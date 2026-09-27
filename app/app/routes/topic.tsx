@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
-import { data } from "react-router";
+import { data, Link, useSearchParams } from "react-router";
 import type { Route } from "./+types/topic";
-import { parseExercise } from "~/content/parse";
-import { readMarkdown, topicReadme } from "~/content/repo";
+import { labSection, parseExercise, referenceCovers, referenceLinks, renderDoc } from "~/content/parse";
+import { listReferences, readMarkdown, topicReadme } from "~/content/repo";
 import { addAttempt, setMark, setNote, topicState } from "~/db/progress";
 import { Markdown } from "~/components/Markdown";
 import { Notes } from "~/components/Notes";
@@ -18,7 +18,19 @@ async function load(params: Route.LoaderArgs["params"]) {
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id, exercise } = await load(params);
-  return { id, exercise, state: topicState(id) };
+  const md = readMarkdown(topicReadme(params.domain, params.topic)!)!;
+  const lab = exercise.lab ? labSection(readMarkdown("lab/README.md")!, exercise.lab) : "";
+  const labHtml = lab ? (await renderDoc(lab, "lab/README.md")).html : "";
+  // Every reference is loaded, so a link from one reference to another still opens in this tab.
+  const covers = referenceCovers(readMarkdown("references/README.md") ?? "");
+  const references = await Promise.all(
+    listReferences().map(async (f) => {
+      const name = f.replace(/^references\/|\.md$/g, "");
+      return { name, covers: covers[name] ?? "", ...(await renderDoc(readMarkdown(f)!, f, true)) };
+    }),
+  );
+  const mine = referenceLinks(md).map((f) => f.replace(/^references\/|\.md$/g, ""));
+  return { id, exercise, state: topicState(id), lab: exercise.lab, labHtml, references, mine };
 }
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.exercise.title ?? "Topic"} · CKA study` }];
@@ -56,22 +68,56 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function Topic({ loaderData }: Route.ComponentProps) {
-  const { id, exercise, state } = loaderData;
+  const { id, exercise, state, lab, labHtml, references, mine } = loaderData;
+  const [params, setParams] = useSearchParams();
+  const tab = (TABS.find((t) => t.key === params.get("tab")) ?? TABS[1]).key;
   const [running, setRunning] = useState(false);
   const [missedOnly, setMissedOnly] = useState(false);
   const onRunning = useCallback((r: boolean) => setRunning(r), []);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
 
   return (
-    <article key={id} className="mx-auto max-w-3xl">
+    <article key={id} className={`mx-auto ${tab === "references" && !running ? "max-w-5xl" : "max-w-3xl"}`}>
       {!running && (
         <header className="mb-10">
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{exercise.title}</h1>
           <Markdown html={exercise.introHtml} className="mt-4" />
+          <div role="tablist" className="mt-8 flex flex-wrap gap-2 border-b border-line">
+            {TABS.map((t, i) => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={tab === t.key}
+                onClick={() => setParams(t.key === "exercise" ? {} : { tab: t.key }, { replace: true, preventScrollReset: true })}
+                className={`-mb-px border-b-2 px-4 py-2 font-semibold ${
+                  tab === t.key ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
+                }`}
+              >
+                {i + 1}. {t.label}
+              </button>
+            ))}
+          </div>
         </header>
       )}
 
-      {exercise.sections.map((s) => {
+      {tab === "lab" && !running && (
+        <section className="mb-14">
+          {labHtml ? (
+            <>
+              <p className="mb-5 text-muted">
+                This exercise starts from the <strong className="text-ink">{lab}</strong> starting state. Run these on the Mac, from the repo root.
+              </p>
+              <Markdown html={labHtml} />
+            </>
+          ) : (
+            <p className="text-muted">This exercise names no lab starting state.</p>
+          )}
+        </section>
+      )}
+
+      {tab === "references" && !running && <References references={references} mine={mine} />}
+
+      {(tab === "exercise" || running) && exercise.sections.map((s) => {
         if (running && s.kind !== "practice") return null;
         switch (s.kind) {
           case "steps":
@@ -132,10 +178,65 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         }
       })}
 
-      {!running && <Notes key={id} body={state.note} />}
+      {tab === "exercise" && !running && <Notes key={id} body={state.note} />}
     </article>
   );
 }
+
+type Reference = { name: string; covers: string; title: string; headings: { id: string; text: string }[]; html: string };
+
+/** A list of this topic's references beside the one selected, which `?ref=` names. */
+function References({ references, mine }: { references: Reference[]; mine: string[] }) {
+  const [params] = useSearchParams();
+  const selected = references.find((r) => r.name === params.get("ref")) ?? references.find((r) => r.name === mine[0]);
+  if (!selected) return <p className="text-muted">This exercise links to no reference pages.</p>;
+  const listed = mine.includes(selected.name) ? mine : [...mine, selected.name];
+  return (
+    <div className="mb-14 md:grid md:grid-cols-[14rem_1fr] md:gap-10">
+      <nav aria-label="References for this topic" className="mb-8 md:sticky md:top-6 md:mb-0 md:self-start">
+        <ul className="space-y-1">
+          {listed.map((name) => {
+            const r = references.find((x) => x.name === name);
+            if (!r) return null;
+            return (
+              <li key={name}>
+                <Link
+                  to={`?tab=references&ref=${name}`}
+                  replace
+                  preventScrollReset
+                  aria-current={r === selected ? "page" : undefined}
+                  className={`block rounded px-3 py-2 hover:bg-surface ${r === selected ? "bg-surface font-semibold" : ""}`}
+                >
+                  {r.title}
+                  {r.covers && <span className="block text-xs font-normal text-muted">{r.covers}</span>}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+      <div className="min-w-0">
+        {selected.headings.length > 0 && (
+          <p className="mb-6 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <span className="text-muted">On this page:</span>
+            {selected.headings.map((h) => (
+              <a key={h.id} href={`#${h.id}`} className="text-accent hover:underline">
+                {h.text}
+              </a>
+            ))}
+          </p>
+        )}
+        <Markdown key={selected.name} html={selected.html} />
+      </div>
+    </div>
+  );
+}
+
+const TABS = [
+  { key: "lab", label: "Set up the lab" },
+  { key: "exercise", label: "Exercise" },
+  { key: "references", label: "References" },
+] as const;
 
 function Section({ s, hideTitle, children }: { s: { slug: string; title: string }; hideTitle?: boolean; children: React.ReactNode }) {
   return (

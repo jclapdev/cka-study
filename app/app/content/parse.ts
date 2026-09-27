@@ -32,7 +32,8 @@ export type Section =
     }
   | { kind: "plain"; slug: string; title: string; html: string };
 
-export type Exercise = { title: string; introHtml: string; sections: Section[] };
+/** `lab` is the starting state named by the "Starts from the … lab" line; `labHtml` is that line rendered. */
+export type Exercise = { title: string; introHtml: string; lab: string | null; labHtml: string; sections: Section[] };
 export type Summary = { title: string; stepKeys: string[]; recallKeys: string[]; hasPractice: boolean };
 
 type Raw = { slug: string; title: string; kind: Section["kind"]; nodes: RootContent[] };
@@ -115,8 +116,11 @@ export function summarize(md: string): Summary {
 
 const TOPIC_README = /^(\d\d-[^/]+)\/(\d\d-[^/]+)\/README\.md$/;
 
-/** Points links at app routes: topic READMEs to /t/, other Markdown to /doc/, the web to a new tab. */
-function rewriteLinks(file: string) {
+/**
+ * Points links at app routes: topic READMEs to /t/, other Markdown to /doc/, the web to a new tab.
+ * `inTopic` is true for anything shown on a topic page, where the lab guide and references open in its tabs.
+ */
+function rewriteLinks({ file, inTopic }: { file: string; inTopic: boolean }) {
   return (tree: HastRoot) => {
     visit(tree, "element", (el: Element) => {
       if (el.tagName === "blockquote") return callout(el);
@@ -132,7 +136,10 @@ function rewriteLinks(file: string) {
       const rel = path.posix.normalize(path.posix.join(path.posix.dirname(file), p));
       const suffix = hash ? `#${hash}` : "";
       const topic = rel.match(TOPIC_README);
-      if (topic) el.properties.href = `/t/${topic[1]}/${topic[2]}${suffix}`;
+      const ref = rel.match(/^references\/([\w-]+)\.md$/);
+      if (inTopic && rel === "lab/README.md") el.properties.href = "?tab=lab";
+      else if (inTopic && ref && ref[1] !== "README") el.properties.href = `?tab=references&ref=${ref[1]}${suffix}`;
+      else if (topic) el.properties.href = `/t/${topic[1]}/${topic[2]}${suffix}`;
       else if (rel.endsWith(".md")) el.properties.href = `/doc/${rel}${suffix}`;
     });
   };
@@ -161,12 +168,12 @@ function mermaidToHtml(nodes: RootContent[]): RootContent[] {
   );
 }
 
-function renderer(file: string) {
+function renderer(file: string, inTopic = TOPIC_README.test(file)) {
   const processor = unified()
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeSlug)
-    .use(rewriteLinks, file)
+    .use(rewriteLinks, { file, inTopic })
     .use(rehypeShiki, { themes: { light: "github-light", dark: "github-dark" }, defaultColor: false })
     .use(rehypeStringify);
   const nodes = async (children: RootContent[]) => {
@@ -180,8 +187,12 @@ function renderer(file: string) {
 
 /** Parses a README into an Exercise. `file` is its repo-relative path, used to resolve links. */
 export async function parseExercise(md: string, file: string): Promise<Exercise> {
-  const { title, intro, sections } = splitSections(md);
+  const { title, intro: introNodes, sections } = splitSections(md);
   const render = renderer(file);
+  const labLine = introNodes.find((n) => n.type === "paragraph" && /^Starts from/.test(toString(n)));
+  const intro = introNodes.filter((n) => n !== labLine);
+  let lab: string | null = null;
+  if (labLine) visit(labLine, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/README\.md#([\w-]+)/)?.[1] ?? null));
   const out: Section[] = [];
 
   for (const s of sections) {
@@ -231,7 +242,7 @@ export async function parseExercise(md: string, file: string): Promise<Exercise>
       out.push({ kind: "plain", ...base, html: await render.nodes(s.nodes) });
     }
   }
-  return { title, introHtml: await render.nodes(intro), sections: out };
+  return { title, introHtml: await render.nodes(intro), lab, labHtml: labLine ? await render.nodes([labLine]) : "", sections: out };
 }
 
 /** Reads "**Host `x`, weight 19%.**" off the front of a task and renders the rest. */
@@ -254,8 +265,33 @@ async function task(item: ListItem, n: number, render: (c: RootContent[]) => Pro
   return { n, hosts, weight, html: await render(children) };
 }
 
-/** Renders a non-exercise Markdown file (a reference, the lab guide) as one block of HTML. */
-export async function renderDoc(md: string, file: string) {
-  const { title } = splitSections(md);
-  return { title, html: await renderer(file).markdown(md) };
+/** The `### <name>` section of the lab guide, without its heading, or "" when there is none. */
+export function labSection(labMd: string, name: string) {
+  const m = labMd.match(new RegExp(`^### ${name}\\n([\\s\\S]*?)(?=^##? |^### |(?![\\s\\S]))`, "m"));
+  return m ? m[1].trim() : "";
+}
+
+/** Repo-relative paths of the reference pages a README links to, in first-mention order. */
+export function referenceLinks(md: string) {
+  return [...new Set([...md.matchAll(/\]\((?:\.\.\/)*(references\/[\w-]+\.md)/g)].map((m) => m[1]))];
+}
+
+/**
+ * Renders a non-exercise Markdown file (a reference, the lab guide) as one block of HTML,
+ * with its `##` headings for an "On this page" list. `inTopic` is true when it is shown on a topic page.
+ */
+export async function renderDoc(md: string, file: string, inTopic = false) {
+  const { title, sections } = splitSections(md);
+  return {
+    title,
+    headings: sections.map((s) => ({ id: s.slug, text: s.title })),
+    html: await renderer(file, inTopic).markdown(md),
+  };
+}
+
+/** The one-line "Covers" text for each reference, read from the table in references/README.md. */
+export function referenceCovers(indexMd: string): Record<string, string> {
+  return Object.fromEntries(
+    [...indexMd.matchAll(/^\| \[[^\]]+\]\(([\w-]+)\.md\) \| (.+?) \|$/gm)].map((m) => [m[1], m[2].replace(/`/g, "")]),
+  );
 }

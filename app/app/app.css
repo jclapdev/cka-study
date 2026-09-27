@@ -53,6 +53,12 @@ body {
   --tw-prose-th-borders: var(--color-line);
   --tw-prose-td-borders: var(--color-line);
 }
+/* Links out to the official docs, which open in a new tab. */
+.md a[target="_blank"]::after {
+  content: "\2197";
+  margin-left: 0.15em;
+  font-size: 0.8em;
+}
 .md :where(code):not(pre code) {
   @apply rounded bg-line/60 px-1 py-0.5 font-normal;
 }

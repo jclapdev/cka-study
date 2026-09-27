@@ -63,6 +63,25 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </button>
         </div>
         <ul id="topics" className={`space-y-5 px-3 pb-6 lg:block ${open ? "block" : "hidden"}`}>
+          <li>
+            <ul>
+              {[
+                ["/doc/lab/README.md", "Lab", "The machines, starting states and fixes"],
+                ["/doc/EXAM.md", "Exam", "Format and every competency"],
+                ["/doc/references/README.md", "References", "Every concept page, in one list"],
+              ].map(([to, label, hint]) => (
+                <li key={to}>
+                  <NavLink
+                    to={to}
+                    className={({ isActive }) => `block rounded px-2 py-1.5 hover:bg-paper ${isActive ? "bg-paper font-semibold" : ""}`}
+                  >
+                    {label}
+                    <span className="block text-xs text-muted">{hint}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </li>
             {loaderData.domains.map((d) => (
               <li key={d.name}>
                 <p className="flex justify-between px-2 pb-1 text-sm font-semibold text-muted">
