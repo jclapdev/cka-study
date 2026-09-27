@@ -20,7 +20,7 @@ Starts from the [`vms` lab](../../lab/README.md#vms). Every command runs on `con
 ## Check what is already running
 
 The machines have the Kubernetes tools installed but no cluster:
-[workers](../../references/workers.md).
+[the kubelet before init or join](../../references/workers.md#the-kubelet-before-init-or-join).
 
 1. Check the state of the kubelet:
 
@@ -36,7 +36,7 @@ The machines have the Kubernetes tools installed but no cluster:
 
    The kubelet is installed and enabled, but it has no configuration file yet, so it exits at
    once and systemd restarts it every 10 seconds. `sudo journalctl -u kubelet` shows the
-   missing file: [workers](../../references/workers.md).
+   missing file: [the kubelet before init or join](../../references/workers.md#the-kubelet-before-init-or-join).
 
 2. Try to talk to a cluster that does not exist yet:
 
@@ -50,14 +50,14 @@ The machines have the Kubernetes tools installed but no cluster:
    The connection to the server localhost:8080 was refused - did you specify the right host or port?
    ```
 
-   There is no [kubeconfig](../../references/kubeconfig.md) yet, so kubectl used its built-in
+   There is no [kubeconfig](../../references/kubeconfig.md#resolution-order) yet, so kubectl used its built-in
    default of `localhost:8080`.
 
 ## Initialise the control plane
 
 `kubeadm init` writes the control plane's address into the apiserver's certificate and into
 every kubeconfig it generates, and the workers are later told to trust that exact address. A
-wrong one is not fixable without `kubeadm reset`: [kubeadm](../../references/kubeadm.md).
+wrong one is not fixable without `kubeadm reset`: [the advertise address](../../references/kubeadm.md#the-advertise-address).
 
 1. Get `controlplane`'s address and keep it in a variable:
 
@@ -108,14 +108,14 @@ wrong one is not fixable without `kubeadm reset`: [kubeadm](../../references/kub
 
    Each progress line starts with the phase that printed it, such as `[preflight]`, `[certs]`,
    `[kubeconfig]` or `[addons]`. What each phase does and the files it leaves:
-   [kubeadm](../../references/kubeadm.md).
+   [what kubeadm init does](../../references/kubeadm.md#what-kubeadm-init-does).
 
 > [!note]
 > If `kubeadm init` stops with `[ERROR Port-6443]: Port 6443 is in use` or `[ERROR
 > FileAvailable--etc-kubernetes-manifests-kube-apiserver.yaml]`, a control plane from an earlier
 > attempt is still there. `sudo kubeadm reset -f` removes it. Swap being on only gives a
 > preflight warning, and `init` fails later at `wait-control-plane`:
-> [kubeadm](../../references/kubeadm.md).
+> [kubeadm failure modes](../../references/kubeadm.md#failure-modes).
 
 ### If pods are created through the apiserver, how did the apiserver pod start?
 
@@ -138,14 +138,14 @@ The kubelet watches that directory and starts whatever it finds there, without a
 apiserver or a scheduler. That is how the control plane starts before there is a cluster to
 start it. Because these pods come from files, editing one restarts that component within
 seconds, and `kubectl delete pod` on one does nothing lasting, because the kubelet recreates it
-from the file: [control-plane](../../references/control-plane.md).
+from the file: [static pods](../../references/control-plane.md#static-pods).
 
 ## Point kubectl at the cluster
 
 `kubeadm init` wrote an admin kubeconfig to `/etc/kubernetes/admin.conf`, owned by root with
 mode `600`, and kubectl looks in `~/.kube/config`. Without the `chown`, the copy stays
 root-owned and kubectl fails with `permission denied`:
-[kubeconfig](../../references/kubeconfig.md).
+[on a kubeadm cluster](../../references/kubeconfig.md#on-a-kubeadm-cluster).
 
 Copy the admin kubeconfig into your home directory:
 
@@ -174,7 +174,7 @@ The node is `NotReady` until a pod network is installed.
 
 Kubernetes needs a network plugin to give pods addresses, and kubeadm installs none. What the
 plugin provides and the three address ranges that must not overlap:
-[pod-network](../../references/pod-network.md).
+[three CIDRs, not one](../../references/pod-network.md#three-cidrs-not-one).
 
 ### Why is controlplane NotReady when all four control plane pods are running?
 
@@ -206,7 +206,7 @@ kube-scheduler-controlplane            0/1     Running   0          14s
 `/etc/cni/net.d/` is empty, so the kubelet reports `cni plugin not initialized` and keeps the
 node `NotReady`. A `NotReady` node carries the taint `node.kubernetes.io/not-ready:NoSchedule`,
 which CoreDNS does not tolerate, so both CoreDNS pods stay `Pending`:
-[pod](../../references/pod.md).
+[pods on a new cluster](../../references/pod.md#on-a-new-cluster).
 
 1. Install Flannel. It defaults to `10.244.0.0/16`, the CIDR you gave `init`:
 
@@ -268,12 +268,12 @@ which CoreDNS does not tolerate, so both CoreDNS pods stay `Pending`:
 > CIDR given to `init` does not match Flannel's `10.244.0.0/16`, or `init` was given none, the
 > node is still `Ready`, but the Flannel pod is in `CrashLoopBackOff` and CoreDNS stays in
 > `ContainerCreating`. `kubectl logs -n kube-flannel -l app=flannel` names the mismatch:
-> [pod-network](../../references/pod-network.md).
+> [three CIDRs, not one](../../references/pod-network.md#three-cidrs-not-one).
 
 ## Join the workers
 
 The join line printed by `init` contains a token that expires after 24 hours. `kubeadm token
-create --print-join-command` prints a new one: [workers](../../references/workers.md).
+create --print-join-command` prints a new one: [joining](../../references/workers.md#joining).
 
 1. On `controlplane`, list the existing token and print a fresh join command:
 
@@ -292,7 +292,7 @@ create --print-join-command` prints a new one: [workers](../../references/worker
 
    The hash lets the joining node check that it reached the right apiserver. The token lets
    the apiserver accept the node for long enough to sign a client certificate for it. The
-   sequence: [workers](../../references/workers.md).
+   sequence: [joining](../../references/workers.md#joining).
 
 2. On `node01`, run the command you just printed. Your token and hash differ from the ones
    above, so paste yours:
@@ -318,7 +318,7 @@ error. Run every `kubectl` command on `controlplane`.
 
 ## Label the workers
 
-A node's role is a [label](../../references/labels.md), not a field. Back on `controlplane`:
+A node's role is a [label](../../references/labels.md#keys-and-values), not a field. Back on `controlplane`:
 
 1. List the nodes:
 
@@ -337,7 +337,7 @@ A node's role is a [label](../../references/labels.md), not a field. Back on `co
 
    The ROLES column is built from labels named `node-role.kubernetes.io/<role>`. kubeadm sets
    that label on `controlplane` and none on the workers:
-   [workers](../../references/workers.md).
+   [roles](../../references/workers.md#roles).
 
 2. Add the worker label to both:
 
@@ -393,10 +393,10 @@ it. `PodInitializing` means that pod's init containers are still running.
 
 The two CoreDNS pods have `10.244.x` addresses from the pod CIDR. Every other pod has its node's
 own address, because the control plane pods and both DaemonSets use the host network:
-[pod-network](../../references/pod-network.md).
+[pods on the host network](../../references/pod-network.md#pods-on-the-host-network).
 
 When the cluster is healthy, no pod is `CrashLoopBackOff`, `Error` or `Pending`. What each of
-those means: [pod](../../references/pod.md).
+those means: [phases](../../references/pod.md#phases).
 
 ## Recall
 

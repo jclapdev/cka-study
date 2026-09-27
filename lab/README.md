@@ -36,7 +36,7 @@ Do this once, in a terminal on your Mac, inside this project's folder (`cd ~/pro
 
 ## Starting states
 
-Each exercise starts from one of two starting states, and names it at the top. A starting state is a saved copy of all three machines, called a snapshot. Restoring one puts the machines back exactly as they were when it was saved, whatever you did to them since.
+Each exercise starts from one of the starting states below, and names it at the top. A starting state is a saved copy of all three machines, called a snapshot. Restoring one puts the machines back exactly as they were when it was saved, whatever you did to them since.
 
 Restoring copies three disk images and takes a few minutes.
 
@@ -87,6 +87,24 @@ If `restore` says `no backup controlplane-built`, the working cluster has not be
   lab/snapshot.sh save built
   ```
 
+### helm
+
+The `cluster` starting state with Helm installed on `controlplane`.
+
+In a terminal on your Mac, run:
+
+```shell
+cd ~/projects/cka-prep
+lab/snapshot.sh restore built
+limactl start controlplane && limactl start node01 && limactl start node02
+01-cluster-architecture/02-helm/setup.sh
+limactl shell controlplane
+```
+
+The first three commands are the same as for `cluster`. The fourth downloads the latest Helm release onto `controlplane` and prints its version, and the last opens a shell there. The exercise's commands run in that shell.
+
+If `restore` says `no backup controlplane-built`, follow the note under [`cluster`](#cluster) first.
+
 ## Moving between machines
 
 When an exercise says "on `node01`", open a shell on that machine. From the Mac, in a second terminal:
@@ -124,7 +142,7 @@ Every lab command, run in a terminal on your Mac inside this project's folder (`
 
 Saving over `clean` leaves no way back to bare machines short of deleting them and running `lab/provision.sh` again.
 
-An exercise that needs more than a restore, such as an add-on installed or a component broken on purpose, has a `setup.sh` in its own folder. Its lab line says to run it.
+An exercise that needs more than a restore, such as an add-on installed or a component broken on purpose, has a `setup.sh` in its own folder, and its starting state above runs it.
 
 ## When something goes wrong
 

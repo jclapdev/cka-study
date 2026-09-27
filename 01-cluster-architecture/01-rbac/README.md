@@ -54,7 +54,7 @@ within: [namespaces](../../references/namespaces.md).
    You are not a Kubernetes object. `kubernetes-admin` is a name asserted by the client
    certificate in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
    same certificate. Neither exists as a resource you could delete. How a certificate becomes
-   a user and groups: [authentication](../../references/authentication.md).
+   a user and groups: [client certificates](../../references/authentication.md#client-certificates).
 
 2. Find the binding that gives that group its power:
 
@@ -71,13 +71,13 @@ within: [namespaces](../../references/namespaces.md).
 
    The group is bound to `cluster-admin`, which permits everything. That binding is the only
    reason your commands work, and it is an ordinary object of the same kind you are about to
-   create. Model and subject kinds: [rbac](../../references/rbac.md).
+   create: [the model](../../references/rbac.md#the-model) and [subjects](../../references/rbac.md#subjects).
 
 ## Create an identity
 
 A ServiceAccount is the one subject kind that exists as an object. Users and groups come from
 credentials, so a cluster cannot create them. It can create a ServiceAccount:
-[service-accounts](../../references/service-accounts.md).
+[the ServiceAccount model](../../references/service-accounts.md#the-model).
 
 1. Create the account in `dev`:
 
@@ -93,7 +93,7 @@ credentials, so a cluster cannot create them. It can create a ServiceAccount:
 
 2. Ask what it is allowed to do. `kubectl auth can-i` asks the apiserver's authoriser directly,
    and `--as` impersonates without needing the subject's credentials
-   ([authentication](../../references/authentication.md)). A ServiceAccount is named in full as
+   ([impersonation](../../references/authentication.md#commands)). A ServiceAccount is named in full as
    `system:serviceaccount:<namespace>:<name>`:
 
    ```shell
@@ -108,7 +108,7 @@ credentials, so a cluster cannot create them. It can create a ServiceAccount:
 
    The account exists and can authenticate, but it cannot do anything, because permissions in
    Kubernetes are purely additive and it has been granted none
-   ([rbac](../../references/rbac.md)).
+   ([subjects](../../references/rbac.md#subjects)).
 
 > [!note]
 > Bindings are not validated against their subjects. A binding that names a ServiceAccount
@@ -120,7 +120,7 @@ credentials, so a cluster cannot create them. It can create a ServiceAccount:
 
 A Role is a list of rules, each naming verbs and the resources those verbs apply to. It lives
 in one namespace and can only ever name resources in that namespace:
-[rbac](../../references/rbac.md).
+[the model](../../references/rbac.md#the-model).
 
 1. Create the Role. `kubectl create role` writes the object without you writing YAML:
 
@@ -166,7 +166,7 @@ in one namespace and can only ever name resources in that namespace:
 ## Bind the Role
 
 A RoleBinding is the grant. It names one role and the subjects that get it:
-[rbac](../../references/rbac.md).
+[the model](../../references/rbac.md#the-model).
 
 1. Create the binding and ask again:
 
@@ -234,7 +234,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
    resources, and the RoleBinding only grants inside `dev`. The subject being a `dev`
    ServiceAccount is not what limits it. The binding's namespace is. Granting the same access
    in `prod` needs a second RoleBinding there, or a ClusterRoleBinding if it should apply
-   everywhere: [namespaces](../../references/namespaces.md).
+   everywhere: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 2. A bare `no` hides which part of the rule failed. Impersonate a real request instead:
 
@@ -250,7 +250,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
 
    The message names every field a rule has to match: subject, verb, resource, API group and
    namespace. `""` is the core API group, not a missing value:
-   [api-groups](../../references/api-groups.md).
+   [where the group matters](../../references/api-groups.md#where-the-group-matters).
 
 > [!note]
 > The Forbidden message names the group the request needed. If it says `in API group "apps"`
@@ -261,7 +261,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
 
 A ClusterRole is a definition with no namespace, and a RoleBinding is allowed to point at one.
 So a ClusterRole can be written once and bound in as many namespaces as needed, instead of a
-Role in each: [rbac](../../references/rbac.md).
+Role in each: [the model](../../references/rbac.md#the-model).
 
 1. Write the definition once and bind it twice:
 
@@ -304,7 +304,7 @@ built-in `view`, `edit` and `admin` roles are meant to be used this way.
 ## Reach a cluster-scoped resource
 
 Nodes are not in a namespace. They are cluster-scoped, like PersistentVolumes and namespaces
-themselves: [namespaces](../../references/namespaces.md).
+themselves: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 1. Try to grant access to them the way that has worked so far:
 
@@ -393,7 +393,7 @@ themselves: [namespaces](../../references/namespaces.md).
    subject ask what it is and what it may do. The `/api`, `/apis` and `/openapi` rows come
    from `system:discovery`, and the `/healthz`, `/livez`, `/readyz` and `/version` rows from
    `system:public-info-viewer`. These paths are non-resource URLs:
-   [rbac](../../references/rbac.md).
+   [RBAC in this lab](../../references/rbac.md#in-this-lab).
 
 4. See how much of this the cluster already came with:
 

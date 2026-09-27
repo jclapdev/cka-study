@@ -12,7 +12,7 @@ describe("repo", () => {
     const arch = domains.find((d) => d.name === "01-cluster-architecture")!;
     expect(arch.weight).toBe(25);
     expect(arch.topics).toHaveLength(9);
-    expect(arch.topics.filter((t) => t.written).map((t) => t.topic)).toEqual(["00-kubeadm-install", "01-rbac"]);
+    expect(arch.topics.filter((t) => t.written).map((t) => t.topic)).toEqual(["00-kubeadm-install", "01-rbac", "02-helm"]);
   });
 
   it("refuses paths outside the repo, non-Markdown and the app", () => {

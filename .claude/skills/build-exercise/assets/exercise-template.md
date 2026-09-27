@@ -13,7 +13,7 @@ Starts from the [`<lab-name>` lab](../../lab/README.md#<lab-name>). Every comman
 ## <First step group, named for what it achieves>
 
 <At most one or two sentences on what the concept is, then link the reference page that
-explains it: [<concept>](../../references/<concept>.md).>
+explains it: [<section heading>](../../references/<concept>.md#<section-anchor>).>
 
 1. <Instruction>:
 

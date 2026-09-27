@@ -17,5 +17,6 @@ Concept summaries shared by every exercise. Each one states the model, how it sh
 | [api-groups](api-groups.md) | the core group, named groups, `apiVersion`, groups in RBAC rules |
 | [service-accounts](service-accounts.md) | ServiceAccounts, their full names and groups, tokens in pods |
 | [authentication](authentication.md) | users and groups from certificates, `admin.conf` vs `super-admin.conf`, `auth whoami`, `--as` |
+| [helm](helm.md) | charts, repositories and releases, values and `--reuse-values`, revisions and rollback, where releases are stored, `helm template` |
 
 Every new exercise extends this folder: each concept it touches either already has a summary here or gets one written alongside it, and the exercise README links to them.

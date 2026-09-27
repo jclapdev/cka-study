@@ -188,7 +188,10 @@ function References({ references, mine }: { references: Reference[]; mine: strin
   const listed = mine.includes(selected.name) ? mine : [...mine, selected.name];
   return (
     <div className="mb-14 md:grid md:grid-cols-[14rem_1fr] md:gap-10">
-      <nav aria-label="References for this topic" className="mb-8 md:sticky md:top-6 md:mb-0 md:self-start">
+      <nav
+        aria-label="References for this topic"
+        className="mb-8 md:sticky md:top-6 md:mb-0 md:max-h-[calc(100vh-3rem)] md:self-start md:overflow-y-auto"
+      >
         <ul className="space-y-1">
           {listed.map((name) => {
             const r = references.find((x) => x.name === name);
@@ -198,29 +201,29 @@ function References({ references, mine }: { references: Reference[]; mine: strin
                 <Link
                   to={`?tab=references&ref=${name}`}
                   replace
-                  preventScrollReset
                   aria-current={r === selected ? "page" : undefined}
                   className={`block rounded px-3 py-2 hover:bg-surface ${r === selected ? "bg-surface font-semibold" : ""}`}
                 >
                   {r.title}
                   {r.covers && <span className="block text-xs font-normal text-muted">{r.covers}</span>}
                 </Link>
+                {r === selected && r.headings.length > 0 && (
+                  <ul aria-label="On this page" className="mb-2 ml-3 mt-1 space-y-1 border-l border-line pl-3 text-sm">
+                    {r.headings.map((h) => (
+                      <li key={h.id}>
+                        <a href={`#${h.id}`} className="block text-accent hover:underline">
+                          {h.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             );
           })}
         </ul>
       </nav>
       <div className="min-w-0">
-        {selected.headings.length > 0 && (
-          <p className="mb-6 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-            <span className="text-muted">On this page:</span>
-            {selected.headings.map((h) => (
-              <a key={h.id} href={`#${h.id}`} className="text-accent hover:underline">
-                {h.text}
-              </a>
-            ))}
-          </p>
-        )}
         <Markdown key={selected.name} html={selected.html} />
       </div>
     </div>

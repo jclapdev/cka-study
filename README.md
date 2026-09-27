@@ -40,7 +40,7 @@ Status is **ready** when the README has steps and a Practice it section, **steps
 | --- | --- | --- |
 | 01-cluster-architecture (25%) | [00-kubeadm-install](01-cluster-architecture/00-kubeadm-install/README.md) | ready |
 | | [01-rbac](01-cluster-architecture/01-rbac/README.md) | ready |
-| | 02-helm | |
+| | [02-helm](01-cluster-architecture/02-helm/README.md) | ready |
 | | 03-kustomize | |
 | | 04-crds-operators | |
 | | 05-extension-interfaces | |
