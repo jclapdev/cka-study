@@ -1,0 +1,106 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-paper: #f5f7fa;
+  --color-surface: #ffffff;
+  --color-ink: #1b2433;
+  --color-muted: #5b6778;
+  --color-line: #d9dfe7;
+  --color-accent: #2f5fd0;
+  --color-done: #2e8b57;
+  --color-missed: #b7791f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #12161d;
+    --color-surface: #1a2029;
+    --color-ink: #e3e8ef;
+    --color-muted: #8b97a8;
+    --color-line: #2a3240;
+    --color-accent: #7fa2f5;
+    --color-done: #5cc28a;
+    --color-missed: #e0a84a;
+    color-scheme: dark;
+  }
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-accent;
+}
+
+/* Rendered README content */
+.md {
+  @apply prose max-w-none text-[1.0625rem] leading-relaxed;
+  --tw-prose-body: var(--color-ink);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-bullets: var(--color-muted);
+  --tw-prose-counters: var(--color-muted);
+  --tw-prose-quotes: var(--color-ink);
+  --tw-prose-quote-borders: var(--color-line);
+  --tw-prose-hr: var(--color-line);
+  --tw-prose-th-borders: var(--color-line);
+  --tw-prose-td-borders: var(--color-line);
+}
+.md :where(code):not(pre code) {
+  @apply rounded bg-line/60 px-1 py-0.5 font-normal;
+}
+.md :where(code):not(pre code)::before,
+.md :where(code):not(pre code)::after {
+  content: none;
+}
+.md pre {
+  @apply relative overflow-x-auto rounded-md border border-line bg-surface px-4 py-3 font-mono text-[0.85rem] leading-6 text-ink;
+}
+.md pre.shiki span {
+  color: var(--shiki-light);
+}
+@media (prefers-color-scheme: dark) {
+  .md pre.shiki span {
+    color: var(--shiki-dark);
+  }
+}
+.md pre.mermaid {
+  @apply flex justify-center bg-transparent border-none;
+}
+.md blockquote {
+  @apply not-italic font-normal border-l-4 border-accent/50 bg-surface py-1 pr-4 rounded-r;
+}
+.md blockquote p::before,
+.md blockquote p::after {
+  content: none;
+}
+.md blockquote .callout-label {
+  @apply block text-sm font-semibold text-accent;
+}
+.md > :first-child {
+  @apply mt-0;
+}
+.md > :last-child {
+  @apply mb-0;
+}
+
+.copy-btn {
+  @apply absolute right-2 top-2 rounded border border-line bg-paper px-2 py-0.5 font-sans text-xs text-muted opacity-0 transition-opacity;
+}
+.md pre:hover .copy-btn,
+.copy-btn:focus-visible {
+  @apply opacity-100;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

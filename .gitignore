@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Study app: dependencies, build output, and each person's own progress
+app/node_modules/
+app/.react-router/
+app/build/
+app/data/
+
+# Local secrets, if any are ever added
+.env
