@@ -1,7 +1,7 @@
 # Control plane
 
-The set of components that decide what the cluster should be running. Workloads
-run on nodes; the control plane records intent and drives reality toward it.
+The components that store the cluster's desired state and act to make the nodes match it.
+Workloads run on nodes.
 
 In this lab the control plane is a single node, `controlplane`.
 
@@ -33,16 +33,17 @@ flowchart LR
   api --> etcd
 ```
 
-Each box carries how it is deployed, because that decides how it restarts and
-where its logs are. Only the apiserver talks to etcd; everything else talks to
-the apiserver. A worker is a control plane node minus the static pods.
+Each box names how it is deployed, which decides how it restarts and where its
+logs are. Only the apiserver talks to etcd, and everything else talks to the
+apiserver. A worker is a control plane node without the static pods. kube-proxy
+and the pod network agent run as [DaemonSets](daemonsets.md).
 
 ## Components
 
 | Component | Job | Where kubeadm puts it |
 | --- | --- | --- |
 | [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else — kubectl, kubelets, controllers — talks to it and never to etcd. Serves on 6443. | static pod |
-| [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | Key-value store holding all cluster state. Losing it loses the cluster; backups are their own exam topic. | static pod |
+| [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | Key-value store holding all cluster state. | static pod |
 | `kube-controller-manager` | One process running many [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), each a loop comparing desired to actual and acting on the gap (node health, replica counts, service accounts). | static pod |
 | [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes by filtering then scoring. Only writes `spec.nodeName`; the kubelet does the starting. | static pod |
 | [`kubelet`](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) | On *every* node, control plane included. Starts containers, reports node and pod status. | systemd unit, not a pod |
@@ -55,7 +56,7 @@ the apiserver. A worker is a control plane node minus the static pods.
 
 A pod defined by a file in `/etc/kubernetes/manifests/` rather than by an API
 object. The kubelet watches that directory directly, so static pods start with no
-apiserver and no scheduler involved — which is how the apiserver itself boots.
+apiserver and no scheduler involved. That is how the apiserver itself starts.
 Official task page: [create static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/).
 
 ```mermaid
@@ -71,18 +72,18 @@ sequenceDiagram
   A-->>K: node registration, pod assignments
 ```
 
-The apiserver is an output of this loop, not a participant in it. Nothing above
-the last line requires a working cluster.
+Because the kubelet reads the files directly:
 
-Consequences worth internalising:
-
-- Editing a manifest file restarts that component within seconds. This is how the
-  apiserver gets reconfigured, and how the upgrade and troubleshooting exercises
-  break it.
-- `kubectl delete pod kube-apiserver-controlplane` does nothing lasting; the kubelet
-  recreates it from the file.
+- Editing a manifest file restarts that component within seconds. This is how a
+  control plane component is reconfigured.
+- Deleting a static pod with `kubectl delete pod` does nothing lasting. In the lab,
+  `kube-scheduler-controlplane` is back `Running` 5 seconds after it is deleted,
+  because the kubelet recreates it from the file.
+- The pod object the apiserver shows is a mirror of the file, and its owner is the
+  Node, not a controller.
 - Static pods are named `<manifest-name>-<node-name>`, e.g. `etcd-controlplane`.
-- The directory is root-only (`sudo ls /etc/kubernetes/manifests/`).
+- Anyone can list the directory, but the manifest files are root-only (mode `600`), so
+  reading or editing one needs `sudo`.
 
 ## Control plane taint
 
@@ -97,13 +98,7 @@ kubectl taint node controlplane node-role.kubernetes.io/control-plane-      # tr
 
 ## Files kubeadm writes on the control plane node
 
-| Path | Contents |
-| --- | --- |
-| `/etc/kubernetes/manifests/` | static pod manifests |
-| `/etc/kubernetes/admin.conf` | admin kubeconfig, root-owned |
-| `/etc/kubernetes/pki/` | CA and all component certificates ([which certificate is which](https://kubernetes.io/docs/setup/best-practices/certificates/)) |
-| `/var/lib/etcd/` | etcd data directory |
-| `/var/lib/kubelet/config.yaml` | kubelet configuration |
+Listed on [kubeadm](kubeadm.md).
 
 ## Docs
 
@@ -115,5 +110,5 @@ kubectl taint node controlplane node-role.kubernetes.io/control-plane-      # tr
 - [Operating etcd](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)
 - [kube-scheduler](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/)
 
-Related: [pod](pod.md), [workers](workers.md), [pod-network](pod-network.md),
+Related: [kubeadm](kubeadm.md), [pod](pod.md), [workers](workers.md), [pod-network](pod-network.md),
 [kubeconfig](kubeconfig.md).

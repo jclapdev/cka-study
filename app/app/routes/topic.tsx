@@ -30,7 +30,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     }),
   );
   const mine = referenceLinks(md).map((f) => f.replace(/^references\/|\.md$/g, ""));
-  return { id, exercise, state: topicState(id), lab: exercise.lab, labHtml, references, mine };
+  return { id, exercise, state: topicState(id), labHtml, references, mine };
 }
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.exercise.title ?? "Topic"} · CKA study` }];
@@ -68,7 +68,7 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function Topic({ loaderData }: Route.ComponentProps) {
-  const { id, exercise, state, lab, labHtml, references, mine } = loaderData;
+  const { id, exercise, state, labHtml, references, mine } = loaderData;
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.key === params.get("tab")) ?? TABS[1]).key;
   const [running, setRunning] = useState(false);
@@ -103,12 +103,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
       {tab === "lab" && !running && (
         <section className="mb-14">
           {labHtml ? (
-            <>
-              <p className="mb-5 text-muted">
-                This exercise starts from the <strong className="text-ink">{lab}</strong> starting state. Run these on the Mac, from the repo root.
-              </p>
-              <Markdown html={labHtml} />
-            </>
+            <Markdown html={labHtml} />
           ) : (
             <p className="text-muted">This exercise names no lab starting state.</p>
           )}

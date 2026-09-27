@@ -7,7 +7,7 @@
 - The clusters run Kubernetes 1.35.
 - Each task starts with a box naming the host to `ssh` into. `sudo -i` gives root, and `exit` returns to the base machine. Doing a task on the wrong host scores zero for it.
 - `kubectl` is preinstalled with the `k` alias and bash completion. `yq`, `curl` and `wget` are available.
-- Allowed documentation is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), and the documentation of any network or storage plugin a task names.
+- The documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), [helm.sh/docs](https://helm.sh/docs), the [Gateway API docs](https://gateway-api.sigs.k8s.io), and any page a task links in its Quick Reference box ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
 - Grading checks the final state of the cluster only. How you got there is never inspected, so an imperative `kubectl create` scores the same as hand-written YAML, and speed decides the result.
 - Tasks often combine topics, such as installing a Helm chart that brings a custom resource, or moving an Ingress to the Gateway API.
 

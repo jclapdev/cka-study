@@ -13,10 +13,10 @@ Each exercise names the lab starting state it needs at the top and links to the 
 
 `app/` is a local web page that shows each exercise with a tick on every step, Recall questions you grade yourself, a timed Practice it run with a score, and notes per topic. It reads the READMEs directly, so there is nothing to sync, and keeps your progress in `app/data/progress.db`. Commands still run in your own terminal.
 
-It needs Node 24 and pnpm (`corepack enable pnpm`). From the repo root:
+It needs Node 24 and pnpm (`corepack enable pnpm`). In a terminal on your Mac:
 
 ```shell
-cd app && pnpm install && pnpm dev
+cd ~/projects/cka-prep/app && pnpm install && pnpm dev
 ```
 
 Then open <http://127.0.0.1:5173>. Delete `app/data/progress.db` to start over.
@@ -28,7 +28,7 @@ The "Practice it" sections are written to match the real exam:
 - 15 to 20 hands-on tasks in 2 hours, on Kubernetes 1.35, with a 66% pass mark.
 - Each task names the host to `ssh` into and shows its weight as a percentage.
 - Only the final state of the cluster is graded, so the fastest correct method wins.
-- The only documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs) and [kubernetes.io/blog](https://kubernetes.io/blog).
+- The documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), [helm.sh/docs](https://helm.sh/docs), the [Gateway API docs](https://gateway-api.sigs.k8s.io), and any page a task links in its Quick Reference box ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
 
 [EXAM.md](EXAM.md) has the full format and every competency the topics below map to.
 
@@ -39,7 +39,7 @@ Status is **ready** when the README has steps and a Practice it section, **steps
 | Domain | Topic | Status |
 | --- | --- | --- |
 | 01-cluster-architecture (25%) | [00-kubeadm-install](01-cluster-architecture/00-kubeadm-install/README.md) | ready |
-| | [01-rbac](01-cluster-architecture/01-rbac/README.md) | steps only |
+| | [01-rbac](01-cluster-architecture/01-rbac/README.md) | ready |
 | | 02-helm | |
 | | 03-kustomize | |
 | | 04-crds-operators | |

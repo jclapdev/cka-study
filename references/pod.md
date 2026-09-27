@@ -2,7 +2,7 @@
 
 The smallest thing Kubernetes schedules. One or more containers that share a network namespace (same IP, same localhost, same port space) and can share volumes. Containers are never scheduled individually.
 
-A pod is bound to one node for life. It is never moved — a "moved" pod is a new pod created by a controller ([Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/), StatefulSet) after the old one died.
+A pod is bound to one node for life. It is never moved. A pod that seems to have moved is a new pod, created by a controller such as a [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) or a [DaemonSet](daemonsets.md) after the old one died.
 
 ## Phases
 
@@ -27,11 +27,17 @@ kubectl logs <name> -n <ns> --previous    # what the crashed instance said
 kubectl get events -n <ns> --sort-by=.lastTimestamp
 ```
 
-`Pending` with "no nodes available" is a scheduling problem (taints, resources, selectors). `CrashLoopBackOff` is the container's own fault and lives in the logs.
+`Pending` with `FailedScheduling` and `0/1 nodes are available` in the events is a scheduling problem: taints, resources or selectors. `CrashLoopBackOff` is the container's own fault and lives in the logs.
 
-## Relevance to a fresh cluster
+## On a new cluster
 
-CoreDNS pods sit in `Pending` from `kubeadm init` until a CNI exists — they need a pod IP and nothing can allocate one. Two CoreDNS pods `Running` is therefore the honest signal that the [pod network](pod-network.md) works, better than the node's `Ready` condition alone.
+After `kubeadm init`, the two CoreDNS pods are `Pending`. The node is `NotReady` until a pod network is installed, so it carries the `node.kubernetes.io/not-ready:NoSchedule` taint, and CoreDNS does not tolerate it. `kubectl describe pod` shows it in the events:
+
+```
+Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 node(s) had untolerated taint(s).
+```
+
+Once the node is `Ready`, CoreDNS is scheduled and waits in `ContainerCreating` until the [pod network](pod-network.md) gives it an address. Both CoreDNS pods `Running` shows that pods are getting addresses. The node being `Ready` does not.
 
 Control plane components are pods too, but [static ones](control-plane.md).
 

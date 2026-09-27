@@ -35,9 +35,10 @@ definition, not as a cluster-wide grant. There is no path from a `Role` to a
 Three kinds, named in a binding's `subjects` ([referring to subjects](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-subjects)):
 
 - **ServiceAccount** — an in-cluster identity, referred to in full as
-  `system:serviceaccount:<namespace>:<name>`. The only kind Kubernetes creates.
+  `system:serviceaccount:<namespace>:<name>`. The only kind Kubernetes creates
+  ([service-accounts](service-accounts.md)).
 - **User** — has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a certificate or token
-  authenticates as that name. `kubeadm` writes `kubernetes-admin` into
+  authenticates as that name ([authentication](authentication.md)). `kubeadm` writes `kubernetes-admin` into
   `admin.conf`.
 - **Group** — also has no object, and comes from the same credential. `kubeadm`
   puts `kubernetes-admin` in the group `kubeadm:cluster-admins`, and binds *that
@@ -48,9 +49,24 @@ something if any binding allows it, and removing access means removing bindings.
 
 ## In this lab
 
-`kubeadm` installs ~70 ClusterRoles at `init`. Most are prefixed `system:` and
-exist to let the control plane components talk to the apiserver. Four are meant
+The `cluster` lab has 71 ClusterRoles. 65 are prefixed `system:` and let the
+control plane components talk to the apiserver. `flannel` belongs to the pod
+network and `kubeadm:get-nodes` to the bootstrap. The remaining four are meant
 for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
+
+Three ClusterRoleBindings give every authenticated subject a few permissions
+before anyone grants it anything ([discovery roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#discovery-roles)).
+That is why `kubectl auth can-i --list` never comes back empty:
+
+| ClusterRole | Lets any subject |
+| --- | --- |
+| `system:basic-user` | Ask what it is and what it may do: `selfsubjectreviews`, `selfsubjectaccessreviews`, `selfsubjectrulesreviews`. |
+| `system:discovery` | Read the API's list of groups and types: `/api`, `/apis`, `/openapi`. |
+| `system:public-info-viewer` | Read `/healthz`, `/livez`, `/readyz` and `/version`. Unauthenticated clients get this one too. |
+
+Paths such as `/healthz` are non-resource URLs. They are not objects, so a rule
+names them in `nonResourceURLs` rather than `resources`, and only a ClusterRole
+can hold such a rule.
 
 Your `kubectl` works because `~/.kube/config` is a copy of `admin.conf`, whose
 certificate authenticates as `kubernetes-admin` in group `kubeadm:cluster-admins`,
@@ -71,7 +87,7 @@ kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
 kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
 ```
 
-`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/user-impersonation/), and works on any command, so a denied request can be seen in
+`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation) another subject ([authentication](authentication.md)), and works on any command, so a denied request can be seen in
 full rather than as a bare `no`:
 
 ```
@@ -80,8 +96,9 @@ Error from server (Forbidden): pods is forbidden: User
 "" in the namespace "prod"
 ```
 
-The message names all four things a rule has to match: subject, verb, resource,
-namespace. Whichever one is wrong is the one to fix.
+The message names all five things a rule has to match: subject, verb, resource,
+API group and namespace. Whichever one is wrong is the one to fix. `""` is the
+core API group ([api-groups](api-groups.md)).
 
 ## Failure modes
 
@@ -89,8 +106,8 @@ namespace. Whichever one is wrong is the one to fix.
 | --- | --- |
 | Role exists, still `no` | Nothing bound it. A Role is a definition; the RoleBinding is the grant |
 | Works in one namespace, not another | RoleBinding is namespaced. A second namespace needs a second binding |
-| `no` on nodes, PVs, namespaces despite a binding | Cluster-scoped resources have no namespace for a RoleBinding to scope to. Needs a ClusterRoleBinding |
-| Rule names the wrong API group | `--resource=deployments.apps` when the rule says `""`. The Forbidden message prints the group it wanted |
+| `no` on nodes, PVs, namespaces despite a binding | Cluster-scoped resources have no namespace for a RoleBinding to scope to ([namespaces](namespaces.md)). Needs a ClusterRoleBinding |
+| Rule names the wrong API group | A hand-written rule says `apiGroups: [""]` for a type in a named group, such as `deployments` in `apps`. The Forbidden message prints the group it wanted |
 | Verb missing | `get` does not imply `list`. `watch` is separate again |
 | Binding names a subject that does not exist | Bindings are not validated against subjects. A typo in a ServiceAccount name binds nothing and reports no error |
 

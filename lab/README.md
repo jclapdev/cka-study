@@ -14,7 +14,7 @@ Each machine has containerd, kubelet, kubeadm and kubectl installed at Kubernete
 
 ## First-time setup
 
-Do this once, from the repo root on the Mac. It needs an Apple silicon Mac with [Homebrew](https://brew.sh), about 8 GiB of free memory, 45 GiB of free disk for the machines, and 45 GiB more for each saved copy.
+Do this once, in a terminal on your Mac, inside this project's folder (`cd ~/projects/cka-prep`). It needs an Apple silicon Mac with [Homebrew](https://brew.sh), about 8 GiB of free memory, 45 GiB of free disk for the machines, and 45 GiB more for each saved copy.
 
 1. Install lima:
 
@@ -42,29 +42,37 @@ Restoring copies three disk images and takes a few minutes.
 
 ### vms
 
-Three bare machines with the Kubernetes tools installed and no cluster. The snapshot is called `clean`, and you made it in [first-time setup](#first-time-setup).
+Three bare machines with the Kubernetes tools installed and no cluster yet.
 
-From the repo root on the Mac, restore it, start the machines and open a shell on `controlplane`:
+In a terminal on your Mac, run:
 
 ```shell
+cd ~/projects/cka-prep
 lab/snapshot.sh restore clean
 limactl start controlplane && limactl start node01 && limactl start node02
 limactl shell controlplane
 ```
 
+The first command moves into this project's folder. The second puts all three machines back to bare, which takes a few minutes. The third starts them, and the last opens a shell on `controlplane`. The exercise's commands run in that shell.
+
+If `restore` says `no backup controlplane-clean`, do [first-time setup](README.md#first-time-setup) first.
+
 ### cluster
 
-A working three-node cluster: kubeadm, the Flannel pod network, and both workers labelled. The snapshot is called `built`.
+A working three-node cluster, built with kubeadm, with the Flannel pod network and both workers labelled.
 
-From the repo root on the Mac, restore it, start the machines and open a shell on `controlplane`:
+In a terminal on your Mac, run:
 
 ```shell
+cd ~/projects/cka-prep
 lab/snapshot.sh restore built
 limactl start controlplane && limactl start node01 && limactl start node02
 limactl shell controlplane
 ```
 
-If `restore` says `no backup controlplane-built`, you have not made this snapshot yet. There are two ways to make it:
+The first command moves into this project's folder. The second puts all three machines back to the saved working cluster, which takes a few minutes. The third starts them, and the last opens a shell on `controlplane`. The exercise's commands run in that shell.
+
+If `restore` says `no backup controlplane-built`, the working cluster has not been saved yet. In the same terminal on your Mac, do one of these, then run the commands above again:
 
 * Finish the [kubeadm exercise](../01-cluster-architecture/00-kubeadm-install/README.md), then save what you built:
 
@@ -101,7 +109,7 @@ limactl stop controlplane node01 node02
 
 ## Commands
 
-Every lab command, run from the repo root on the Mac.
+Every lab command, run in a terminal on your Mac inside this project's folder (`cd ~/projects/cka-prep`).
 
 | Command | What it does |
 | --- | --- |

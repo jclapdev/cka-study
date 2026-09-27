@@ -19,7 +19,7 @@ The full rules: [merging kubeconfig files](https://kubernetes.io/docs/concepts/c
 2. `$KUBECONFIG` — colon-separated list, merged left to right
 3. `~/.kube/config`
 
-`sudo kubectl` runs as root, so it reads `/root/.kube/config` — not the invoking user's. This is the usual reason a command works one moment and fails the next.
+`sudo kubectl` runs as root, so it reads `/root/.kube/config`, not the invoking user's. On the lab's control plane node, root has no kubeconfig, so `sudo kubectl get nodes` fails with `localhost:8080 was refused` while plain `kubectl get nodes` works.
 
 ## On a kubeadm cluster
 
@@ -27,11 +27,11 @@ The full rules: [merging kubeconfig files](https://kubernetes.io/docs/concepts/c
 
 | File | Identity |
 | --- | --- |
-| `admin.conf` | `kubernetes-admin`, group `system:masters` — full access |
-| `super-admin.conf` | bypasses even RBAC deny rules (1.29+) |
+| `admin.conf` | `kubernetes-admin`, group `kubeadm:cluster-admins`, which a ClusterRoleBinding binds to `cluster-admin` |
+| `super-admin.conf` | `kubernetes-super-admin`, group `system:masters`, which skips RBAC entirely. For when RBAC itself is broken ([authentication](authentication.md)) |
 | `kubelet.conf`, `controller-manager.conf`, `scheduler.conf` | the components' own identities |
 
-Making it usable unprivileged is a copy and a chown:
+The files are root-owned with mode `600`. To use `admin.conf` as a normal user, copy it and change its owner:
 
 ```bash
 mkdir -p ~/.kube
@@ -39,7 +39,7 @@ sudo cp /etc/kubernetes/admin.conf ~/.kube/config
 sudo chown "$(id -u):$(id -g)" ~/.kube/config
 ```
 
-`export KUBECONFIG=/etc/kubernetes/admin.conf` also works but only for that shell, and reading a root-only file as a normal user fails anyway.
+Without the `chown`, the copy is still root-owned and kubectl cannot read it. `export KUBECONFIG=/etc/kubernetes/admin.conf` only works for root, because a normal user cannot read that file.
 
 ## Commands
 
@@ -53,13 +53,12 @@ kubectl config set-context --current --namespace=dev  # stop typing -n dev
 kubectl config current-context
 ```
 
-Setting the namespace on the context is worth seconds per command on an exam where a task names one namespace repeatedly.
-
 ## Failure modes
 
 | Symptom | Cause |
 | --- | --- |
-| `connection to the server localhost:8080 was refused` | no kubeconfig found at all — the fallback default |
+| `connection to the server localhost:8080 was refused` | No kubeconfig was found, so kubectl used its built-in default. Often `sudo`, or a worker node. |
+| `error loading config file "/home/<user>/.kube/config": open /home/<user>/.kube/config: permission denied` | The copied file is still root-owned. Run the `chown`. |
 | `You must be logged in to the server (Unauthorized)` | credentials present but wrong or expired |
 | `x509: certificate signed by unknown authority` | cluster CA does not match the apiserver's |
 | `Forbidden` | identity is fine; [RBAC](rbac.md) says no |

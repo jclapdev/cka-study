@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listDomains, readMarkdown, topicReadme } from "../app/content/repo";
+import { listDomains, listReferences, readMarkdown, topicReadme } from "../app/content/repo";
 import { labSection, parseExercise, referenceCovers, referenceLinks, renderDoc, summarize } from "../app/content/parse";
 
 const KUBEADM = "01-cluster-architecture/00-kubeadm-install/README.md";
@@ -41,16 +41,21 @@ describe("parse", () => {
     expect(check?.kind).toBe("plain");
   });
 
-  it("gives rbac steps and no practice", async () => {
+  it("reads rbac's steps and practice", async () => {
     const md = readMarkdown(RBAC)!;
     const s = summarize(md);
     expect(s.stepKeys.length).toBeGreaterThan(10);
     expect(s.stepKeys).toContain("create-two-namespaces#1");
     expect(s.recallKeys).toHaveLength(7);
-    expect(s.hasPractice).toBe(false);
+    expect(s.hasPractice).toBe(true);
     const ex = await parseExercise(md, RBAC);
     const steps = ex.sections.flatMap((x) => (x.kind === "steps" ? x.blocks.flatMap((b) => ("steps" in b ? b.steps : [])) : []));
     expect(steps.map((x) => x.key)).toEqual(s.stepKeys);
+    const practice = ex.sections.find((x) => x.kind === "practice");
+    if (practice?.kind !== "practice") throw new Error("no practice");
+    expect(practice.minutes).toBe(15);
+    expect(practice.tasks).toHaveLength(5);
+    expect(practice.tasks.reduce((a, t) => a + t.weight, 0)).toBe(100);
   });
 
   it("rewrites links into app routes", async () => {
@@ -104,11 +109,15 @@ describe("bundle", () => {
 
   it("lists the reference pages an exercise links to", () => {
     expect(referenceLinks(readMarkdown(KUBEADM)!)).toEqual([
+      "references/workers.md",
       "references/kubeconfig.md",
+      "references/kubeadm.md",
       "references/control-plane.md",
       "references/pod-network.md",
-      "references/workers.md",
       "references/pod.md",
+      "references/labels.md",
+      "references/daemonsets.md",
+      "references/namespaces.md",
     ]);
     expect(referenceLinks(readMarkdown(RBAC)!)).toContain("references/rbac.md");
   });
@@ -126,7 +135,7 @@ describe("references tab", () => {
 
   it("reads the Covers line for each reference", () => {
     const covers = referenceCovers(readMarkdown("references/README.md")!);
-    expect(Object.keys(covers)).toHaveLength(6);
+    expect(Object.keys(covers).sort()).toEqual(listReferences().map((f) => f.replace(/^references\/|\.md$/g, "")).sort());
     expect(covers.pod).toBe("pods, phases, reading Pending vs CrashLoopBackOff");
   });
 });

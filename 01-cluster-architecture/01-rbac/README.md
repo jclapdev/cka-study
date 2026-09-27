@@ -1,15 +1,7 @@
 # Granting Permissions with RBAC
 
 Role-based access control (RBAC) decides which requests the apiserver allows, by matching the
-identity behind a request against the rules that have been bound to it. You have a working
-three-node cluster, and a `kubectl` that can do absolutely anything to it.
-
-In this lesson, you will build a second identity that starts with no permissions at all, grant
-it exactly one thing, watch that grant stop at a namespace boundary, and then reach past the
-boundary on purpose.
-
-Nothing here schedules a pod, so nothing waits. Every step ends on a one-word answer from the
-apiserver.
+identity behind a request against the rules that have been bound to it.
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
@@ -26,10 +18,10 @@ Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs
 
 ## Create two namespaces
 
-Namespaced permissions are only worth reasoning about once there is more than one namespace.
-These two stand in for two environments.
+A namespace is a named group of objects, and the boundary a Role and a RoleBinding apply
+within: [namespaces](../../references/namespaces.md).
 
-1. Create them:
+1. Create two:
 
    ```shell
    kubectl create namespace dev
@@ -61,7 +53,8 @@ These two stand in for two environments.
 
    You are not a Kubernetes object. `kubernetes-admin` is a name asserted by the client
    certificate in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
-   same certificate. Neither exists as a resource you could delete.
+   same certificate. Neither exists as a resource you could delete. How a certificate becomes
+   a user and groups: [authentication](../../references/authentication.md).
 
 2. Find the binding that gives that group its power:
 
@@ -77,13 +70,14 @@ These two stand in for two environments.
    ```
 
    The group is bound to `cluster-admin`, which permits everything. That binding is the only
-   reason your commands work, and it is an ordinary object — the same kind you are about to
+   reason your commands work, and it is an ordinary object of the same kind you are about to
    create. Model and subject kinds: [rbac](../../references/rbac.md).
 
 ## Create an identity
 
 A ServiceAccount is the one subject kind that exists as an object. Users and groups come from
-credentials, so a cluster cannot hand you one; a ServiceAccount it can.
+credentials, so a cluster cannot create them. It can create a ServiceAccount:
+[service-accounts](../../references/service-accounts.md).
 
 1. Create the account in `dev`:
 
@@ -98,8 +92,9 @@ credentials, so a cluster cannot hand you one; a ServiceAccount it can.
    ```
 
 2. Ask what it is allowed to do. `kubectl auth can-i` asks the apiserver's authoriser directly,
-   and `--as` impersonates without needing the subject's credentials. A ServiceAccount is named
-   in full as `system:serviceaccount:<namespace>:<name>`:
+   and `--as` impersonates without needing the subject's credentials
+   ([authentication](../../references/authentication.md)). A ServiceAccount is named in full as
+   `system:serviceaccount:<namespace>:<name>`:
 
    ```shell
    kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
@@ -111,9 +106,9 @@ credentials, so a cluster cannot hand you one; a ServiceAccount it can.
    no
    ```
 
-   The account exists and can authenticate. It just cannot do anything, because permissions in
-   Kubernetes are purely additive and it has been granted none. Existing and being allowed are
-   separate.
+   The account exists and can authenticate, but it cannot do anything, because permissions in
+   Kubernetes are purely additive and it has been granted none
+   ([rbac](../../references/rbac.md)).
 
 > [!note]
 > Bindings are not validated against their subjects. A binding that names a ServiceAccount
@@ -124,10 +119,10 @@ credentials, so a cluster cannot hand you one; a ServiceAccount it can.
 ## Write a Role
 
 A Role is a list of rules, each naming verbs and the resources those verbs apply to. It lives
-in one namespace and can only ever name resources in that namespace.
+in one namespace and can only ever name resources in that namespace:
+[rbac](../../references/rbac.md).
 
-1. Create the Role. `kubectl create role` writes the object without you writing YAML, which is
-   what you want under exam time:
+1. Create the Role. `kubectl create role` writes the object without you writing YAML:
 
    ```shell
    kubectl create role pod-reader -n dev --verb=get,list,watch --resource=pods
@@ -164,14 +159,14 @@ in one namespace and can only ever name resources in that namespace.
    no
    ```
 
-   Still `no`. A Role is a definition sitting in the namespace, attached to nobody. Nothing
-   about creating it mentions `deploy-bot`, and RBAC never guesses at a subject. This is the
-   single most common reason a permission that "looks right" does not work, and the check is
-   always the same: look for a RoleBinding naming both the role and the subject.
+   Still `no`. A Role is a definition attached to nobody. Nothing about creating it mentions
+   `deploy-bot`, and RBAC never guesses at a subject. When a Role looks right and still grants
+   nothing, look for a RoleBinding that names both the Role and the subject.
 
 ## Bind the Role
 
-A RoleBinding is the grant: it names one role and the subjects that get it.
+A RoleBinding is the grant. It names one role and the subjects that get it:
+[rbac](../../references/rbac.md).
 
 1. Create the binding and ask again:
 
@@ -188,8 +183,7 @@ A RoleBinding is the grant: it names one role and the subjects that get it.
    yes
    ```
 
-2. Read back the shape of what you just made, because the exam asks you to read these as often
-   as write them:
+2. Read back what you just made:
 
    ```shell
    kubectl describe rolebinding deploy-bot-reads-pods -n dev
@@ -210,8 +204,6 @@ A RoleBinding is the grant: it names one role and the subjects that get it.
      ServiceAccount  deploy-bot  dev
    ```
 
-   One role, one subject list.
-
 3. Confirm the grant stops at the verbs the Role named:
 
    ```shell
@@ -226,9 +218,7 @@ A RoleBinding is the grant: it names one role and the subjects that get it.
 
 ## Cross a namespace boundary
 
-`prod` exists and has pods-shaped permissions nowhere.
-
-1. Ask the same question there:
+1. Ask the same question in `prod`:
 
    ```shell
    kubectl auth can-i list pods -n prod --as=system:serviceaccount:dev:deploy-bot
@@ -242,12 +232,11 @@ A RoleBinding is the grant: it names one role and the subjects that get it.
 
    Both halves are namespaced, and both are in `dev`: the Role can only describe `dev`
    resources, and the RoleBinding only grants inside `dev`. The subject being a `dev`
-   ServiceAccount is not what limits it — the binding's namespace is. Granting the same access
+   ServiceAccount is not what limits it. The binding's namespace is. Granting the same access
    in `prod` needs a second RoleBinding there, or a ClusterRoleBinding if it should apply
-   everywhere.
+   everywhere: [namespaces](../../references/namespaces.md).
 
-2. A bare `no` hides which of the four parts of a rule failed. Impersonate a real request
-   instead:
+2. A bare `no` hides which part of the rule failed. Impersonate a real request instead:
 
    ```shell
    kubectl get pods -n prod --as=system:serviceaccount:dev:deploy-bot
@@ -259,21 +248,20 @@ A RoleBinding is the grant: it names one role and the subjects that get it.
    Error from server (Forbidden): pods is forbidden: User "system:serviceaccount:dev:deploy-bot" cannot list resource "pods" in API group "" in the namespace "prod"
    ```
 
-   Subject, verb, resource, API group, namespace — the message names every field a rule has to
-   match. When a permission fails and you cannot see why, this is the command that tells you,
-   and `""` is the core API group, not a missing value.
+   The message names every field a rule has to match: subject, verb, resource, API group and
+   namespace. `""` is the core API group, not a missing value:
+   [api-groups](../../references/api-groups.md).
 
 > [!note]
-> `cannot list resource "deployments" in API group ""` means the rule was written against the
-> core group, but Deployments live in `apps`. Pass `--resource=deployments.apps`. The Forbidden
-> message always names the group the request actually needed, which is why it is worth reading
-> rather than skimming.
+> The Forbidden message names the group the request needed. If it says `in API group "apps"`
+> and your hand-written Role has `apiGroups: [""]`, the rule matches nothing.
+> `kubectl create role --resource=deployments` fills in `apps` for you.
 
 ## Reuse one definition in two namespaces
 
-Granting the same read access in a third and fourth namespace by writing a Role in each is how
-the object count gets away from you. A ClusterRole is a definition with no namespace, and a
-RoleBinding is allowed to point at one.
+A ClusterRole is a definition with no namespace, and a RoleBinding is allowed to point at one.
+So a ClusterRole can be written once and bound in as many namespaces as needed, instead of a
+Role in each: [rbac](../../references/rbac.md).
 
 1. Write the definition once and bind it twice:
 
@@ -297,8 +285,8 @@ RoleBinding is allowed to point at one.
    yes
    ```
 
-2. One definition, two grants. The ClusterRole did not make the permission cluster-wide — the
-   RoleBinding still scopes it to its own namespace, which a third namespace proves:
+2. The ClusterRole did not make the permission cluster-wide. Each RoleBinding still scopes it
+   to its own namespace, which a third namespace shows:
 
    ```shell
    kubectl auth can-i list configmaps -n kube-system --as=system:serviceaccount:dev:deploy-bot
@@ -310,13 +298,13 @@ RoleBinding is allowed to point at one.
    no
    ```
 
-This combination is worth recognising on sight: **ClusterRole bound by RoleBinding** means a
-reusable definition applied per namespace, and it is how the built-in `view`, `edit` and
-`admin` roles are meant to be used.
+A ClusterRole bound by a RoleBinding is a reusable definition applied per namespace. The
+built-in `view`, `edit` and `admin` roles are meant to be used this way.
 
 ## Reach a cluster-scoped resource
 
-Nodes are not in a namespace.
+Nodes are not in a namespace. They are cluster-scoped, like PersistentVolumes and namespaces
+themselves: [namespaces](../../references/namespaces.md).
 
 1. Try to grant access to them the way that has worked so far:
 
@@ -337,10 +325,10 @@ Nodes are not in a namespace.
    no
    ```
 
-   kubectl says the quiet part out loud. The ClusterRole grants node access, and the
-   RoleBinding grants it *in `dev`* — but there is no such thing as a node in `dev`, so the
-   grant applies to nothing. A RoleBinding scopes to a namespace, and a cluster-scoped resource
-   has no namespace to be scoped into. The binding is legal and does nothing.
+   The ClusterRole grants node access, and the RoleBinding grants it *in `dev`*. There is no
+   such thing as a node in `dev`, so the grant applies to nothing. A RoleBinding scopes to a
+   namespace, and a cluster-scoped resource has no namespace to be scoped into. The binding is
+   legal and does nothing.
 
 2. The only binding without a namespace is a ClusterRoleBinding:
 
@@ -397,14 +385,15 @@ Nodes are not in a namespace.
                                                    [/version]                             []               [get]
    ```
 
-   The three rows you created are `pods`, `configmaps` and `nodes` — four bindings across two
-   namespaces, collapsed into the list of what the subject can actually do. `can-i --list` is
-   the fastest way to audit a subject.
+   The three rows you created are `pods`, `configmaps` and `nodes`. They come from four
+   bindings across two namespaces, collapsed into one list of what the subject can do.
 
-   Everything else in that table was there before you started. The `selfsubjectreviews` rows
-   come from `system:basic-user`, which lets any subject ask what it can do, and the
-   `/healthz` and `/version` rows from `system:public-info-viewer`. Every authenticated
-   subject gets both, which is why a brand-new ServiceAccount is never truly empty.
+   Everything else in that table was there before you started, and every authenticated
+   subject gets it. The three `self…reviews` rows come from `system:basic-user`, which lets a
+   subject ask what it is and what it may do. The `/api`, `/apis` and `/openapi` rows come
+   from `system:discovery`, and the `/healthz`, `/livez`, `/readyz` and `/version` rows from
+   `system:public-info-viewer`. These paths are non-resource URLs:
+   [rbac](../../references/rbac.md).
 
 4. See how much of this the cluster already came with:
 
@@ -427,11 +416,10 @@ Nodes are not in a namespace.
    view                                                                   2026-08-02T10:49:07Z
    ```
 
-   Sixty-five of the seventy-three carry the `system:` prefix and wire the control plane to
-   the apiserver. Of the eight left, two are the ones you just wrote and two belong to
-   components — `flannel` from the pod network, `kubeadm:get-nodes` from the bootstrap. That
-   leaves four meant for humans: `cluster-admin`, `admin`, `edit` and `view`. Reading one
-   before writing your own is usually faster than writing your own.
+   65 of the 73 carry the `system:` prefix and let the control plane components talk to the
+   apiserver. Of the 8 left, 2 are the ones you just wrote, `flannel` belongs to the pod
+   network, and `kubeadm:get-nodes` to the bootstrap. That leaves 4 meant for people:
+   `cluster-admin`, `admin`, `edit` and `view`.
 
 ## Recall
 
@@ -480,10 +468,65 @@ so a binding can reference a user that no one can create or delete.
 group to `cluster-admin`.
 </details>
 
+## Practice it
+
+Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
+
+Start from a fresh [`cluster` lab](../../lab/README.md#cluster).
+
+1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in
+   it.
+2. **Host `controlplane`, weight 25%.** Create a Role `deployer` in `web` that allows only
+   `create`, `update` and `delete` on Deployments, and bind it to `ci` with a RoleBinding
+   `ci-deployer`.
+3. **Host `controlplane`, weight 20%.** Create one ClusterRole `secret-reader` that allows `get`
+   and `list` on Secrets. Use it so that `ci` can read Secrets in `web` and `default` but not in
+   any other namespace. Name each binding `ci-secret-reader`.
+4. **Host `controlplane`, weight 20%.** Allow `ci` to `list` PersistentVolumes, with a
+   ClusterRole `pv-lister` and a ClusterRoleBinding `ci-pv-lister`.
+5. **Host `controlplane`, weight 20%.** Give the group `auditors` the built-in `view` role in
+   `web` only, with a RoleBinding `auditors-view`.
+
+<details><summary>Solution</summary>
+
+```shell
+# 1.
+kubectl create namespace web
+kubectl create serviceaccount ci -n web
+
+# 2. kubectl fills in the apps group for deployments
+kubectl create role deployer -n web --verb=create,update,delete --resource=deployments
+kubectl create rolebinding ci-deployer -n web --role=deployer --serviceaccount=web:ci
+
+# 3. one ClusterRole, one RoleBinding per namespace
+kubectl create clusterrole secret-reader --verb=get,list --resource=secrets
+kubectl create rolebinding ci-secret-reader -n web --clusterrole=secret-reader --serviceaccount=web:ci
+kubectl create rolebinding ci-secret-reader -n default --clusterrole=secret-reader --serviceaccount=web:ci
+
+# 4. PersistentVolumes have no namespace, so only a ClusterRoleBinding reaches them
+kubectl create clusterrole pv-lister --verb=list --resource=persistentvolumes
+kubectl create clusterrolebinding ci-pv-lister --clusterrole=pv-lister --serviceaccount=web:ci
+
+# 5.
+kubectl create rolebinding auditors-view -n web --clusterrole=view --group=auditors
+
+# check: the first answer of each pair is yes, the second is no
+SA=system:serviceaccount:web:ci
+kubectl auth can-i delete deployments.apps -n web --as=$SA
+kubectl auth can-i get deployments.apps -n web --as=$SA
+kubectl auth can-i list secrets -n default --as=$SA
+kubectl auth can-i list secrets -n kube-system --as=$SA
+kubectl auth can-i list persistentvolumes --as=$SA
+kubectl auth can-i delete persistentvolumes --as=$SA
+kubectl auth can-i list pods -n web --as=anyone --as-group=auditors
+kubectl auth can-i list pods -n default --as=anyone --as-group=auditors
+```
+</details>
+
 ## What's next
 
-* [rbac](../../references/rbac.md) has the object model, the subject kinds and the full
-  rule-resolution order in one place.
+* [rbac](../../references/rbac.md) has the object model, the subject kinds, the roles every
+  subject gets, and the failure modes in one place.
 * [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
   is the reference for every field of a Role, a ClusterRole and both bindings.
 * [ServiceAccounts](https://kubernetes.io/docs/concepts/security/service-accounts/) covers
