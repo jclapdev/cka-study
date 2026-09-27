@@ -13,6 +13,8 @@ Nothing in the file is a permission. It is identity only; what that identity may
 
 ## Resolution order
 
+The full rules: [merging kubeconfig files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#merging-kubeconfig-files).
+
 1. `--kubeconfig <file>`
 2. `$KUBECONFIG` — colon-separated list, merged left to right
 3. `~/.kube/config`
@@ -41,6 +43,8 @@ sudo chown "$(id -u):$(id -g)" ~/.kube/config
 
 ## Commands
 
+Every subcommand: [`kubectl config`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/).
+
 ```bash
 kubectl config view                                  # merged, credentials redacted
 kubectl config get-contexts
@@ -58,7 +62,7 @@ Setting the namespace on the context is worth seconds per command on an exam whe
 | `connection to the server localhost:8080 was refused` | no kubeconfig found at all — the fallback default |
 | `You must be logged in to the server (Unauthorized)` | credentials present but wrong or expired |
 | `x509: certificate signed by unknown authority` | cluster CA does not match the apiserver's |
-| `Forbidden` | identity is fine; RBAC says no |
+| `Forbidden` | identity is fine; [RBAC](rbac.md) says no |
 
 ## Docs
 

@@ -4,31 +4,14 @@
 Kubernetes cluster. It generates the certificates, writes the control plane's static pod
 manifests, and hands you a command that joins other machines to what it built.
 
-There are three Ubuntu VMs with containerd, kubelet, kubeadm and kubectl already installed:
+You start with three machines that have containerd, kubelet, kubeadm and kubectl installed:
 `controlplane`, `node01`, `node02`. In this lesson, you will initialise the cluster on
 `controlplane`, give it a pod network, join the other two as workers, and end with three nodes
 that can all schedule pods.
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
-## Prerequisites
-
-* lima installed and the VMs built once with `lab/provision.sh`. See [lab/README.md](../../lab/README.md).
-
-## Lab setup
-
-This exercise uses the `vms` lab: three bare VMs with no cluster.
-
-From the Mac, in the repo root, reset the VMs to bare machines with no cluster, start them, and
-open a shell on `controlplane`:
-
-```shell
-lab/snapshot.sh restore clean
-limactl start controlplane && limactl start node01 && limactl start node02
-limactl shell controlplane
-```
-
-Every command below runs on `controlplane` unless it says otherwise.
+Starts from the [`vms` lab](../../lab/README.md#vms). Every command runs on `controlplane` unless a step says otherwise.
 
 ## Objectives
 
@@ -91,9 +74,9 @@ fixable without `kubeadm reset`.
    192.168.104.5
    ```
 
-   The address must be the one the other nodes can reach. In this lab that is the
-   `192.168.104.x` address; [lab/README.md](../../lab/README.md#problems-specific-to-this-lab) explains the
-   second address that looks valid and is not.
+   The address must be one the other nodes can reach. `ip route get` prints the address the
+   machine uses to reach other networks, which on a machine with more than one address is the
+   one to advertise.
 
 2. Initialise the cluster:
 
@@ -321,11 +304,10 @@ hours. Learn to regenerate it instead.
    apiserver, long enough for it to get a client certificate signed. Sequence diagram:
    [workers](../../references/workers.md).
 
-2. In a second terminal on your Mac, open a shell on `node01` and run the command you just
-   printed. Your token and hash differ from the ones above, so paste yours:
+2. On `node01`, run the command you just printed. Your token and hash differ from the ones
+   above, so paste yours:
 
    ```shell
-   limactl shell node01
    sudo kubeadm join ...        # the command printed in the previous step
    ```
 
@@ -340,11 +322,6 @@ hours. Learn to regenerate it instead.
    ```
 
 3. Join `node02` the same way, from a shell on `node02`.
-
-> [!note]
-> A `kubeadm join` that times out means the worker cannot reach the advertise address on port
-> 6443, almost always because `init` was given the wrong address. It is not fixable from the
-> worker; run `sudo kubeadm reset -f` and re-run `init` on `controlplane`.
 
 Workers get no admin kubeconfig, so `kubectl` on `node01` fails with the same `localhost:8080`
 error. Run every `kubectl` command from `controlplane`.
@@ -466,8 +443,7 @@ certificate signed. It expires in 24 hours;
 
 <details><summary>Which address goes in --apiserver-advertise-address?</summary>
 
-The one the other nodes route to. Here that is `controlplane`'s `192.168.104.x`
-address from `ip route get 1.1.1.1`. It ends up in the apiserver's
+The one the other nodes can reach, which `ip route get 1.1.1.1` prints. It ends up in the apiserver's
 certificate and in every join command, so a wrong choice is not fixable without a
 reset.
 </details>
@@ -476,12 +452,7 @@ reset.
 
 Do it again without the steps above, the way the exam asks. Give yourself **25 minutes**.
 
-Reset to bare VMs first, from the Mac:
-
-```shell
-lab/snapshot.sh restore clean
-limactl start controlplane && limactl start node01 && limactl start node02
-```
+Start from a fresh [`vms` lab](../../lab/README.md#vms).
 
 1. **Host `controlplane`, weight 19%.** Initialise a control plane with pod network CIDR
    `10.244.0.0/16`. The API server must advertise `controlplane`'s own IPv4 address.
@@ -579,14 +550,6 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
    ```shell
    kubectl get pods -n kube-system
    ```
-
-## Clean up
-
-Keep this cluster. Later exercises use it as the `cluster` lab. From the Mac:
-
-```shell
-lab/snapshot.sh save built
-```
 
 ## What's next
 

@@ -7,7 +7,7 @@ This lab has two: `node01`, `node02`.
 ## What a worker runs
 
 - **kubelet** (systemd) — the only agent that starts containers. Registers the node, watches the apiserver for pods assigned to it, reports status.
-- **container runtime** — containerd here, spoken to over CRI at `/run/containerd/containerd.sock`. Inspect with `crictl ps`, `crictl images` (not `docker`).
+- **container runtime** — containerd here, spoken to over CRI at `/run/containerd/containerd.sock`. Inspect with [`crictl`](https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/): `crictl ps`, `crictl images` (not `docker`).
 - **kube-proxy** and the **CNI agent**, both as DaemonSet pods.
 
 A worker holds no kubeconfig for cluster administration, only `/etc/kubernetes/kubelet.conf` for its own identity. `kubectl` on a worker fails with `connection to the server localhost:8080 was refused` — expected; work from the control plane node.
@@ -40,19 +40,19 @@ sudo kubeadm token create --print-join-command
 
 ## Node conditions
 
-`Ready` is one of several conditions; `kubectl describe node node01` shows all, plus allocatable resources and the pods placed there.
+`Ready` is one of several [conditions](https://kubernetes.io/docs/reference/node/node-status/#condition); `kubectl describe node node01` shows all, plus allocatable resources and the pods placed there.
 
 | Condition | Trouble it names |
 | --- | --- |
 | `Ready=False` | kubelet unhealthy, or no pod network on that node |
 | `Ready=Unknown` | kubelet stopped reporting — node or kubelet is down |
-| `MemoryPressure`, `DiskPressure`, `PIDPressure` | resource exhaustion; the kubelet starts evicting |
+| `MemoryPressure`, `DiskPressure`, `PIDPressure` | resource exhaustion; the kubelet starts [evicting](https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/) |
 
-A node that goes `NotReady` gets its pods evicted after `--pod-eviction-timeout` (5 minutes by default), which is why a rebooted node looks fine but its pods have been recreated elsewhere.
+A node that goes `NotReady` or unreachable gets its pods evicted after 300 seconds, because every pod tolerates the not-ready and unreachable taints for that long by default ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)). That is why a rebooted node looks fine but its pods have been recreated elsewhere.
 
 ## Roles
 
-There is no role field. The ROLES column is rendered from labels named `node-role.kubernetes.io/<role>`, conventionally with an empty value:
+There is no role field. The ROLES column is rendered from labels named [`node-role.kubernetes.io/<role>`](https://kubernetes.io/docs/reference/labels-annotations-taints/#node-role-kubernetes-io), conventionally with an empty value:
 
 ```bash
 kubectl label node node01 node02 node-role.kubernetes.io/worker=

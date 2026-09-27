@@ -41,12 +41,12 @@ the apiserver. A worker is a control plane node minus the static pods.
 
 | Component | Job | Where kubeadm puts it |
 | --- | --- | --- |
-| `kube-apiserver` | The only door to cluster state. Everything else — kubectl, kubelets, controllers — talks to it and never to etcd. Serves on 6443. | static pod |
-| `etcd` | Key-value store holding all cluster state. Losing it loses the cluster; backups are their own exam topic. | static pod |
+| [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else — kubectl, kubelets, controllers — talks to it and never to etcd. Serves on 6443. | static pod |
+| [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | Key-value store holding all cluster state. Losing it loses the cluster; backups are their own exam topic. | static pod |
 | `kube-controller-manager` | One process running many [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), each a loop comparing desired to actual and acting on the gap (node health, replica counts, service accounts). | static pod |
-| `kube-scheduler` | Assigns unscheduled pods to nodes by filtering then scoring. Only writes `spec.nodeName`; the kubelet does the starting. | static pod |
-| `kubelet` | On *every* node, control plane included. Starts containers, reports node and pod status. | systemd unit, not a pod |
-| `kube-proxy` | On every node. Programs iptables/IPVS so Service IPs work. | DaemonSet |
+| [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes by filtering then scoring. Only writes `spec.nodeName`; the kubelet does the starting. | static pod |
+| [`kubelet`](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) | On *every* node, control plane included. Starts containers, reports node and pod status. | systemd unit, not a pod |
+| [`kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) | On every node. Programs iptables/IPVS so Service IPs work. | DaemonSet |
 
 `kubectl get pods -n kube-system` shows all of these except the kubelet.
 `systemctl status kubelet` and `journalctl -u kubelet` for that one.
@@ -56,6 +56,7 @@ the apiserver. A worker is a control plane node minus the static pods.
 A pod defined by a file in `/etc/kubernetes/manifests/` rather than by an API
 object. The kubelet watches that directory directly, so static pods start with no
 apiserver and no scheduler involved — which is how the apiserver itself boots.
+Official task page: [create static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/).
 
 ```mermaid
 sequenceDiagram
@@ -87,7 +88,7 @@ Consequences worth internalising:
 
 `kubeadm init` taints the control plane node
 `node-role.kubernetes.io/control-plane:NoSchedule` so ordinary workloads stay
-off it. CNI and kube-proxy pods tolerate the taint, which is why they still land
+off it ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)). CNI and kube-proxy pods tolerate the taint, which is why they still land
 there. Removing the taint is how a single-node cluster runs workloads:
 
 ```bash
@@ -100,7 +101,7 @@ kubectl taint node controlplane node-role.kubernetes.io/control-plane-      # tr
 | --- | --- |
 | `/etc/kubernetes/manifests/` | static pod manifests |
 | `/etc/kubernetes/admin.conf` | admin kubeconfig, root-owned |
-| `/etc/kubernetes/pki/` | CA and all component certificates |
+| `/etc/kubernetes/pki/` | CA and all component certificates ([which certificate is which](https://kubernetes.io/docs/setup/best-practices/certificates/)) |
 | `/var/lib/etcd/` | etcd data directory |
 | `/var/lib/kubelet/config.yaml` | kubelet configuration |
 

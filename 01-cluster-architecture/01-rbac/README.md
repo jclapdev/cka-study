@@ -13,25 +13,23 @@ apiserver.
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
-## Prerequisites
+Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`.
 
-* The `built` snapshot, saved at the end of [00-kubeadm-install](../00-kubeadm-install/README.md).
-  If you have none, run `lab/provision.sh --auto` and then `lab/snapshot.sh save built`.
+## Objectives
 
-## Lab setup
+* Find out why your own `kubectl` is allowed to do anything.
+* Create a ServiceAccount that holds no permissions at all.
+* Grant it one verb on one resource, with a Role and a RoleBinding.
+* Watch the same request fail in a second namespace, and read the message that says why.
+* Reuse a single ClusterRole definition across two namespaces.
+* Reach a cluster-scoped resource, which a RoleBinding cannot do.
 
-This exercise uses the `cluster` lab: a working three-node cluster.
+## Create two namespaces
 
-1. From the Mac, in the repo root, restore the cluster and open a shell on `controlplane`:
+Namespaced permissions are only worth reasoning about once there is more than one namespace.
+These two stand in for two environments.
 
-   ```shell
-   lab/snapshot.sh restore built
-   limactl start controlplane && limactl start node01 && limactl start node02
-   limactl shell controlplane
-   ```
-
-2. Create two namespaces, which stand in for two environments. Namespaced permissions are only
-   worth reasoning about once there is more than one namespace:
+1. Create them:
 
    ```shell
    kubectl create namespace dev
@@ -44,15 +42,6 @@ This exercise uses the `cluster` lab: a working three-node cluster.
    namespace/dev created
    namespace/prod created
    ```
-
-## Objectives
-
-* Find out why your own `kubectl` is allowed to do anything.
-* Create a ServiceAccount that holds no permissions at all.
-* Grant it one verb on one resource, with a Role and a RoleBinding.
-* Watch the same request fail in a second namespace, and read the message that says why.
-* Reuse a single ClusterRole definition across two namespaces.
-* Reach a cluster-scoped resource, which a RoleBinding cannot do.
 
 ## Find out why your kubectl can do anything
 
@@ -490,14 +479,6 @@ so a binding can reference a user that no one can create or delete.
 `kubeadm:cluster-admins`, and the ClusterRoleBinding of the same name binds that
 group to `cluster-admin`.
 </details>
-
-## Cleaning up
-
-Hand the cluster back the way you found it. From the Mac, in the repo root:
-
-```shell
-lab/snapshot.sh restore built
-```
 
 ## What's next
 

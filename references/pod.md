@@ -2,11 +2,11 @@
 
 The smallest thing Kubernetes schedules. One or more containers that share a network namespace (same IP, same localhost, same port space) and can share volumes. Containers are never scheduled individually.
 
-A pod is bound to one node for life. It is never moved — a "moved" pod is a new pod created by a controller (Deployment, DaemonSet, StatefulSet) after the old one died.
+A pod is bound to one node for life. It is never moved — a "moved" pod is a new pod created by a controller ([Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/), StatefulSet) after the old one died.
 
 ## Phases
 
-`kubectl get pods` STATUS mixes the pod phase with container-level reasons.
+`kubectl get pods` STATUS mixes the [pod phase](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase) with container-level reasons.
 
 | Shown | Meaning |
 | --- | --- |
@@ -14,11 +14,11 @@ A pod is bound to one node for life. It is never moved — a "moved" pod is a ne
 | `Running` | Bound to a node, at least one container started |
 | `Succeeded` / `Failed` | All containers terminated, zero / non-zero exit |
 | `ContainerCreating` | Scheduled; runtime and CNI are setting the pod up |
-| `CrashLoopBackOff` | Container keeps exiting; kubelet restarts with growing delay |
+| `CrashLoopBackOff` | Container keeps exiting; kubelet restarts with growing delay ([container restarts](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-restarts)) |
 | `ImagePullBackOff` | Image cannot be pulled — wrong name, or no registry access |
 | `Error` | Container exited non-zero and is not being restarted |
 
-`Pending` and `CrashLoopBackOff` fail in different places, so they need different questions:
+`Pending` and `CrashLoopBackOff` fail in different places, so they need different questions ([debugging pods](https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/)):
 
 ```bash
 kubectl describe pod <name> -n <ns>       # Events at the bottom: scheduling, pulls, mounts

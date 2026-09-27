@@ -11,8 +11,8 @@ a permission that is never bound grants nothing.
 
 | | Defines what | Grants it to whom |
 | --- | --- | --- |
-| Namespaced | `Role` | `RoleBinding` |
-| Cluster-wide | `ClusterRole` | `ClusterRoleBinding` |
+| Namespaced | [`Role`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole) | [`RoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding) |
+| Cluster-wide | [`ClusterRole`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole) | [`ClusterRoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding) |
 
 The pairs cross in one direction only:
 
@@ -32,11 +32,11 @@ definition, not as a cluster-wide grant. There is no path from a `Role` to a
 
 ## Subjects
 
-Three kinds, named in a binding's `subjects`:
+Three kinds, named in a binding's `subjects` ([referring to subjects](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-subjects)):
 
 - **ServiceAccount** — an in-cluster identity, referred to in full as
   `system:serviceaccount:<namespace>:<name>`. The only kind Kubernetes creates.
-- **User** — has no object. A user exists because a certificate or token
+- **User** — has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a certificate or token
   authenticates as that name. `kubeadm` writes `kubernetes-admin` into
   `admin.conf`.
 - **Group** — also has no object, and comes from the same credential. `kubeadm`
@@ -50,7 +50,7 @@ something if any binding allows it, and removing access means removing bindings.
 
 `kubeadm` installs ~70 ClusterRoles at `init`. Most are prefixed `system:` and
 exist to let the control plane components talk to the apiserver. Four are meant
-for people: `cluster-admin`, `admin`, `edit`, `view`.
+for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
 
 Your `kubectl` works because `~/.kube/config` is a copy of `admin.conf`, whose
 certificate authenticates as `kubernetes-admin` in group `kubeadm:cluster-admins`,
@@ -71,7 +71,7 @@ kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
 kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
 ```
 
-`--as` impersonates, and works on any command, so a denied request can be seen in
+`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/user-impersonation/), and works on any command, so a denied request can be seen in
 full rather than as a bare `no`:
 
 ```

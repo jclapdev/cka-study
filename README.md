@@ -2,35 +2,12 @@
 
 Hands-on labs for the Certified Kubernetes Administrator (CKA) exam. Each topic folder is one exercise with a single `README.md` that walks you through the concept step by step, then asks for the same result in exam wording so you can practise it unaided.
 
-## Prerequisites
+## Getting started
 
-- An Apple silicon Mac with about 8 GiB of free memory for the three lab VMs.
-- About 45 GiB of free disk for the VMs, plus 45 GiB for each saved snapshot.
-- [Homebrew](https://brew.sh), and lima installed with `brew install lima`.
+1. Set up the lab once, following [first-time setup](lab/README.md#first-time-setup). The lab is three virtual machines on your Mac where every exercise's commands run, and [lab/README.md](lab/README.md) explains all of it.
+2. Start the study app, below, and pick an exercise.
 
-Nothing else goes on the Mac. `kubectl` and every other tool run inside the VMs.
-
-## First-time setup
-
-Run these once, from the repo root.
-
-1. Build the three VMs. This takes about 20 minutes and ends with the VMs' IP addresses:
-
-   ```shell
-   lab/provision.sh
-   ```
-
-2. Save the bare VMs, so exercises can always return to them:
-
-   ```shell
-   lab/snapshot.sh save clean
-   ```
-
-[lab/README.md](lab/README.md) explains the VMs, the labs each exercise starts from, and how to fix the lab when it misbehaves.
-
-## Doing an exercise
-
-Open the exercise's `README.md` and follow it from the top. Every one has the same sections: Prerequisites, Lab setup, the numbered steps, Practice it, Check your work, and Clean up.
+Each exercise names the lab starting state it needs at the top and links to the commands that get you there. Everything else on the page is the lesson.
 
 ## Study app
 
