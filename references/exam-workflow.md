@@ -86,7 +86,7 @@ The exam blocks the INSERT key, so enter insert mode with `i`.
 | `V`, move, `>` or `<` | Selects lines and shifts them right or left by one indent. |
 | `:set et sw=2 ts=2` | Indents with two spaces instead of a tab, which YAML requires. |
 
-Paste in the exam terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C. In Firefox they are Ctrl+V and Ctrl+C.
+Paste in the exam terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, the same as in the lab's terminal in the study app. In Firefox they are Ctrl+V and Ctrl+C.
 
 ## kubectl explain
 

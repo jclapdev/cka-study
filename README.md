@@ -4,22 +4,22 @@ Hands-on labs for the Certified Kubernetes Administrator (CKA) exam. Each topic 
 
 ## Getting started
 
-1. Set up the lab once, following [first-time setup](lab/README.md#first-time-setup). The lab is three virtual machines on your Mac where every exercise's commands run, and [lab/README.md](lab/README.md) explains all of it.
-2. Start the study app, below, and pick an exercise.
-
-Each exercise names the lab starting state it needs at the top and links to the commands that get you there. Everything else on the page is the lesson.
+1. Set up the lab once, following [first-time setup](lab/README.md#first-time-setup) in a terminal on your Mac. The lab is four virtual machines where every exercise's commands run, and [lab/README.md](lab/README.md) explains all of it.
+2. Start the study app, below, and open a topic.
+3. On the topic's **Set up the lab** tab, press **Prepare lab**. It puts the machines into the starting state the exercise needs, in about a minute.
+4. Press **Open terminal**. You start on `base`, as in the exam, and `ssh controlplane` takes you to where the exercise's commands run.
 
 ## Study app
 
-`app/` is a local web page that shows each exercise with a tick on every step, Recall questions you grade yourself, a timed Practice it run with a score, and notes per topic. It reads the READMEs directly, so there is nothing to sync, and keeps your progress in `app/data/progress.db`. The Open terminal button on a topic page opens a shell on `base` beside the exercise, where the exam starts you. It copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, the exam terminal's keys. The machines must already be running, from the topic's starting state.
+`app/` is a local web page with one page per topic. Each page has three tabs: **Set up the lab**, with the Prepare lab button; **Exercise**, with a tick on every step, Recall questions you grade yourself, a timed Practice it run with a Run grader button, and notes; and **References**, with the concept pages the exercise links. **Open terminal** puts a shell on `base` beside whichever tab is open. It copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, the exam terminal's keys.
 
-It needs Node 24 and pnpm (`corepack enable pnpm`). In a terminal on your Mac:
+The app reads the READMEs directly, so there is nothing to sync, and keeps your progress in `app/data/progress.db`. It needs Node 24 and pnpm (`corepack enable pnpm`). In a terminal on your Mac:
 
 ```shell
 cd ~/projects/cka-prep/app && pnpm install && pnpm dev
 ```
 
-Then open <http://127.0.0.1:5173>. Delete `app/data/progress.db` to start over.
+Then open <http://127.0.0.1:5173>. The terminal works only under `pnpm dev`, not `pnpm start`. Delete `app/data/progress.db` to start over.
 
 ## How the exam asks questions
 

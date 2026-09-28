@@ -253,8 +253,8 @@ PersistentVolumeClaim. The docs have one for each, ready to copy:
    vim deny.yaml
    ```
 
-   Type `:set paste` and Enter, then `i`, then paste. In the exam terminal, paste is
-   Ctrl+Shift+V. Press Esc, and `:wq` to save. The file holds:
+   Type `:set paste` and Enter, then `i`, then paste. Paste is Ctrl+Shift+V, in the exam
+   terminal and in the lab's. Press Esc, and `:wq` to save. The file holds:
 
    ```yaml
    ---

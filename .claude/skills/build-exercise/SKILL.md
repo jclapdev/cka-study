@@ -16,7 +16,7 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 ## Checklist
 
 - [ ] 1. Read the topic's competencies in `EXAM.md` and teach only what the exam tests.
-- [ ] 2. Pick the starting state. Use `vms` (bare machines) or `cluster` (working cluster) from `lab/README.md`. If the exercise needs something else, add a `### <lab-name>` section under "Starting states" in `lab/README.md`, and put a `setup.sh` in the topic folder when a restore alone isn't enough.
+- [ ] 2. Pick the starting state. Use `vms` (bare machines) or `cluster` (working cluster) from `lab/README.md`. If the exercise needs something else, put a `setup.sh` in the topic folder, add a case for the new state to `lab/start.sh` that restores a saved copy and runs it, and add a `### <lab-name>` section under "Starting states" in `lab/README.md` in the same form as the others. The app's Prepare lab button refuses a state with no section.
 - [ ] 3. Run every command on the lab first and save the real output. Do this for the steps, for each command a reference page will quote, and for each error message a failure-modes table will quote. Nothing that looks like command output is written from memory.
 - [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Each step is a command, its trimmed output from step 3, one sentence on what to notice, and a link to the reference page that explains it. Every step group links at least one reference page. Explanations belong on reference pages, not in steps.
 - [ ] 5. Get every manifest the way the exam allows, fastest source first (the "How to work in the exam" section of `EXAM.md`), and never have the reader type a whole manifest:
@@ -36,7 +36,7 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 - [ ] 11. Reread every sentence you wrote and delete narration (see Gotchas).
 - [ ] 12. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`.
 - [ ] 13. Set the topic's status in the root `README.md`: **ready** with Practice it, **steps only** without.
-- [ ] 14. Run `cd app && pnpm test`. Then run `pnpm dev`, open the topic and check all three tabs: the lab commands show, every step renders, and each reference opens from the list.
+- [ ] 14. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Prepare lab and wait for "The lab is ready", open the terminal and run the first steps from `base`, then check that every step renders and each reference opens from the list.
 
 ## Gotchas
 

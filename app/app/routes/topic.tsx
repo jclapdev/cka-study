@@ -10,6 +10,7 @@ import { addAttempt, setMark, setNote, topicState } from "~/db/progress";
 import { Markdown } from "~/components/Markdown";
 import { Notes } from "~/components/Notes";
 import { PracticeRun } from "~/components/PracticeRun";
+import { PrepareLab } from "~/components/PrepareLab";
 import { RecallCard } from "~/components/RecallCard";
 import { Step } from "~/components/Step";
 import { Terminal } from "~/components/Terminal";
@@ -117,15 +118,15 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         </header>
       )}
 
-      {tab === "lab" && !running && (
-        <section className="mb-14">
-          {labHtml ? (
-            <Markdown html={labHtml} />
-          ) : (
-            <p className="text-muted">This exercise names no lab starting state.</p>
-          )}
-        </section>
-      )}
+      {/* Hidden rather than removed on other tabs, so a lab being prepared keeps showing its output. */}
+      <section className="mb-14" hidden={tab !== "lab" || running}>
+        {exercise.lab && <PrepareLab state={exercise.lab} onOpenTerminal={() => setTerm(true)} />}
+        {labHtml ? (
+          <Markdown html={labHtml} />
+        ) : (
+          <p className="text-muted">This exercise names no lab starting state.</p>
+        )}
+      </section>
 
       {tab === "references" && !running && <References references={references} mine={mine} />}
 

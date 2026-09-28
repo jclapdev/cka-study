@@ -103,9 +103,9 @@ describe("lab", () => {
 describe("bundle", () => {
   it("pulls each exercise's lab section out of the lab guide", () => {
     const guide = readMarkdown("lab/README.md")!;
-    expect(labSection(guide, "vms")).toContain("lab/snapshot.sh restore clean");
-    expect(labSection(guide, "vms")).not.toContain("restore built");
-    expect(labSection(guide, "cluster")).toContain("lab/snapshot.sh restore built");
+    expect(labSection(guide, "vms")).toContain("lab/start.sh vms");
+    expect(labSection(guide, "vms")).not.toContain("lab/start.sh cluster");
+    expect(labSection(guide, "cluster")).toContain("lab/start.sh cluster");
     expect(labSection(guide, "nope")).toBe("");
   });
 

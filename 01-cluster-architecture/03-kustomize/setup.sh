@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Places the files Practice it task 3 hands over, as the exam does under /opt/course.
-# Run on the Mac after restoring and starting the cluster starting state.
+# Run on the Mac by lab/start.sh, after it restores and starts the cluster starting state.
 set -euo pipefail
 limactl shell --workdir / controlplane bash -eo pipefail -c '
   sudo rm -rf /opt/course/3 && sudo mkdir -p /opt/course/3/base /opt/course/3/overlay
