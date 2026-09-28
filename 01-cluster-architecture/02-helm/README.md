@@ -34,10 +34,12 @@ charts and their versions: [charts, repositories and releases](../../references/
    The output is similar to this:
 
    ```
-   NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+   NAME  	NAMESPACE	REVISION	UPDATED                               	STATUS  	CHART         	APP VERSION
+   legacy	legacy   	1       	2026-09-27 20:01:31.39597267 -0400 EDT	deployed	podinfo-6.14.0	6.14.0
    ```
 
-   No releases exist in any namespace. `-A` means all namespaces, as it does for `kubectl`.
+   `-A` means all namespaces, as it does for `kubectl`. The lab installed one release,
+   `legacy`, for Practice it to find.
 
 2. Add a repository under a local name and download its index:
 
@@ -212,13 +214,17 @@ A release is one installed copy of a chart, with its own name, in one namespace:
 `helm upgrade` installs a new chart version, new values, or both, as the next revision of the
 same release: [revisions and where releases are stored](../../references/helm.md#revisions-and-where-releases-are-stored).
 
-1. Put the new value in a file and upgrade to version 6.15.0 with it:
+1. Put the new value in a file. Its keys have the same nesting as `helm show values` prints, so
+   `vim web-values.yaml` and write:
 
-   ```shell
-   cat > web-values.yaml <<EOF
+   ```yaml
    ui:
      message: hello from helm
-   EOF
+   ```
+
+   Then upgrade to version 6.15.0 with it:
+
+   ```shell
    helm upgrade web podinfo/podinfo --version 6.15.0 -n apps -f web-values.yaml
    ```
 
@@ -381,7 +387,7 @@ installing anything: [rendering without installing](../../references/helm.md#ren
 
    ```shell
    helm uninstall web -n apps
-   helm list -A
+   helm list -n apps
    kubectl get secrets -n apps
    kubectl get ns apps
    ```
@@ -450,7 +456,8 @@ No. The namespace is not part of the release, so it stays.
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
-Start from a fresh [`helm` lab](../../lab/README.md#helm).
+Start from a fresh [`helm` lab](../../lab/README.md#helm). When time is up,
+[grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 20%.** Add the chart repository
    `https://stefanprodan.github.io/podinfo` under the name `podinfo`. Install the chart
@@ -463,7 +470,8 @@ Start from a fresh [`helm` lab](../../lab/README.md#helm).
 4. **Host `controlplane`, weight 20%.** Write the manifests that chart version `6.15.0` of
    `podinfo/podinfo` would create for a release `preview` in `store` to `~/preview.yaml`,
    without the chart's test pods. Do not install it.
-5. **Host `controlplane`, weight 15%.** Uninstall `shop`. The namespace `store` must remain.
+5. **Host `controlplane`, weight 15%.** A release of chart version `6.14.0` of podinfo is
+   installed somewhere in the cluster. Uninstall it, and leave its namespace in place.
 
 <details><summary>Solution</summary>
 
@@ -482,26 +490,27 @@ helm rollback shop 1 -n store
 # 4.
 helm template preview podinfo/podinfo --version 6.15.0 -n store --skip-tests > ~/preview.yaml
 
-# 5. uninstall never deletes the namespace
-helm uninstall shop -n store
+# 5. find it in every namespace; uninstall never deletes the namespace
+helm list -A
+helm uninstall legacy -n legacy
 ```
 
 </details>
 
 ## Check your work
 
-Run these on `controlplane`, before task 5 for the first check.
+[Grade the run](../../lab/README.md#grading), or check by hand on `controlplane`:
 
-1. The rollback put chart version 6.14.1 back with 3 replicas:
+1. `shop` is back on chart version 6.14.1 with 3 replicas, and `legacy` is gone:
 
    ```shell
-   helm list -n store
+   helm list -A
    kubectl get deploy shop-podinfo -n store -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
    ```
 
    ```
    NAME	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART         	APP VERSION
-   shop	store    	3       	2026-09-27 18:32:58.700685462 -0400 EDT	deployed	podinfo-6.14.1	6.14.1
+   shop	store    	3       	2026-09-27 20:02:25.936142095 -0400 EDT	deployed	podinfo-6.14.1	6.14.1
    3 ghcr.io/stefanprodan/podinfo:6.14.1
    ```
 
@@ -514,19 +523,6 @@ Run these on `controlplane`, before task 5 for the first check.
    ```
    kind: Service
    kind: Deployment
-   ```
-
-3. After task 5, no release is left and the namespace is:
-
-   ```shell
-   helm list -A
-   kubectl get ns store
-   ```
-
-   ```
-   NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
-   NAME    STATUS   AGE
-   store   Active   1s
    ```
 
 ## What's next

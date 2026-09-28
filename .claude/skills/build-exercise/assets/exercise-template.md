@@ -29,10 +29,33 @@ explains it: [<section heading>](../../references/<concept>.md#<section-anchor>)
 
    <One sentence on what to notice, with a link to the reference page that explains it.>
 
-2. On `node01`, <instruction for a step on another machine>:
+2. <Instruction for a manifest kubectl can write>:
 
    ```shell
+   kubectl create <kind> <name> <flags> --dry-run=client -o yaml > <file>.yaml
+   ```
+
+3. <Instruction for a manifest no kubectl command writes.> Search kubernetes.io for
+   `<search term>`, open [<page title>](https://kubernetes.io/docs/<page>/#<section>), and copy
+   the <example file or `cat <<EOF` block> in <section name>. Paste it into `vim <file>.yaml`,
+   then change <what>:
+
+   ```yaml
+   <the finished file, or only the changed lines with enough context to place them>
+   ```
+
+4. Open `<file>` in vim, <what to add or change and where>, and save:
+
+   ```yaml
+   <the lines to add, at their real indentation>
+   ```
+
+5. On `node01`, <instruction for work on a worker>:
+
+   ```shell
+   ssh node01
    <command>
+   exit
    ```
 
 ## <Next step group>
@@ -52,19 +75,32 @@ Answer before opening.
 
 Do it again without the steps above, the way the exam asks. Give yourself **<N> minutes**.
 
-Start from a fresh [`<lab-name>` lab](../../lab/README.md#<lab-name>).
+Start from a fresh [`<lab-name>` lab](../../lab/README.md#<lab-name>). When time is up,
+[grade the run](../../lab/README.md#grading).
 
-1. **Host `controlplane`, weight <N>%.** <Task in exam wording, no steps.>
-2. **Hosts `controlplane`, `node01`, weight <N>%.** <Task.>
+1. **Host `controlplane`, weight <N>%.** <Task in exam wording, no steps. Name any file the
+   exam would hand over, such as `/opt/course/1/kustomization.yaml`, placed by `setup.sh`.>
+2. **Host `node01`, weight <N>%.** `ssh node01` first. <Task.>
 
 <details><summary>Solution</summary>
 
-```shell
-# 1.
-<commands>
+Task 1:
 
-# 2.
+```shell
+k <command>
+vim <file>
+```
+
+```yaml
+<what the file holds after editing>
+```
+
+Task 2:
+
+```shell
+ssh node01
 <commands>
+exit
 ```
 
 </details>

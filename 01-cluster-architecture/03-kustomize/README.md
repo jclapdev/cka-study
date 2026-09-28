@@ -1,0 +1,669 @@
+# Customizing Manifests with Kustomize
+
+Kustomize builds a final set of manifests from plain YAML files plus a `kustomization.yaml` that
+lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is
+built into `kubectl`, so no template language and no extra tool is involved.
+
+Exam domain: Cluster Architecture, Installation and Configuration (25%).
+
+Starts from the [`kustomize` lab](../../lab/README.md#kustomize). Every command runs on `controlplane`.
+
+## Objectives
+
+* Turn generated manifests into a Kustomize base, using the kustomization the docs give you.
+* Preview what Kustomize produces before anything reaches the cluster.
+* Write an overlay that changes the base's namespace, names, labels and image tag.
+* Change fields in one object with patches copied from the docs.
+* Generate a ConfigMap whose name changes with its contents, and watch the Deployment roll.
+* Apply and delete everything a kustomization produces with `-k`.
+
+Every YAML file in this exercise comes from `kubectl create --dry-run` or from the allowed docs.
+The Kustomize snippets are all on one page,
+[Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
+found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
+paste straight into the terminal:
+[snippets from the docs](../../references/exam-workflow.md#snippets-from-the-docs).
+
+## Write a base
+
+A base is a folder of ordinary manifests with a `kustomization.yaml` that lists them:
+[bases and overlays](../../references/kustomize.md#bases-and-overlays).
+
+1. Make the folder and generate a Deployment and a Service into it:
+
+   ```shell
+   mkdir -p ~/web/base && cd ~/web
+   k create deployment web --image=nginx:1.27 --dry-run=client -o yaml > base/deployment.yaml
+   k create service clusterip web --tcp=80:80 --dry-run=client -o yaml > base/service.yaml
+   ```
+
+   The Deployment labels its pods `app: web`, which is the selector `k create service` writes
+   for a Service named `web`: [generating YAML](../../references/exam-workflow.md#generating-yaml).
+
+2. Ask Kustomize to build the folder:
+
+   ```shell
+   k kustomize base
+   ```
+
+   The output is similar to this:
+
+   ```
+   error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/home/john.guest/web/base'
+   ```
+
+   A folder of manifests is not a kustomization until it has that file.
+
+3. On the Kustomize page, go to
+   [Bases and Overlays](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#bases-and-overlays).
+   The first example ends with a block that writes `base/kustomization.yaml`. Copy that block
+   and paste it into the terminal as it is:
+
+   ```shell
+   # Create a base/kustomization.yaml
+   cat <<EOF > base/kustomization.yaml
+   resources:
+   - deployment.yaml
+   - service.yaml
+   EOF
+   ```
+
+   The docs' file names match the ones you generated, so nothing needs changing.
+
+4. Build again:
+
+   ```shell
+   k kustomize base | head -3
+   ```
+
+   The output is similar to this:
+
+   ```
+   apiVersion: v1
+   kind: Service
+   metadata:
+   ```
+
+   `k kustomize` prints both objects and sends nothing to the cluster:
+   [kustomize commands](../../references/kustomize.md#commands).
+
+5. Apply the folder the way a plain folder of manifests is applied:
+
+   ```shell
+   k apply -f base/
+   ```
+
+   The output is similar to this:
+
+   ```
+   deployment.apps/web created
+   service/web created
+   error: error validating "base/kustomization.yaml": error validating data: [apiVersion not set, kind not set]; if you choose to ignore these errors, turn validation off with --validate=false
+   ```
+
+   `-f` reads every file in the folder as a manifest, including `kustomization.yaml`, and
+   ignores what it says. `-k` is the flag that runs Kustomize:
+   [-f and -k](../../references/kustomize.md#-f-and--k).
+
+6. Remove the two objects `-f` created:
+
+   ```shell
+   k delete -f base/deployment.yaml -f base/service.yaml
+   ```
+
+   The output is similar to this:
+
+   ```
+   deployment.apps "web" deleted from default namespace
+   service "web" deleted from default namespace
+   ```
+
+## Write an overlay
+
+An overlay is a kustomization whose resources include another kustomization, the base, and
+which changes what the base produces. The base files are never edited:
+[bases and overlays](../../references/kustomize.md#bases-and-overlays).
+
+1. In the same Bases and Overlays section, copy the `prod` overlay block, paste it, and build
+   it:
+
+   ```shell
+   mkdir prod
+   cat <<EOF > prod/kustomization.yaml
+   resources:
+   - ../base
+   namePrefix: prod-
+   EOF
+   k kustomize prod | grep -E '^kind|^  name:'
+   ```
+
+   The output is similar to this:
+
+   ```
+   kind: Service
+     name: prod-web
+   kind: Deployment
+     name: prod-web
+   ```
+
+2. Add a namespace, a label and a new image tag. Go to
+   [Setting cross-cutting fields](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#setting-cross-cutting-fields)
+   for `namespace` and `labels`, and to
+   [Customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)
+   for `images`. Copy only those lines from the docs' `kustomization.yaml` blocks into
+   `vim prod/kustomization.yaml`, with `:set paste` first, and change the values. The file now
+   reads:
+
+   ```yaml
+   resources:
+   - ../base
+   namespace: prod
+   namePrefix: prod-
+   labels:
+     - pairs:
+         env: prod
+   images:
+   - name: nginx
+     newTag: "1.28"
+   ```
+
+   The docs' `labels` example also has `includeSelectors: true`. Leave it out: it would also
+   change the Deployment's selector, which cannot change once the Deployment exists:
+   [labels](../../references/kustomize.md#labels).
+
+3. Build the overlay:
+
+   ```shell
+   k kustomize prod
+   ```
+
+   The output is similar to this:
+
+   ```
+   apiVersion: v1
+   kind: Service
+   metadata:
+     labels:
+       app: web
+       env: prod
+     name: prod-web
+     namespace: prod
+   spec:
+     ports:
+     - name: 80-80
+       port: 80
+       protocol: TCP
+       targetPort: 80
+     selector:
+       app: web
+     type: ClusterIP
+   status:
+     loadBalancer: {}
+   ---
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     labels:
+       app: web
+       env: prod
+     name: prod-web
+     namespace: prod
+   spec:
+     replicas: 1
+     selector:
+       matchLabels:
+         app: web
+     strategy: {}
+     template:
+       metadata:
+         labels:
+           app: web
+       spec:
+         containers:
+         - image: nginx:1.28
+           name: nginx
+           resources: {}
+   status: {}
+   ```
+
+   `images` names the image as the base does, `nginx`. The `env: prod` label went onto each
+   object's own labels only, not into the selector or the pod template:
+   [what an overlay can set](../../references/kustomize.md#what-an-overlay-can-set).
+
+4. Apply the overlay:
+
+   ```shell
+   k apply -k prod
+   ```
+
+   The output is similar to this:
+
+   ```
+   Error from server (NotFound): error when creating "prod": namespaces "prod" not found
+   Error from server (NotFound): error when creating "prod": namespaces "prod" not found
+   ```
+
+   `namespace:` sets the namespace on every object but does not create it:
+   [kustomize failure modes](../../references/kustomize.md#failure-modes).
+
+5. Generate a Namespace manifest into the overlay, then add `- namespace.yaml` under
+   `resources` in `vim prod/kustomization.yaml`:
+
+   ```shell
+   k create namespace prod --dry-run=client -o yaml > prod/namespace.yaml
+   ```
+
+## Patch fields
+
+A patch is a partial manifest. It names the object it changes by kind and name, and holds only
+the fields to add or replace: [patches](../../references/kustomize.md#patches).
+
+1. The [Customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)
+   section has two patch blocks, `increase_replicas.yaml` and `set_memory.yaml`. In `~/web/prod`,
+   paste each block into the terminal, then fix the names in vim. The docs' Deployment is
+   `my-nginx`, and so is its container. Yours is `web`, and its container is `nginx`. Set the
+   memory limit to `128Mi`. The files read:
+
+   ```yaml
+   # prod/increase_replicas.yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: web
+   spec:
+     replicas: 3
+   ```
+
+   ```yaml
+   # prod/set_memory.yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: web
+   spec:
+     template:
+       spec:
+         containers:
+         - name: nginx
+           resources:
+             limits:
+               memory: 128Mi
+   ```
+
+   A patch uses the base's name, `web`, not `prod-web`. The container is matched by its `name`.
+
+2. In `vim prod/kustomization.yaml`, add the `patches` list from the same docs block. The file
+   now reads:
+
+   ```yaml
+   resources:
+   - ../base
+   - namespace.yaml
+   namespace: prod
+   namePrefix: prod-
+   labels:
+     - pairs:
+         env: prod
+   images:
+   - name: nginx
+     newTag: "1.28"
+   patches:
+     - path: increase_replicas.yaml
+     - path: set_memory.yaml
+   ```
+
+3. Apply the overlay and check the Deployment:
+
+   ```shell
+   cd ~/web
+   k apply -k prod
+   k rollout status deploy/prod-web -n prod
+   k get deploy prod-web -n prod -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image} {.spec.template.spec.containers[0].resources.limits}{"\n"}'
+   ```
+
+   The output is similar to this:
+
+   ```
+   namespace/prod created
+   service/prod-web created
+   deployment.apps/prod-web created
+   deployment "prod-web" successfully rolled out
+   3 nginx:1.28 {"memory":"128Mi"}
+   ```
+
+4. Select by the label the overlay added:
+
+   ```shell
+   k get deploy,pods -n prod -l env=prod
+   ```
+
+   The output is similar to this:
+
+   ```
+   NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+   deployment.apps/prod-web   3/3     3            3           1s
+   ```
+
+   The pods are missing, because the label was not added to the pod template. `-l app=web`
+   finds them: [labels](../../references/kustomize.md#labels) and
+   [selectors](../../references/labels.md#keys-and-values).
+
+## Generate a ConfigMap
+
+A ConfigMap holds key-value settings that a pod can read as environment variables.
+`configMapGenerator` writes one and adds a hash of its contents to the name:
+[generated names](../../references/kustomize.md#generated-names).
+
+1. The second example in the
+   [configMapGenerator](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#configmapgenerator)
+   section uses `literals`. Its block would overwrite the whole `kustomization.yaml`, so don't
+   paste it into the terminal. Copy only its four `configMapGenerator` lines into the end of
+   `vim base/kustomization.yaml`, and change the name and the value:
+
+   ```yaml
+   configMapGenerator:
+   - name: web-config
+     literals:
+     - GREETING=hello
+   ```
+
+2. Load it into the container. On
+   [Configure a Pod to Use a ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#configure-all-key-value-pairs-in-a-configmap-as-container-environment-variables),
+   the example file has an `envFrom` block. Copy it into `vim base/deployment.yaml`, below
+   `resources: {}` and at the same indent, and change the name:
+
+   ```yaml
+           envFrom:
+           - configMapRef:
+               name: web-config
+   ```
+
+3. Build the overlay and find the ConfigMap's name:
+
+   ```shell
+   k kustomize prod | grep web-config
+   ```
+
+   The output is similar to this:
+
+   ```
+     name: prod-web-config-f655md8fbd
+               name: prod-web-config-f655md8fbd
+   ```
+
+   The ConfigMap is `prod-web-config-f655md8fbd`, and the Deployment's reference to
+   `web-config` was rewritten to the same name.
+
+4. Apply it and read the variable in a pod:
+
+   ```shell
+   k apply -k prod
+   k rollout status deploy/prod-web -n prod
+   k exec -n prod deploy/prod-web -- printenv GREETING
+   ```
+
+   The output is similar to this:
+
+   ```
+   namespace/prod unchanged
+   configmap/prod-web-config-f655md8fbd created
+   service/prod-web unchanged
+   deployment.apps/prod-web configured
+   deployment "prod-web" successfully rolled out
+   hello
+   ```
+
+5. In `vim base/kustomization.yaml`, change `GREETING=hello` to `GREETING=hi`. Then see what
+   would change in the cluster:
+
+   ```shell
+   k diff -k prod | grep -E '^[-+] +name: prod-web-config'
+   ```
+
+   The output is similar to this:
+
+   ```
+   -            name: prod-web-config-f655md8fbd
+   +            name: prod-web-config-hc7d4825hb
+   +  name: prod-web-config-hc7d4825hb
+   ```
+
+   New contents give a new name, and the new name changes the pod template, so the Deployment
+   rolls out new pods. A ConfigMap edited in place would not update the running pods:
+   [generated names](../../references/kustomize.md#generated-names).
+
+6. Apply the change:
+
+   ```shell
+   k apply -k prod
+   k rollout status deploy/prod-web -n prod
+   k exec -n prod deploy/prod-web -- printenv GREETING
+   k get cm -n prod
+   ```
+
+   The output is similar to this:
+
+   ```
+   namespace/prod unchanged
+   configmap/prod-web-config-hc7d4825hb created
+   service/prod-web unchanged
+   deployment.apps/prod-web configured
+   deployment "prod-web" successfully rolled out
+   hi
+   NAME                         DATA   AGE
+   kube-root-ca.crt             1      7s
+   prod-web-config-f655md8fbd   1      5s
+   prod-web-config-hc7d4825hb   1      2s
+   ```
+
+   The old ConfigMap is still there. `k apply` creates and updates, and never deletes an object
+   the kustomization no longer produces.
+
+## Delete everything
+
+1. Delete what the overlay produces:
+
+   ```shell
+   k delete -k prod
+   ```
+
+   The output is similar to this:
+
+   ```
+   namespace "prod" deleted
+   configmap "prod-web-config-hc7d4825hb" deleted from prod namespace
+   service "prod-web" deleted from prod namespace
+   deployment.apps "prod-web" deleted from prod namespace
+   ```
+
+   `delete -k` deletes only what the kustomization renders now, so it names
+   `prod-web-config-hc7d4825hb` and not the older ConfigMap. That one goes because its
+   namespace is deleted: [namespaces](../../references/namespaces.md).
+
+## Recall
+
+Answer before opening.
+
+<details><summary>What is the difference between `k kustomize dir`, `k apply -k dir` and `k apply -f dir`?</summary>
+
+`kustomize` prints the built manifests and changes nothing. `apply -k` builds and applies them.
+`apply -f` applies every file in the folder as-is, and fails on `kustomization.yaml` because it
+is not a Kubernetes object.
+</details>
+
+<details><summary>Where in the allowed docs are the Kustomize snippets, and what do you search for?</summary>
+
+Search kubernetes.io for `kustomize` and open "Declarative Management of Kubernetes Objects Using
+Kustomize". Bases and Overlays, Setting cross-cutting fields, Customizing and configMapGenerator
+have the blocks.
+</details>
+
+<details><summary>A docs block starts with `cat <<EOF >./kustomization.yaml`. When is pasting it into the terminal wrong?</summary>
+
+When the file already exists. The block replaces the whole file, so copy only the lines you need
+into vim instead.
+</details>
+
+<details><summary>An overlay sets `namespace: prod` and `apply -k` fails with `namespaces "prod" not found`. Why?</summary>
+
+`namespace:` only sets the field on each object. Add a Namespace manifest to the overlay's
+resources, or create the namespace first.
+</details>
+
+<details><summary>A patch in an overlay with `namePrefix: prod-` targets a Deployment. Which name does the patch use?</summary>
+
+The base's name, such as `web`. Naming `prod-web` fails with `no resource matches strategic merge
+patch`.
+</details>
+
+<details><summary>Why does a generated ConfigMap get a hash suffix?</summary>
+
+The name changes whenever the contents change, which changes every reference to it, so the
+pods that use it are replaced and read the new values.
+</details>
+
+<details><summary>You add `labels` with `env: prod` in an overlay. Why does `k get pods -l env=prod` find nothing?</summary>
+
+`labels` adds to each object's own labels only. `includeTemplates: true` also adds it to the pod
+template. `includeSelectors: true` adds it to the pod template and the selectors.
+</details>
+
+## Practice it
+
+Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
+
+Start from a fresh [`kustomize` lab](../../lab/README.md#kustomize). When time is up,
+[grade the run](../../lab/README.md#grading).
+
+1. **Host `controlplane`, weight 25%.** In `~/shop/base`, create a kustomization with a
+   Deployment `shop` running `nginx:1.27`, and a ClusterIP Service `shop` on port 80 for it.
+2. **Host `controlplane`, weight 30%.** In `~/shop/staging`, create an overlay of that base that
+   puts everything in the namespace `staging`, which does not exist yet, prefixes every name
+   with `staging-`, runs `nginx:1.28` and 2 replicas. Apply it.
+3. **Host `controlplane`, weight 25%.** The kustomization in `/opt/course/3/overlay` should
+   deploy `tools-api` with 2 replicas into the namespace `tools`, but it fails to apply. Fix it
+   without changing anything in `/opt/course/3/base`, and apply it.
+4. **Host `controlplane`, weight 20%.** In the `staging` overlay, generate a ConfigMap
+   `shop-settings` with `MODE=staging` and load it into the `shop` container as environment
+   variables. Apply it.
+
+<details><summary>Solution</summary>
+
+Task 1. Generate the manifests, then paste the base kustomization block from Bases and Overlays:
+
+```shell
+mkdir -p ~/shop/base ~/shop/staging && cd ~/shop
+k create deployment shop --image=nginx:1.27 --dry-run=client -o yaml > base/deployment.yaml
+k create service clusterip shop --tcp=80:80 --dry-run=client -o yaml > base/service.yaml
+cat <<EOF > base/kustomization.yaml
+resources:
+- deployment.yaml
+- service.yaml
+EOF
+```
+
+Tasks 2 and 4. Generate the Namespace. Build the two patches from `increase_replicas.yaml` on
+the Customizing section and the `envFrom` block on the ConfigMap task page, fixing the names.
+The container is `nginx`, after its image:
+
+```shell
+k create namespace staging --dry-run=client -o yaml > staging/namespace.yaml
+vim staging/increase_replicas.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop
+spec:
+  replicas: 2
+```
+
+```shell
+vim staging/env.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        envFrom:
+        - configMapRef:
+            name: shop-settings
+```
+
+```shell
+vim staging/kustomization.yaml
+```
+
+```yaml
+resources:
+- ../base
+- namespace.yaml
+namespace: staging
+namePrefix: staging-
+images:
+- name: nginx
+  newTag: "1.28"
+patches:
+  - path: increase_replicas.yaml
+  - path: env.yaml
+configMapGenerator:
+- name: shop-settings
+  literals:
+  - MODE=staging
+```
+
+```shell
+k apply -k staging
+```
+
+Task 3. The build error names the patch target:
+
+```shell
+k kustomize /opt/course/3/overlay
+```
+
+```
+error: no resource matches strategic merge patch "Deployment.v1.apps/tools-api.[noNs]": no matches for Id Deployment.v1.apps/tools-api.[noNs]; failed to find unique target for patch Deployment.v1.apps/tools-api.[noNs]
+```
+
+The patch names the prefixed `tools-api`. In `vim /opt/course/3/overlay/replicas.yaml`, change
+it to the base's name, `api`, then apply:
+
+```shell
+k apply -k /opt/course/3/overlay
+```
+
+</details>
+
+## Check your work
+
+[Grade the run](../../lab/README.md#grading), or check by hand on `controlplane`:
+
+1. The `staging` Deployment runs 2 replicas of `nginx:1.28` and reads the generated ConfigMap:
+
+   ```shell
+   k get deploy staging-shop -n staging -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image} {.spec.template.spec.containers[0].envFrom[0].configMapRef.name}{"\n"}'
+   k exec -n staging deploy/staging-shop -- printenv MODE
+   ```
+
+   ```
+   2 nginx:1.28 staging-shop-settings-7t6ch9d7dd
+   staging
+   ```
+
+## What's next
+
+* [kustomize](../../references/kustomize.md) has the fields an overlay can set, patches,
+  generated names and the failure modes in one place.
+* [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
+  covers `secretGenerator`, `generatorOptions` and `replacements`, which this exercise does not
+  use.

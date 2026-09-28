@@ -38,10 +38,11 @@ Status is **ready** when the README has steps and a Practice it section, **steps
 
 | Domain | Topic | Status |
 | --- | --- | --- |
+| 00-exam-skills | [00-exam-workflow](00-exam-skills/00-exam-workflow/README.md) | ready |
 | 01-cluster-architecture (25%) | [00-kubeadm-install](01-cluster-architecture/00-kubeadm-install/README.md) | ready |
 | | [01-rbac](01-cluster-architecture/01-rbac/README.md) | ready |
 | | [02-helm](01-cluster-architecture/02-helm/README.md) | ready |
-| | 03-kustomize | |
+| | [03-kustomize](01-cluster-architecture/03-kustomize/README.md) | ready |
 | | 04-crds-operators | |
 | | 05-extension-interfaces | |
 | | 06-etcd-backup-restore | |

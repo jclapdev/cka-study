@@ -294,11 +294,13 @@ create --print-join-command` prints a new one: [joining](../../references/worker
    the apiserver accept the node for long enough to sign a client certificate for it. The
    sequence: [joining](../../references/workers.md#joining).
 
-2. On `node01`, run the command you just printed. Your token and hash differ from the ones
-   above, so paste yours:
+2. Copy the command you just printed, then run it on `node01`. Your token and hash differ from
+   the ones above, so paste yours:
 
    ```shell
-   sudo kubeadm join ...        # the command printed in the previous step
+   ssh node01
+   sudo kubeadm join ...        # paste the command printed in the previous step
+   exit
    ```
 
    The last lines are similar to this:
@@ -311,7 +313,7 @@ create --print-join-command` prints a new one: [joining](../../references/worker
    Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
    ```
 
-3. Join `node02` the same way, from a shell on `node02`.
+3. Join `node02` the same way, with `ssh node02` from `controlplane`.
 
 Workers get no admin kubeconfig, so `kubectl` on `node01` fails with the same `localhost:8080`
 error. Run every `kubectl` command on `controlplane`.
@@ -342,7 +344,7 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
 2. Add the worker label to both:
 
    ```shell
-   kubectl label node node01 node02 node-role.kubernetes.io/worker=
+   k label node node01 node02 node-role.kubernetes.io/worker=
    kubectl get nodes
    ```
 
@@ -443,7 +445,8 @@ reset.
 
 Do it again without the steps above, the way the exam asks. Give yourself **25 minutes**.
 
-Start from a fresh [`vms` lab](../../lab/README.md#vms).
+Start from a fresh [`vms` lab](../../lab/README.md#vms). When time is up,
+[grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 19%.** Initialise a control plane with pod network CIDR
    `10.244.0.0/16`. The API server must advertise `controlplane`'s own IPv4 address.
@@ -471,16 +474,22 @@ sudo cp /etc/kubernetes/admin.conf ~/.kube/config
 sudo chown "$(id -u):$(id -g)" ~/.kube/config
 
 # 3.
-kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+k apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 
-# 4. print the join command, then run it with sudo on node01 and node02
+# 4. print the join command, then run it with sudo on each worker
 sudo kubeadm token create --print-join-command
+ssh node01
+sudo kubeadm join ...        # the printed command
+exit
+ssh node02
+sudo kubeadm join ...
+exit
 
 # 5.
-kubectl label node node01 node02 node-role.kubernetes.io/worker=
+k label node node01 node02 node-role.kubernetes.io/worker=
 
 # 6.
-kubectl get pods -n kube-system
+k get pods -n kube-system
 ```
 
 Flannel defaults to `10.244.0.0/16`, so its manifest needs no editing. Calico defaults to

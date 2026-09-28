@@ -32,6 +32,9 @@ status() { limactl list --format '{{.Name}} {{.Status}}' 2>/dev/null | awk -v n=
 stopall() {
   for vm in "${VMS[@]}"; do
     exists "$vm" || continue
+    # `stop -f` powers off without a clean shutdown, so flush writes first or
+    # the saved copy can miss the last minutes of changes.
+    [ "$(status "$vm")" = Running ] && limactl shell --workdir / "$vm" sync >/dev/null 2>&1
     for _ in 1 2 3; do
       [ "$(status "$vm")" = Stopped ] && break
       limactl stop -f "$vm" >/dev/null 2>&1 || true

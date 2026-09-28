@@ -11,7 +11,7 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 2. **Exercise** is the topic's `README.md`.
 3. **References** holds every `references/*.md` page the README links to, each with its one-line summary from the table in `references/README.md`.
 
-`01-cluster-architecture/01-rbac/` is the finished example. Match it.
+`01-cluster-architecture/03-kustomize/` is the finished example. Match it.
 
 ## Checklist
 
@@ -19,16 +19,24 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 - [ ] 2. Pick the starting state. Use `vms` (bare machines) or `cluster` (working cluster) from `lab/README.md`. If the exercise needs something else, add a `### <lab-name>` section under "Starting states" in `lab/README.md`, and put a `setup.sh` in the topic folder when a restore alone isn't enough.
 - [ ] 3. Run every command on the lab first and save the real output. Do this for the steps, for each command a reference page will quote, and for each error message a failure-modes table will quote. Nothing that looks like command output is written from memory.
 - [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Each step is a command, its trimmed output from step 3, one sentence on what to notice, and a link to the reference page that explains it. Every step group links at least one reference page. Explanations belong on reference pages, not in steps.
-- [ ] 5. List the concepts the steps rely on. A concept is any term or behaviour a reader needs in order to follow a step, where no earlier topic has taught it. Check each one against `references/`:
+- [ ] 5. Get every manifest the way the exam allows, fastest source first (the "How to work in the exam" section of `EXAM.md`), and never have the reader type a whole manifest:
+  1. `kubectl create`, `run` or `expose` with `--dry-run=client -o yaml > file` whenever one of them can write it.
+  2. Otherwise, a snippet from a kubernetes.io page. The step names the search term, links the page section with its anchor, says to copy the block and paste it, then shows the lines to change and the finished file. Prefer the docs' own `cat <<EOF` blocks and example files with copy buttons.
+  3. `kubectl explain <kind>.<field>` for a field no snippet shows.
+
+  Hand edits happen in `vim`. A step names the file and shows the lines to add or change, never a `sed`, `printf` or script. Steps link only docs the exam allows: kubernetes.io/docs, kubernetes.io/blog, helm.sh/docs and gateway-api.sigs.k8s.io.
+- [ ] 6. List the concepts the steps rely on. A concept is any term or behaviour a reader needs in order to follow a step, where no earlier topic has taught it. Check each one against `references/`:
   - It has a page: link that page.
   - It is a detail of a concept that already has a page (for example, the roles every subject gets belong to `rbac.md`): add a section to that page.
   - Other topics will use it too (for example, namespaces or API groups): write a new page from [the reference template](assets/reference-template.md).
-- [ ] 6. A reference page covers what this and earlier exercises use, plus what `EXAM.md` lists for that concept, and nothing else. Every claim links to the kubernetes.io section that supports it. Before you link a section, fetch the page to confirm the anchor exists. Diagrams are mermaid.
-- [ ] 7. Add each new reference page's row to the table in `references/README.md`.
-- [ ] 8. Reread every sentence you wrote and delete narration (see Gotchas).
-- [ ] 9. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL`.
-- [ ] 10. Set the topic's status in the root `README.md`: **ready** with Practice it, **steps only** without.
-- [ ] 11. Run `cd app && pnpm test`. Then run `pnpm dev`, open the topic and check all three tabs: the lab commands show, every step renders, and each reference opens from the list.
+- [ ] 7. A reference page covers what this and earlier exercises use, plus what `EXAM.md` lists for that concept, and nothing else. Every claim links to the kubernetes.io section that supports it. Before you link a section, fetch the page to confirm the anchor exists. Diagrams are mermaid. A link outside the exam's allowed docs goes only in the page's Docs list, marked "(not available in the exam)".
+- [ ] 8. Add each new reference page's row to the table in `references/README.md`.
+- [ ] 9. Write the Practice it the way the exam asks: a host lead-in and weight per task, `ssh <host>` in the task when the work is on a worker, and a `setup.sh` that places any files the exam would hand over (for example a kustomization under `/opt/course/<n>/`). The solution uses `k`.
+- [ ] 10. Write `grade.sh` in the topic folder from [the grader template](assets/grade-template.sh). One `task` per Practice it task with its weight, and one `check` per sub-task that inspects only the final state. Restore the starting state and run it: it must score 0%. Run the solution and run it again: it must score 100%. The exercise links [grading](../../lab/README.md#grading) and never says how the grader runs.
+- [ ] 11. Reread every sentence you wrote and delete narration (see Gotchas).
+- [ ] 12. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`.
+- [ ] 13. Set the topic's status in the root `README.md`: **ready** with Practice it, **steps only** without.
+- [ ] 14. Run `cd app && pnpm test`. Then run `pnpm dev`, open the topic and check all three tabs: the lab commands show, every step renders, and each reference opens from the list.
 
 ## Gotchas
 
@@ -49,6 +57,9 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 - Reference links in an exercise must be relative (`../../references/<page>.md`), or the References tab won't list the page. Links between reference pages are plain `<page>.md`.
 - A step links the section that explains it, not the top of the page: `[values](../../references/helm.md#values)`, with the section's heading as the link text, or the page's name before a generic heading such as `[kubeadm failure modes](…#failure-modes)`. A link on a word inside a sentence keeps the word and still gets the anchor. Link the top of the page only when its opening paragraph is the explanation. The anchor is the heading in lowercase with spaces turned into hyphens and punctuation dropped. A reference page with one section per idea the steps use makes this possible.
 - The table row in `references/README.md` must stay in the form `| [<page>](<page>.md) | <what it covers> |`. The app reads it with a pattern, and a page without a row shows up with no summary.
-- Exercises never mention `limactl`, snapshots, the Mac or the lab's IP addresses. Those belong only in `lab/README.md`. A step on another machine starts with "On `node01`".
+- Exercises never mention `limactl`, snapshots, the Mac or the lab's IP addresses. Those belong only in `lab/README.md`. Work on another machine starts with `ssh node01` from `controlplane`, as in the exam, and ends with `exit`.
+- The exam's hosts share nothing between tasks: each task is a new `ssh` session. Don't teach an alias, an exported variable or a `.vimrc` as setup the reader can rely on later. `k` and its completion exist everywhere, in the lab too (`lab/exam-mode.sh`).
+- A grader `check` runs on `controlplane` as the lab user. Use `k` there, `ssh node01 …` for a worker, and `sudo` for root-owned files. A check that fails on a fresh restore and passes after the solution is the only proof it works.
+- `kubectl create deployment` names the container after the image (`nginx` for `nginx:1.27`) and labels the pods `app: <name>`, which is the selector `kubectl create service clusterip <name>` writes. A patch or `envFrom` step must use that container name.
 - Check every kubernetes.io claim against the live page, not memory. Flags get removed: `--pod-eviction-timeout` no longer exists, for example.
 - Delete wrong content rather than annotating it.

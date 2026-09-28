@@ -9,10 +9,12 @@ describe("repo", () => {
   it("lists every domain and topic folder", () => {
     const domains = listDomains();
     expect(domains.map((d) => d.name)).toContain("99-mock-exams");
+    expect(domains[0].name).toBe("00-exam-skills");
+    expect(domains[0].topics.filter((t) => t.written).map((t) => t.topic)).toEqual(["00-exam-workflow"]);
     const arch = domains.find((d) => d.name === "01-cluster-architecture")!;
     expect(arch.weight).toBe(25);
     expect(arch.topics).toHaveLength(9);
-    expect(arch.topics.filter((t) => t.written).map((t) => t.topic)).toEqual(["00-kubeadm-install", "01-rbac", "02-helm"]);
+    expect(arch.topics.filter((t) => t.written).map((t) => t.topic)).toEqual(["00-kubeadm-install", "01-rbac", "02-helm", "03-kustomize"]);
   });
 
   it("refuses paths outside the repo, non-Markdown and the app", () => {

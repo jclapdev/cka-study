@@ -70,7 +70,7 @@ The file is the only thing the kubelet checks. Flannel's `install-cni` init cont
 
 ## Plugins
 
-Flannel defaults to `10.244.0.0/16` and does not enforce NetworkPolicy ([Flannel](https://github.com/flannel-io/flannel)):
+Flannel defaults to `10.244.0.0/16` and does not enforce NetworkPolicy ([Flannel](https://github.com/flannel-io/flannel) (not available in the exam)):
 
 ```bash
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
@@ -104,8 +104,8 @@ Cluster DNS, a Deployment of two replicas in `kube-system`, reachable at the ser
 - [Network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)
 - [DNS for services and pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)
 - [Customising CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)
-- [Flannel](https://github.com/flannel-io/flannel) · [Calico quickstart](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart)
+- [Flannel](https://github.com/flannel-io/flannel) · [Calico quickstart](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart) (not available in the exam)
 
-The exam allows the documentation a task links in its Quick Reference box, which is where a plugin's docs would come from ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
+The exam allows the documentation a task links in its Quick Reference box, which is where a plugin's docs would come from ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)).
 
 Related: [kubeadm](kubeadm.md), [pod](pod.md), [workers](workers.md), [control-plane](control-plane.md).

@@ -4,6 +4,7 @@ Concept summaries shared by every exercise. Each one states the model, how it sh
 
 | File | Covers |
 | --- | --- |
+| [exam-workflow](exam-workflow.md) | hosts and ssh, `k` and short names, generating YAML, docs snippets, vim for YAML, `explain`, changing and checking live objects |
 | [kubeadm](kubeadm.md) | what `init` does phase by phase, the advertise address, tokens, `reset`, preflight failures |
 | [control-plane](control-plane.md) | apiserver, etcd, controller-manager, scheduler, static pods, the control plane taint |
 | [workers](workers.md) | kubelet, containerd/CRI, the kubelet before a cluster exists, joining, node conditions, role labels |
@@ -18,5 +19,6 @@ Concept summaries shared by every exercise. Each one states the model, how it sh
 | [service-accounts](service-accounts.md) | ServiceAccounts, their full names and groups, tokens in pods |
 | [authentication](authentication.md) | users and groups from certificates, `admin.conf` vs `super-admin.conf`, `auth whoami`, `--as` |
 | [helm](helm.md) | charts, repositories and releases, values and `--reuse-values`, revisions and rollback, where releases are stored, `helm template` |
+| [kustomize](kustomize.md) | bases and overlays, the fields an overlay sets, `labels` and selectors, patches, generated ConfigMap names, `-k` vs `-f` |
 
 Every new exercise extends this folder: each concept it touches either already has a summary here or gets one written alongside it, and the exercise README links to them.

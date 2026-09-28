@@ -1,0 +1,551 @@
+# Working the Way the Exam Works
+
+The exam gives each task on a different host, grades only the final state, and allows no tool
+beyond a terminal, vim and the kubernetes.io docs. This drill practises the moves every other
+exercise relies on: reaching the right host, getting YAML without typing it, finding a snippet
+in the docs, and changing and checking live objects.
+
+Exam domain: all of them. The [exam page](../../EXAM.md) has the format and how grading works.
+
+Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane` unless a step says otherwise.
+
+## Objectives
+
+* Reach a worker with `ssh`, become root, and get back to the base host.
+* Use `k`, its completion, and the short names for resource types.
+* Generate a Pod, Deployment, Service, ConfigMap and Secret with `--dry-run=client -o yaml`.
+* Find a manifest on kubernetes.io, copy it, and paste it into vim with its indentation intact.
+* Look up a field with `kubectl explain`.
+* Change live objects without opening their YAML, and replace a pod whose change is rejected.
+* Read one value back to check the result.
+
+## Reach the right host
+
+Each exam task names the host to `ssh` into, and the base host has no cluster access:
+[hosts and ssh](../../references/exam-workflow.md#hosts-and-ssh).
+
+1. Go to `node01`, become root, and try `kubectl` there:
+
+   ```shell
+   hostname
+   ssh node01
+   sudo -i
+   whoami
+   kubectl get nodes
+   ```
+
+   The output is similar to this:
+
+   ```
+   controlplane
+   root
+   The connection to the server localhost:8080 was refused - did you specify the right host or port?
+   ```
+
+   `kubectl` works only where a kubeconfig exists. A task that says to work on `node01` means
+   files and services on that machine, not the cluster.
+
+2. Read the node's container runtime version, then return to `controlplane`:
+
+   ```shell
+   containerd --version
+   exit
+   exit
+   hostname
+   ```
+
+   The output is similar to this:
+
+   ```
+   containerd github.com/containerd/containerd/v2 2.2.1
+   controlplane
+   ```
+
+   The first `exit` leaves root, and the second leaves `node01`. `ssh node02` from `node01`
+   is nested ssh, which the exam does not support.
+
+## Type less with `k`
+
+`k` is `kubectl` with bash completion, on every exam host:
+[the k alias and short names](../../references/exam-workflow.md#the-k-alias-and-short-names).
+
+1. Check the alias:
+
+   ```shell
+   type k
+   k get no
+   ```
+
+   The output is similar to this:
+
+   ```
+   k is aliased to `kubectl'
+   NAME           STATUS   ROLES           AGE   VERSION
+   controlplane   Ready    control-plane   56d   v1.34.10
+   node01         Ready    worker          56d   v1.34.10
+   node02         Ready    worker          56d   v1.34.10
+   ```
+
+   Type `k get dep` and press Tab: completion writes `deployments`. It completes object names
+   and `-n` namespaces too.
+
+2. List the short names of the types used most:
+
+   ```shell
+   k api-resources | grep -wE 'NAME|pods|deployments|services|configmaps|secrets|namespaces|serviceaccounts|persistentvolumeclaims|networkpolicies'
+   ```
+
+   The output is similar to this:
+
+   ```
+   NAME                                SHORTNAMES   APIVERSION                        NAMESPACED   KIND
+   configmaps                          cm           v1                                true         ConfigMap
+   namespaces                          ns           v1                                false        Namespace
+   persistentvolumeclaims              pvc          v1                                true         PersistentVolumeClaim
+   pods                                po           v1                                true         Pod
+   secrets                                          v1                                true         Secret
+   serviceaccounts                     sa           v1                                true         ServiceAccount
+   services                            svc          v1                                true         Service
+   deployments                         deploy       apps/v1                           true         Deployment
+   networkpolicies                     netpol       networking.k8s.io/v1              true         NetworkPolicy
+   ```
+
+   Secrets have no short name.
+
+## Generate YAML instead of typing it
+
+`--dry-run=client -o yaml` prints the object a command would create, without creating it.
+Redirect it to a file to edit before applying:
+[generating YAML](../../references/exam-workflow.md#generating-yaml).
+
+1. Print a Pod:
+
+   ```shell
+   k run web --image=nginx:1.27 --dry-run=client -o yaml
+   ```
+
+   The output is similar to this:
+
+   ```
+   apiVersion: v1
+   kind: Pod
+   metadata:
+     labels:
+       run: web
+     name: web
+   spec:
+     containers:
+     - image: nginx:1.27
+       name: web
+       resources: {}
+     dnsPolicy: ClusterFirst
+     restartPolicy: Always
+   status: {}
+   ```
+
+2. Write a Deployment to a file, then create a namespace and apply the file there:
+
+   ```shell
+   k create deployment web --image=nginx:1.27 --replicas=2 --dry-run=client -o yaml > web.yaml
+   k create namespace drill
+   k apply -f web.yaml -n drill
+   ```
+
+   The output is similar to this:
+
+   ```
+   namespace/drill created
+   deployment.apps/web created
+   ```
+
+   `web.yaml` has the pod labels `app: web` and a container named `nginx`, after the image.
+
+3. Print the Service that would expose it:
+
+   ```shell
+   k expose deployment web -n drill --port=80 --dry-run=client -o yaml
+   ```
+
+   The output is similar to this:
+
+   ```
+   apiVersion: v1
+   kind: Service
+   metadata:
+     labels:
+       app: web
+     name: web
+     namespace: drill
+   spec:
+     ports:
+     - port: 80
+       protocol: TCP
+       targetPort: 80
+     selector:
+       app: web
+   status:
+     loadBalancer: {}
+   ```
+
+   `expose` reads the Deployment's selector from the cluster, so the Deployment has to exist
+   first.
+
+4. Print a ConfigMap and a Secret:
+
+   ```shell
+   k create configmap web-config -n drill --from-literal=MODE=fast --dry-run=client -o yaml
+   k create secret generic web-secret -n drill --from-literal=TOKEN=abc123 --dry-run=client -o yaml
+   ```
+
+   The output is similar to this:
+
+   ```
+   apiVersion: v1
+   data:
+     MODE: fast
+   kind: ConfigMap
+   metadata:
+     name: web-config
+     namespace: drill
+   apiVersion: v1
+   data:
+     TOKEN: YWJjMTIz
+   kind: Secret
+   metadata:
+     name: web-secret
+     namespace: drill
+   ```
+
+   The Secret's value is base64-encoded for you. Written by hand as `TOKEN: abc123` under
+   `data`, it is rejected with `illegal base64 data at input byte 4`.
+
+## Copy a manifest from the docs
+
+No `kubectl create` command writes a NetworkPolicy, a PersistentVolume or a
+PersistentVolumeClaim. The docs have one for each, ready to copy:
+[snippets from the docs](../../references/exam-workflow.md#snippets-from-the-docs).
+
+1. Search kubernetes.io for `network policy`, open
+   [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/#default-deny-all-ingress-traffic),
+   and find the example file under "Default deny all ingress traffic". Click its copy button.
+
+2. Open a new file in vim and paste without re-indenting:
+
+   ```shell
+   vim deny.yaml
+   ```
+
+   Type `:set paste` and Enter, then `i`, then paste. In the exam terminal, paste is
+   Ctrl+Shift+V. Press Esc, and `:wq` to save. The file holds:
+
+   ```yaml
+   ---
+   apiVersion: networking.k8s.io/v1
+   kind: NetworkPolicy
+   metadata:
+     name: default-deny-ingress
+   spec:
+     podSelector: {}
+     policyTypes:
+     - Ingress
+   ```
+
+   Without `:set paste`, vim can indent each pasted line one step further than the one above
+   it, and the YAML no longer parses: [vim for YAML](../../references/exam-workflow.md#vim-for-yaml).
+
+3. Apply it to `drill`:
+
+   ```shell
+   k apply -f deny.yaml -n drill
+   k get netpol -n drill
+   ```
+
+   The output is similar to this:
+
+   ```
+   networkpolicy.networking.k8s.io/default-deny-ingress created
+   NAME                   POD-SELECTOR   AGE
+   default-deny-ingress   <none>         0s
+   ```
+
+   The lab's pod network, Flannel, does not enforce NetworkPolicies, so the policy exists but
+   blocks nothing here: [plugins](../../references/pod-network.md#plugins). The grader and the
+   exam check the object.
+
+## Look up a field
+
+`kubectl explain` prints the fields of any type, from the cluster's own schema:
+[kubectl explain](../../references/exam-workflow.md#kubectl-explain).
+
+1. Show one field and what it holds:
+
+   ```shell
+   k explain pod.spec.containers.resources | head -13
+   ```
+
+   The output is similar to this:
+
+   ```
+   KIND:       Pod
+   VERSION:    v1
+
+   FIELD: resources <ResourceRequirements>
+
+
+   DESCRIPTION:
+       Compute Resources required by this container. Cannot be updated. More info:
+       https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+       ResourceRequirements describes the compute resource requirements.
+
+   FIELDS:
+     claims	<[]ResourceClaim>
+   ```
+
+2. Show a whole subtree at once:
+
+   ```shell
+   k explain deploy.spec.strategy --recursive
+   ```
+
+   The output is similar to this:
+
+   ```
+   GROUP:      apps
+   KIND:       Deployment
+   VERSION:    v1
+
+   FIELD: strategy <DeploymentStrategy>
+
+
+   DESCRIPTION:
+       The deployment strategy to use to replace existing pods with new ones.
+       DeploymentStrategy describes how to replace existing pods with new ones.
+
+   FIELDS:
+     rollingUpdate	<RollingUpdateDeployment>
+       maxSurge	<IntOrString>
+       maxUnavailable	<IntOrString>
+     type	<string>
+     enum: Recreate, RollingUpdate
+   ```
+
+   The indentation matches the YAML, so `maxSurge` goes under `rollingUpdate`, under
+   `strategy`.
+
+## Change live objects
+
+Common changes have their own commands, which are faster than editing YAML:
+[changing live objects](../../references/exam-workflow.md#changing-live-objects).
+
+1. Change the image, the replica count and a label:
+
+   ```shell
+   k set image deploy/web nginx=nginx:1.28 -n drill
+   k scale deploy web --replicas=3 -n drill
+   k label deploy web tier=frontend -n drill
+   k rollout status deploy/web -n drill
+   k get deploy web -n drill -o wide --show-labels
+   ```
+
+   The output is similar to this:
+
+   ```
+   deployment.apps/web image updated
+   deployment.apps/web scaled
+   deployment.apps/web labeled
+   deployment "web" successfully rolled out
+   NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES       SELECTOR   LABELS
+   web    3/3     3            3           27s   nginx        nginx:1.28   app=web    app=web,tier=frontend
+   ```
+
+   `set image` takes the container's name, `nginx`, then the new image.
+
+2. Start a pod, then try to change its command with `k edit`:
+
+   ```shell
+   k run tool --image=busybox:1.37 -n drill -- sleep 3600
+   k edit pod tool -n drill
+   ```
+
+   In vim, change `"3600"` to `"7200"` under `args`, and `:wq`. The output is similar to this:
+
+   ```
+   pod/tool created
+   error: pods "tool" is invalid
+   A copy of your changes has been stored to "/tmp/kubectl-edit-2739834084.yaml"
+   error: Edit cancelled, no valid changes were saved.
+   ```
+
+   Most of a running pod's spec cannot change. `k edit` keeps your edit in the file it names.
+
+3. Delete the pod and create it again from that file:
+
+   ```shell
+   k replace --force -f /tmp/kubectl-edit-2739834084.yaml
+   ```
+
+   The output is similar to this:
+
+   ```
+   pod "tool" deleted from drill namespace
+   pod/tool replaced
+   ```
+
+## Check the result
+
+The grader reads the cluster, so read back the exact value a task asked for:
+[checking your work](../../references/exam-workflow.md#checking-your-work).
+
+1. Print two fields with `jsonpath`, and the same from `describe`:
+
+   ```shell
+   k get deploy web -n drill -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
+   k describe deploy web -n drill | grep -E '^Replicas|Image'
+   ```
+
+   The output is similar to this:
+
+   ```
+   3 nginx:1.28
+   Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+       Image:         nginx:1.28
+   ```
+
+## Recall
+
+Answer before opening.
+
+<details><summary>A task says to work on `node01`. Where does `kubectl` work, and how do you get back?</summary>
+
+`kubectl` works on the host with a kubeconfig, `controlplane` here. `ssh node01` reaches the
+worker, `sudo -i` gives root, and one `exit` per level returns you.
+</details>
+
+<details><summary>What are the three sources of YAML, fastest first?</summary>
+
+`k create`, `k run` or `k expose` with `--dry-run=client -o yaml`. Then a snippet copied from a
+kubernetes.io page. Then `k explain` for a field neither shows.
+</details>
+
+<details><summary>Which common types have no `kubectl create` command?</summary>
+
+NetworkPolicy, PersistentVolume and PersistentVolumeClaim. Copy them from the docs.
+</details>
+
+<details><summary>Pasted YAML in vim is indented one step further on every line. What prevents it?</summary>
+
+`:set paste` before entering insert mode and pasting.
+</details>
+
+<details><summary>`k edit` on a pod fails with `is invalid`. What now?</summary>
+
+`k replace --force -f` the file whose name `k edit` printed. It deletes the pod and creates it
+from your edited copy.
+</details>
+
+<details><summary>You set `alias kn=...` in one task. Is it there in the next?</summary>
+
+No. Each task is a new `ssh` session. Only `k` and its completion are always there.
+</details>
+
+## Practice it
+
+Do it again without the steps above, the way the exam asks. Give yourself **12 minutes**.
+
+Start from a fresh [`cluster` lab](../../lab/README.md#cluster). When time is up,
+[grade the run](../../lab/README.md#grading).
+
+1. **Host `controlplane`, weight 15%.** Create the namespace `shop`, and in it a Deployment `api`
+   running `nginx:1.27` with 2 replicas.
+2. **Host `controlplane`, weight 15%.** Expose `api` inside the cluster as a Service `api` on port
+   80.
+3. **Host `controlplane`, weight 20%.** In `shop`, create a ConfigMap `api-config` with
+   `MODE=fast` and a Secret `api-secret` with `TOKEN=abc123`.
+4. **Host `controlplane`, weight 20%.** In `shop`, create a NetworkPolicy `deny-in` that denies
+   all ingress traffic to every pod in the namespace.
+5. **Host `node01`, weight 15%.** Write the output of `containerd --version` on `node01` to
+   `/opt/course/5/runtime.txt` on `node01`.
+6. **Host `controlplane`, weight 15%.** Change `api` to run `nginx:1.28` with 3 replicas.
+
+<details><summary>Solution</summary>
+
+Tasks 1 to 3:
+
+```shell
+k create ns shop
+k create deployment api --image=nginx:1.27 --replicas=2 -n shop
+k expose deployment api -n shop --port=80
+k create configmap api-config -n shop --from-literal=MODE=fast
+k create secret generic api-secret -n shop --from-literal=TOKEN=abc123
+```
+
+Task 4. Copy "Default deny all ingress traffic" from the Network Policies page into
+`vim deny.yaml` with `:set paste`, and change the name:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-in
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+```
+
+```shell
+k apply -f deny.yaml -n shop
+```
+
+Task 5. `/opt` needs root:
+
+```shell
+ssh node01
+sudo -i
+mkdir -p /opt/course/5
+containerd --version > /opt/course/5/runtime.txt
+exit
+exit
+```
+
+Task 6:
+
+```shell
+k set image deploy/api nginx=nginx:1.28 -n shop
+k scale deploy api --replicas=3 -n shop
+```
+
+</details>
+
+## Check your work
+
+[Grade the run](../../lab/README.md#grading), or check by hand on `controlplane`:
+
+1. The Deployment's image and ready replicas:
+
+   ```shell
+   k get deploy api -n shop -o jsonpath='{.spec.template.spec.containers[0].image} {.status.readyReplicas}{"\n"}'
+   ```
+
+   ```
+   nginx:1.28 3
+   ```
+
+2. The file on `node01`:
+
+   ```shell
+   ssh node01 cat /opt/course/5/runtime.txt
+   ```
+
+   ```
+   containerd github.com/containerd/containerd/v2 2.2.1
+   ```
+
+## What's next
+
+* [exam-workflow](../../references/exam-workflow.md) has every command above, the vim keys and
+  the docs pages worth knowing, in one place.
+* [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is on
+  the allowed docs and lists more imperative commands and `jsonpath` examples.
+* [killer.sh](https://killer.sh) (not available in the exam) is the exam's remote desktop, where
+  Ctrl+Shift+C and Ctrl+Shift+V can be practised for real.

@@ -28,7 +28,13 @@ Do this once, in a terminal on your Mac, inside this project's folder (`cd ~/pro
    lab/provision.sh
    ```
 
-3. Save a copy of the bare machines, so you can always return to them:
+3. Set the machines up the way the exam's hosts are: `ssh node01` and `ssh node02` work from `controlplane` without a password, and every machine has the `k` alias with bash completion and `yq`:
+
+   ```shell
+   lab/exam-mode.sh
+   ```
+
+4. Save a copy of the bare machines, so you can always return to them:
 
    ```shell
    lab/snapshot.sh save clean
@@ -84,12 +90,13 @@ If `restore` says `no backup controlplane-built`, the working cluster has not be
 
   ```shell
   lab/provision.sh --auto
+  lab/exam-mode.sh
   lab/snapshot.sh save built
   ```
 
 ### helm
 
-The `cluster` starting state with Helm installed on `controlplane`.
+The `cluster` starting state with Helm installed on `controlplane`, and one release, `legacy`, that Practice it task 5 has to find.
 
 In a terminal on your Mac, run:
 
@@ -101,21 +108,50 @@ limactl start controlplane && limactl start node01 && limactl start node02
 limactl shell controlplane
 ```
 
-The first three commands are the same as for `cluster`. The fourth downloads the latest Helm release onto `controlplane` and prints its version, and the last opens a shell there. The exercise's commands run in that shell.
+The first three commands are the same as for `cluster`. The fourth downloads the latest Helm onto `controlplane`, installs `legacy`, and prints Helm's version, and the last opens a shell there. The exercise's commands run in that shell.
 
 If `restore` says `no backup controlplane-built`, follow the note under [`cluster`](#cluster) first.
 
-## Moving between machines
+### kustomize
 
-When an exercise says "on `node01`", open a shell on that machine. From the Mac, in a second terminal:
+The `cluster` starting state with the files Practice it task 3 hands over, under `/opt/course/3`.
+
+In a terminal on your Mac, run:
 
 ```shell
-limactl shell node01
+cd ~/projects/cka-prep
+lab/snapshot.sh restore built
+limactl start controlplane && limactl start node01 && limactl start node02
+01-cluster-architecture/03-kustomize/setup.sh
+limactl shell controlplane
 ```
 
-`exit` returns to the Mac. The exam does the same thing with `ssh node01`.
+The first three commands are the same as for `cluster`. The fourth writes the task's files and lists them, and the last opens a shell on `controlplane`.
 
-`kubectl` only works on `controlplane`, because only it has the admin kubeconfig. On a worker it fails with `localhost:8080 was refused`.
+## Moving between machines
+
+`controlplane` plays the part of the exam's base host. When an exercise says "on `node01`" or a task names `node01`, reach it the way the exam does, from `controlplane`:
+
+```shell
+ssh node01
+sudo -i        # root, when the task needs it
+exit           # back to controlplane (twice after sudo -i)
+```
+
+Nested ssh, such as `ssh node02` from `node01`, is not set up, and the exam does not support it either. From the Mac, `limactl shell node01` also opens a shell there.
+
+`kubectl` only works on `controlplane`, because only it has the admin kubeconfig. On a worker it fails with `localhost:8080 was refused`. `k` is an alias for `kubectl` with bash completion, as in the exam.
+
+## Grading
+
+A topic whose Practice it can be graded has a `grade.sh` in its folder. After a timed run, grade it in a terminal on your Mac:
+
+```shell
+cd ~/projects/cka-prep
+01-cluster-architecture/03-kustomize/grade.sh
+```
+
+It checks only the cluster's final state, one sub-task at a time, and prints each result, each task's share of its weight, and the total against the 66% pass mark. How you got there is never checked, which is how the exam grades. Tick the tasks it passed in the study app to keep the score with your notes.
 
 ## After an exercise
 
@@ -139,6 +175,8 @@ Every lab command, run in a terminal on your Mac inside this project's folder (`
 | `lab/snapshot.sh save <name>` | Saves a copy of all three machines under a name, replacing any copy with that name, then restarts them. |
 | `lab/snapshot.sh restore <name>` | Puts all three machines back to that copy and leaves them stopped. |
 | `lab/snapshot.sh list` | Lists the machines and saved copies. |
+| `lab/exam-mode.sh` | Sets up `ssh` from `controlplane` to the workers, the `k` alias and `yq`. Run it after `provision.sh`, before saving. |
+| `<topic folder>/grade.sh` | Grades that topic's Practice it on the running machines. |
 
 Saving over `clean` leaves no way back to bare machines short of deleting them and running `lab/provision.sh` again.
 

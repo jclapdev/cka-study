@@ -15,6 +15,26 @@ Registration includes two sessions of the [killer.sh](https://killer.sh) simulat
 
 Sources: [Linux Foundation tips for the CKA](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad), [CKA curriculum](https://github.com/cncf/curriculum).
 
+## How to work in the exam
+
+The remote desktop is XFCE with a terminal and Firefox, and nothing else is on screen. These details change how fast you can go:
+
+- **Copy and paste.** The terminal copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, or with its right-click menu. Firefox uses Ctrl+C and Ctrl+V. On the lab, your Mac terminal uses Cmd+C and Cmd+V instead, so practise the exam keys in the [killer.sh](https://killer.sh) sessions.
+- **vim.** The INSERT key is blocked, so enter insert mode with `i`. Pasted YAML can come out re-indented, one step further right per line. Run `:set paste` before pasting to prevent it.
+- **Nothing carries over between tasks.** Each task starts a new `ssh` session, so an alias, an exported variable or a `.vimrc` set in one task is gone in the next. Only what the hosts come with, `k` and its completion, is always there.
+- **Docs search.** The search box on kubernetes.io is allowed, but opening a result outside the allowed sites is not. The Kustomize field reference at `kubectl.docs.kubernetes.io` is not on the allowed list.
+- **Partial credit.** A task is split into sub-tasks, and each one that is right in the final state scores. Harder sub-tasks can count for more. A task finished halfway still earns part of its weight.
+
+YAML comes from three places, fastest first. Nobody types a whole manifest.
+
+1. An imperative command that writes it: `k create deployment web --image=nginx --dry-run=client -o yaml > web.yaml`. `k create`, `k run` and `k expose` cover Deployments, Pods, Services, ConfigMaps, Secrets, Namespaces, ServiceAccounts, Roles, bindings, Jobs and CronJobs.
+2. A snippet from a kubernetes.io page, found with the search box. Many pages have an example file with a copy button, or a ready-to-paste `cat <<EOF` block. Paste it, then change the names and values.
+3. `k explain <kind>.<field>`, when you know a field exists but not where it goes. `--recursive` prints the whole tree.
+
+The [exam workflow](references/exam-workflow.md) page has the commands, and the [exam workflow drill](00-exam-skills/00-exam-workflow/README.md) practises them.
+
+Sources: [Linux Foundation tips for the CKA](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad), [resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed), [killer.sh FAQ](https://killer.sh/faq) (partial credit), [a 2026 candidate's guide](https://github.com/techwithmohamed/CKA-Certified-Kubernetes-Administrator) (a new ssh session per task).
+
 ## Domains
 
 ### Troubleshooting (30%)

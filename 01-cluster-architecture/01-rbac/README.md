@@ -472,7 +472,8 @@ group to `cluster-admin`.
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
-Start from a fresh [`cluster` lab](../../lab/README.md#cluster).
+Start from a fresh [`cluster` lab](../../lab/README.md#cluster). When time is up,
+[grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in
    it.
@@ -491,35 +492,35 @@ Start from a fresh [`cluster` lab](../../lab/README.md#cluster).
 
 ```shell
 # 1.
-kubectl create namespace web
-kubectl create serviceaccount ci -n web
+k create namespace web
+k create serviceaccount ci -n web
 
 # 2. kubectl fills in the apps group for deployments
-kubectl create role deployer -n web --verb=create,update,delete --resource=deployments
-kubectl create rolebinding ci-deployer -n web --role=deployer --serviceaccount=web:ci
+k create role deployer -n web --verb=create,update,delete --resource=deployments
+k create rolebinding ci-deployer -n web --role=deployer --serviceaccount=web:ci
 
 # 3. one ClusterRole, one RoleBinding per namespace
-kubectl create clusterrole secret-reader --verb=get,list --resource=secrets
-kubectl create rolebinding ci-secret-reader -n web --clusterrole=secret-reader --serviceaccount=web:ci
-kubectl create rolebinding ci-secret-reader -n default --clusterrole=secret-reader --serviceaccount=web:ci
+k create clusterrole secret-reader --verb=get,list --resource=secrets
+k create rolebinding ci-secret-reader -n web --clusterrole=secret-reader --serviceaccount=web:ci
+k create rolebinding ci-secret-reader -n default --clusterrole=secret-reader --serviceaccount=web:ci
 
 # 4. PersistentVolumes have no namespace, so only a ClusterRoleBinding reaches them
-kubectl create clusterrole pv-lister --verb=list --resource=persistentvolumes
-kubectl create clusterrolebinding ci-pv-lister --clusterrole=pv-lister --serviceaccount=web:ci
+k create clusterrole pv-lister --verb=list --resource=persistentvolumes
+k create clusterrolebinding ci-pv-lister --clusterrole=pv-lister --serviceaccount=web:ci
 
 # 5.
-kubectl create rolebinding auditors-view -n web --clusterrole=view --group=auditors
+k create rolebinding auditors-view -n web --clusterrole=view --group=auditors
 
 # check: the first answer of each pair is yes, the second is no
 SA=system:serviceaccount:web:ci
-kubectl auth can-i delete deployments.apps -n web --as=$SA
-kubectl auth can-i get deployments.apps -n web --as=$SA
-kubectl auth can-i list secrets -n default --as=$SA
-kubectl auth can-i list secrets -n kube-system --as=$SA
-kubectl auth can-i list persistentvolumes --as=$SA
-kubectl auth can-i delete persistentvolumes --as=$SA
-kubectl auth can-i list pods -n web --as=anyone --as-group=auditors
-kubectl auth can-i list pods -n default --as=anyone --as-group=auditors
+k auth can-i delete deployments.apps -n web --as=$SA
+k auth can-i get deployments.apps -n web --as=$SA
+k auth can-i list secrets -n default --as=$SA
+k auth can-i list secrets -n kube-system --as=$SA
+k auth can-i list persistentvolumes --as=$SA
+k auth can-i delete persistentvolumes --as=$SA
+k auth can-i list pods -n web --as=anyone --as-group=auditors
+k auth can-i list pods -n default --as=anyone --as-group=auditors
 ```
 </details>
 
