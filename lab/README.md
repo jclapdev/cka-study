@@ -128,6 +128,22 @@ limactl shell controlplane
 
 The first three commands are the same as for `cluster`. The fourth writes the task's files and lists them, and the last opens a shell on `controlplane`.
 
+### crds
+
+The `cluster` starting state with Helm installed on `controlplane`, and empty folders under `/opt/course` for Practice it's answers.
+
+In a terminal on your Mac, run:
+
+```shell
+cd ~/projects/cka-prep
+lab/snapshot.sh restore built
+limactl start controlplane && limactl start node01 && limactl start node02
+01-cluster-architecture/04-crds-operators/setup.sh
+limactl shell controlplane
+```
+
+The first three commands are the same as for `cluster`. The fourth installs Helm and prints its version, and the last opens a shell on `controlplane`.
+
 ## Moving between machines
 
 `controlplane` plays the part of the exam's base host. When an exercise says "on `node01`" or a task names `node01`, reach it the way the exam does, from `controlplane`:

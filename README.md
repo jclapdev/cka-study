@@ -43,7 +43,7 @@ Status is **ready** when the README has steps and a Practice it section, **steps
 | | [01-rbac](01-cluster-architecture/01-rbac/README.md) | ready |
 | | [02-helm](01-cluster-architecture/02-helm/README.md) | ready |
 | | [03-kustomize](01-cluster-architecture/03-kustomize/README.md) | ready |
-| | 04-crds-operators | |
+| | [04-crds-operators](01-cluster-architecture/04-crds-operators/README.md) | ready |
 | | 05-extension-interfaces | |
 | | 06-etcd-backup-restore | |
 | | 07-cluster-upgrade | |

@@ -20,5 +20,6 @@ Concept summaries shared by every exercise. Each one states the model, how it sh
 | [authentication](authentication.md) | users and groups from certificates, `admin.conf` vs `super-admin.conf`, `auth whoami`, `--as` |
 | [helm](helm.md) | charts, repositories and releases, values and `--reuse-values`, revisions and rollback, where releases are stored, `helm template` |
 | [kustomize](kustomize.md) | bases and overlays, the fields an overlay sets, `labels` and selectors, patches, generated ConfigMap names, `-k` vs `-f` |
+| [crds](crds.md) | what a CRD adds, its parts, schema validation, operators and reconciling, CRDs in Helm charts |
 
 Every new exercise extends this folder: each concept it touches either already has a summary here or gets one written alongside it, and the exercise README links to them.
