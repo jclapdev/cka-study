@@ -6,7 +6,7 @@ operator usually means installing its CRDs and its controller together, often fr
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
-Starts from the [`crds` lab](../../lab/README.md#crds). Every command runs on `controlplane`.
+Starts from the [`crds` lab](../../lab/README.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -502,6 +502,7 @@ Start from a fresh [`crds` lab](../../lab/README.md#crds). When time is up,
 Tasks 1 to 3:
 
 ```shell
+ssh controlplane
 helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
 k get crd -o name | grep cert-manager > /opt/course/2/crds.txt
 k explain certificate.spec.subject > /opt/course/3/subject.txt

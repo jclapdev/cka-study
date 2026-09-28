@@ -41,6 +41,11 @@ export function topicReadme(domain: string, topic: string): string | null {
   return fs.existsSync(path.join(REPO, rel)) ? rel : null;
 }
 
+/** Whether a topic has a grade.sh for its Practice it. */
+export function hasGrader(domain: string, topic: string): boolean {
+  return NUMBERED.test(domain) && NUMBERED.test(topic) && fs.existsSync(path.join(REPO, domain, topic, "grade.sh"));
+}
+
 /**
  * Reads a Markdown file by repo-relative path. Returns null for anything that
  * is not a .md file inside the repo, or that lives in the app itself.

@@ -18,13 +18,18 @@ export function PracticeRun({
   checkHtml,
   attempts,
   onRunning,
+  grader,
+  terminalButton,
 }: {
   practice: Practice;
   checkHtml: string | null;
   attempts: Attempt[];
   onRunning: (running: boolean) => void;
+  grader: boolean;
+  terminalButton: React.ReactNode;
 }) {
   const fetcher = useFetcher();
+  const grading = useFetcher<{ grade: string }>();
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [endedAt, setEndedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -44,7 +49,7 @@ export function PracticeRun({
     setNow(Date.now());
     setEndedAt(null);
     setPassed([]);
-    window.scrollTo({ top: 0 });
+    document.querySelector("article")?.scrollIntoView(); // the page, or its pane beside the terminal
   };
   const reset = () => {
     setStartedAt(null);
@@ -108,6 +113,7 @@ export function PracticeRun({
           </span>
         </div>
         <div className="flex gap-2">
+          {terminalButton}
           <button onClick={reset} className="rounded border border-line px-3 py-2 text-sm hover:border-accent">
             Abandon
           </button>
@@ -137,6 +143,20 @@ export function PracticeRun({
               Save attempt
             </button>
           </div>
+          {grader && (
+            <section>
+              <button
+                onClick={() => grading.submit({ intent: "grade" }, { method: "post" })}
+                disabled={grading.state !== "idle"}
+                className="rounded border border-line px-4 py-2 font-semibold hover:border-accent disabled:opacity-60"
+              >
+                {grading.state !== "idle" ? "Grading…" : "Run grader"}
+              </button>
+              {grading.data?.grade && (
+                <pre className="mt-3 overflow-x-auto rounded-md border border-line bg-surface px-5 py-4 font-mono text-sm">{grading.data.grade}</pre>
+              )}
+            </section>
+          )}
           {checkHtml && (
             <section>
               <h3 className="mb-3 text-lg font-bold">Check your work</h3>

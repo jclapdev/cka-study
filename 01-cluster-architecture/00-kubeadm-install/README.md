@@ -6,7 +6,7 @@ manifests, and prints a command that joins other machines to what it built.
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
-Starts from the [`vms` lab](../../lab/README.md#vms). Every command runs on `controlplane` unless a step says otherwise.
+Starts from the [`vms` lab](../../lab/README.md#vms). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -295,9 +295,10 @@ create --print-join-command` prints a new one: [joining](../../references/worker
    sequence: [joining](../../references/workers.md#joining).
 
 2. Copy the command you just printed, then run it on `node01`. Your token and hash differ from
-   the ones above, so paste yours:
+   the ones above, so paste yours. Go back to `base` first:
 
    ```shell
+   exit                         # back to base
    ssh node01
    sudo kubeadm join ...        # paste the command printed in the previous step
    exit
@@ -313,14 +314,14 @@ create --print-join-command` prints a new one: [joining](../../references/worker
    Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
    ```
 
-3. Join `node02` the same way, with `ssh node02` from `controlplane`.
+3. Join `node02` the same way, with `ssh node02` from `base`.
 
 Workers get no admin kubeconfig, so `kubectl` on `node01` fails with the same `localhost:8080`
 error. Run every `kubectl` command on `controlplane`.
 
 ## Label the workers
 
-A node's role is a [label](../../references/labels.md#keys-and-values), not a field. Back on `controlplane`:
+A node's role is a [label](../../references/labels.md#keys-and-values), not a field. Back on `controlplane`, with `ssh controlplane` from `base`:
 
 1. List the nodes:
 
@@ -464,7 +465,8 @@ Start from a fresh [`vms` lab](../../lab/README.md#vms). When time is up,
 <details><summary>Solution</summary>
 
 ```shell
-# 1. on controlplane
+# 1.
+ssh controlplane
 CP_IP=$(ip route get 1.1.1.1 | awk '{print $7; exit}')
 sudo kubeadm init --apiserver-advertise-address "$CP_IP" --pod-network-cidr 10.244.0.0/16
 
@@ -478,6 +480,7 @@ k apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-f
 
 # 4. print the join command, then run it with sudo on each worker
 sudo kubeadm token create --print-join-command
+exit                         # back to base
 ssh node01
 sudo kubeadm join ...        # the printed command
 exit
@@ -486,6 +489,7 @@ sudo kubeadm join ...
 exit
 
 # 5.
+ssh controlplane
 k label node node01 node02 node-role.kubernetes.io/worker=
 
 # 6.

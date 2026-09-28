@@ -6,7 +6,7 @@ built into `kubectl`, so no template language and no extra tool is involved.
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
-Starts from the [`kustomize` lab](../../lab/README.md#kustomize). Every command runs on `controlplane`.
+Starts from the [`kustomize` lab](../../lab/README.md#kustomize). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -552,6 +552,7 @@ Start from a fresh [`kustomize` lab](../../lab/README.md#kustomize). When time i
 Task 1. Generate the manifests, then paste the base kustomization block from Bases and Overlays:
 
 ```shell
+ssh controlplane
 mkdir -p ~/shop/base ~/shop/staging && cd ~/shop
 k create deployment shop --image=nginx:1.27 --dry-run=client -o yaml > base/deployment.yaml
 k create service clusterip shop --tcp=80:80 --dry-run=client -o yaml > base/service.yaml

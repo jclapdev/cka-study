@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Makes the running lab machines behave like exam hosts:
-#   - `ssh node01` / `ssh node02` from controlplane, without a password
+#   - `ssh controlplane` / `ssh node01` / `ssh node02` from base, without a
+#     password, and no ssh from one of those to another
 #   - the `k` alias with bash completion, for the user and for root
 #   - yq (mikefarah's, the one the exam ships)
-# Idempotent. Run on the Mac with all three machines started, then save the
+# Idempotent. Run on the Mac with all four machines started, then save the
 # starting state again (lab/snapshot.sh save <name>) so restores keep it.
 set -euo pipefail
 
@@ -11,7 +12,6 @@ VMS=(controlplane node01 node02)
 YQ_VERSION=v4.53.6
 
 on() { local vm=$1; shift; limactl shell --workdir / "$vm" "$@"; }
-nodeip() { on "$1" ip route get 1.1.1.1 2>/dev/null | awk '{print $7; exit}'; }
 
 
 for vm in "${VMS[@]}"; do
@@ -34,17 +34,27 @@ RC
   "
 done
 
-echo "== ssh key on controlplane"
-on controlplane bash -c 'ssh-keygen -y -f ~/.ssh/id_ed25519 >/dev/null 2>&1 || { rm -f ~/.ssh/id_ed25519*; ssh-keygen -q -t ed25519 -N "" -f ~/.ssh/id_ed25519; }'
-PUB=$(on controlplane bash -c 'cat ~/.ssh/id_ed25519.pub')
-for vm in node01 node02; do
-  on "$vm" bash -c "grep -qF '$PUB' ~/.ssh/authorized_keys || echo '$PUB' >> ~/.ssh/authorized_keys"
-done
-# /etc/hosts is rewritten at every boot, so the names live in ~/.ssh/config.
+echo "== ssh from base"
+# Every lima machine already accepts lima's own key, so base gets a copy of it and
+# reaches all three, including any machine restored from a saved copy.
+on base bash -c 'umask 077; mkdir -p ~/.ssh; cat > ~/.ssh/id_ed25519' < ~/.lima/_config/user
+# lima's network names each machine lima-<name>.internal, which survives restores.
 # Host keys change on every restore (each is a new clone), so they are not pinned.
 CONF=""
-for vm in node01 node02; do CONF+="Host $vm"$'\n'"  HostName $(nodeip "$vm")"$'\n'"  StrictHostKeyChecking no"$'\n'"  UserKnownHostsFile /dev/null"$'\n'"  LogLevel ERROR"$'\n'; done
-on controlplane bash -c "printf '%s' '$CONF' > ~/.ssh/config && chmod 600 ~/.ssh/config"
+for vm in "${VMS[@]}"; do CONF+="Host $vm"$'\n'"  HostName lima-$vm.internal"$'\n'"  StrictHostKeyChecking no"$'\n'"  UserKnownHostsFile /dev/null"$'\n'"  LogLevel ERROR"$'\n'; done
+on base bash -c "printf '%s' '$CONF' > ~/.ssh/config && chmod 600 ~/.ssh/config"
+
+echo "== no nested ssh"
+# The exam does not support ssh from one task host to another. Older copies of the
+# lab had controlplane's own key authorised on the workers; remove it.
+OLD=$(on controlplane bash -c 'cat ~/.ssh/id_ed25519.pub 2>/dev/null' || true)
+if [ -n "$OLD" ]; then
+  for vm in node01 node02; do on "$vm" bash -c "grep -vF '$OLD' ~/.ssh/authorized_keys > ~/.ssh/ak; mv ~/.ssh/ak ~/.ssh/authorized_keys; chmod 600 ~/.ssh/authorized_keys"; done
+fi
+on controlplane rm -f .ssh/id_ed25519 .ssh/id_ed25519.pub .ssh/config
 
 echo "== check"
-on controlplane bash -ic 'for n in node01 node02; do ssh -o BatchMode=yes $n hostname; done; type k | head -1; yq --version'
+on base bash -c 'for n in controlplane node01 node02; do ssh -o BatchMode=yes $n hostname; done'
+on base bash -c '! command -v kubectl >/dev/null' && echo "base has no kubectl"
+on controlplane ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no node01 true 2>/dev/null && { echo "nested ssh still works from controlplane"; exit 1; } || echo "no nested ssh from controlplane"
+on controlplane bash -ic 'type k | head -1; yq --version'

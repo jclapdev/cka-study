@@ -7,11 +7,11 @@ in the docs, and changing and checking live objects.
 
 Exam domain: all of them. The [exam page](../../EXAM.md) has the format and how grading works.
 
-Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane` unless a step says otherwise.
+Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
-* Reach a worker with `ssh`, become root, and get back to the base host.
+* Start on `base`, reach a worker with `ssh`, become root, and get back to `base`.
 * Use `k`, its completion, and the short names for resource types.
 * Generate a Pod, Deployment, Service, ConfigMap and Secret with `--dry-run=client -o yaml`.
 * Find a manifest on kubernetes.io, copy it, and paste it into vim with its indentation intact.
@@ -21,13 +21,26 @@ Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs
 
 ## Reach the right host
 
-Each exam task names the host to `ssh` into, and the base host has no cluster access:
+You start on `base`, which has no `kubectl`. Each exam task names the host to `ssh` into:
 [hosts and ssh](../../references/exam-workflow.md#hosts-and-ssh).
 
-1. Go to `node01`, become root, and try `kubectl` there:
+1. Check where you are, and try `kubectl`:
 
    ```shell
    hostname
+   kubectl get nodes
+   ```
+
+   The output is similar to this:
+
+   ```
+   base
+   Command 'kubectl' not found, but can be installed with:
+   ```
+
+2. Go to `node01`, become root, and try `kubectl` there:
+
+   ```shell
    ssh node01
    sudo -i
    whoami
@@ -37,7 +50,6 @@ Each exam task names the host to `ssh` into, and the base host has no cluster ac
    The output is similar to this:
 
    ```
-   controlplane
    root
    The connection to the server localhost:8080 was refused - did you specify the right host or port?
    ```
@@ -45,7 +57,7 @@ Each exam task names the host to `ssh` into, and the base host has no cluster ac
    `kubectl` works only where a kubeconfig exists. A task that says to work on `node01` means
    files and services on that machine, not the cluster.
 
-2. Read the node's container runtime version, then return to `controlplane`:
+3. Read the node's container runtime version, then return to `base`:
 
    ```shell
    containerd --version
@@ -58,11 +70,17 @@ Each exam task names the host to `ssh` into, and the base host has no cluster ac
 
    ```
    containerd github.com/containerd/containerd/v2 2.2.1
-   controlplane
+   base
    ```
 
    The first `exit` leaves root, and the second leaves `node01`. `ssh node02` from `node01`
-   is nested ssh, which the exam does not support.
+   is nested ssh, which the exam does not support and the lab refuses.
+
+4. Go to `controlplane`, where the rest of this exercise runs:
+
+   ```shell
+   ssh controlplane
+   ```
 
 ## Type less with `k`
 
@@ -417,8 +435,9 @@ Answer before opening.
 
 <details><summary>A task says to work on `node01`. Where does `kubectl` work, and how do you get back?</summary>
 
-`kubectl` works on the host with a kubeconfig, `controlplane` here. `ssh node01` reaches the
-worker, `sudo -i` gives root, and one `exit` per level returns you.
+`kubectl` works on the host with a kubeconfig, `controlplane` here, and not on `base`. From
+`base`, `ssh node01` reaches the worker, `sudo -i` gives root, and one `exit` per level returns
+you to `base`.
 </details>
 
 <details><summary>What are the three sources of YAML, fastest first?</summary>
@@ -472,6 +491,7 @@ Start from a fresh [`cluster` lab](../../lab/README.md#cluster). When time is up
 Tasks 1 to 3:
 
 ```shell
+ssh controlplane
 k create ns shop
 k create deployment api --image=nginx:1.27 --replicas=2 -n shop
 k expose deployment api -n shop --port=80
@@ -497,9 +517,10 @@ spec:
 k apply -f deny.yaml -n shop
 ```
 
-Task 5. `/opt` needs root:
+Task 5. Go back to `base` first. `/opt` needs root:
 
 ```shell
+exit          # back to base
 ssh node01
 sudo -i
 mkdir -p /opt/course/5
@@ -511,6 +532,7 @@ exit
 Task 6:
 
 ```shell
+ssh controlplane
 k set image deploy/api nginx=nginx:1.28 -n shop
 k scale deploy api --replicas=3 -n shop
 ```
@@ -531,9 +553,10 @@ k scale deploy api --replicas=3 -n shop
    nginx:1.28 3
    ```
 
-2. The file on `node01`:
+2. The file on `node01`, from `base`:
 
    ```shell
+   exit
    ssh node01 cat /opt/course/5/runtime.txt
    ```
 

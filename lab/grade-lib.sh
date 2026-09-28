@@ -12,13 +12,23 @@
 # task scores its weight times the share of its points that passed, the way the
 # exam gives partial credit per sub-task. Checks run on controlplane as the lab
 # user; `ssh node01 …` reaches a worker. Only the final state is inspected.
+#
+# controlplane has no key for the workers, as in the exam, so for the run the
+# grader lends it lima's own key, which every lab machine accepts, and deletes
+# it afterwards.
 
 grade() {
+  limactl shell --workdir / controlplane bash -c 'umask 077; cat > /tmp/cka-grader-key' < ~/.lima/_config/user
+  trap 'limactl shell --workdir / controlplane rm -f /tmp/cka-grader-key' EXIT
   limactl shell --workdir / controlplane bash -s < <(cat <<'LIB'
 exec 2>/dev/null   # a check reports ✓ or ✗; its errors are noise
 k() { kubectl "$@"; }
 # -n: ssh must not read the rest of this script from stdin
-ssh() { command ssh -n -o BatchMode=yes "$@"; }
+ssh() {
+  local host=$1; shift
+  command ssh -n -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+    -o LogLevel=ERROR -i /tmp/cka-grader-key "lima-$host.internal" "$@"
+}
 export -f k ssh   # visible inside `bash -c` checks too
 T=0; W=0; GOT=0; MAX=0; TOTAL=0
 end_task() {

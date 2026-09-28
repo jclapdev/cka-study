@@ -4,19 +4,19 @@ The exam is 15 to 20 tasks in 2 hours on remote Linux hosts, with a terminal, vi
 
 ## Hosts and ssh
 
-Each task opens with a box naming the host to `ssh` into. Work on the wrong host scores nothing for that task.
+You start on a machine named `base`, which has no `kubectl`, `k`, `yq` or other exam tools. Each task opens with a box naming the host to `ssh` into, and all the task's work happens there. Work on the wrong host scores nothing for that task.
 
 ```bash
-ssh node01      # reach the host a task names
+ssh node01      # from base, reach the host a task names
 sudo -i         # root, for files under /etc, /opt or /var, or systemctl
-exit            # leave root; exit again to leave the host
+exit            # leave root; exit again to go back to base
 ```
 
 - `kubectl` needs a kubeconfig. On a host without one it fails with `The connection to the server localhost:8080 was refused`. A task on a worker is about that machine's files and services.
-- Nested ssh, such as `ssh node02` from `node01`, is not supported. Go back to the base host first.
+- Nested ssh, such as `ssh node02` from `node01`, is not supported. Go back to `base` first.
 - Each task is a new session. An alias, an exported variable or a `.vimrc` you set is gone in the next task.
 
-In the lab, `controlplane` is the base host, and `ssh node01` and `ssh node02` work from it ([lab](../lab/README.md#moving-between-machines)).
+The lab works the same way: you start on `base`, and `ssh controlplane`, `ssh node01` and `ssh node02` work only from there ([lab](../lab/README.md#moving-between-machines)).
 
 ## The k alias and short names
 
@@ -128,7 +128,8 @@ k auth can-i list pods --as=system:serviceaccount:dev:bot -n dev
 
 | Symptom | Cause |
 | --- | --- |
-| `The connection to the server localhost:8080 was refused` | `kubectl` on a host without a kubeconfig. Run it on the base host, or the host the task names for cluster work. |
+| `The connection to the server localhost:8080 was refused` | `kubectl` on a host without a kubeconfig. Run it on the host the task names for cluster work. |
+| `Command 'kubectl' not found` or `k: command not found` | You are still on `base`. `ssh` to the host the task names first. |
 | `Error from server (NotFound): deployments.apps "web" not found` from `k expose … --dry-run=client` | `expose` reads the object from the cluster. Create it first, or use `k create service`. |
 | `Secret in version "v1" cannot be handled as a Secret: illegal base64 data at input byte 4` | A plain value under a Secret's `data`. Use `k create secret generic --from-literal`, or put it under `stringData`. |
 | `error: pods "tool" is invalid`, then `A copy of your changes has been stored to "/tmp/kubectl-edit-….yaml"` | The field cannot change on a running pod. `k replace --force -f` that file. |

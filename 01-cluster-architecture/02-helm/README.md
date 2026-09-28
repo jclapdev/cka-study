@@ -6,7 +6,7 @@ one unit.
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
-Starts from the [`helm` lab](../../lab/README.md#helm). Every command runs on `controlplane`.
+Starts from the [`helm` lab](../../lab/README.md#helm). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -476,6 +476,7 @@ Start from a fresh [`helm` lab](../../lab/README.md#helm). When time is up,
 <details><summary>Solution</summary>
 
 ```shell
+ssh controlplane
 # 1.
 helm repo add podinfo https://stefanprodan.github.io/podinfo
 helm install shop podinfo/podinfo --version 6.14.1 -n store --create-namespace --set replicaCount=3

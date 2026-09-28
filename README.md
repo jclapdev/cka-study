@@ -11,7 +11,7 @@ Each exercise names the lab starting state it needs at the top and links to the 
 
 ## Study app
 
-`app/` is a local web page that shows each exercise with a tick on every step, Recall questions you grade yourself, a timed Practice it run with a score, and notes per topic. It reads the READMEs directly, so there is nothing to sync, and keeps your progress in `app/data/progress.db`. Commands still run in your own terminal.
+`app/` is a local web page that shows each exercise with a tick on every step, Recall questions you grade yourself, a timed Practice it run with a score, and notes per topic. It reads the READMEs directly, so there is nothing to sync, and keeps your progress in `app/data/progress.db`. The Open terminal button on a topic page opens a shell on `base` beside the exercise, where the exam starts you. It copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, the exam terminal's keys. The machines must already be running, from the topic's starting state.
 
 It needs Node 24 and pnpm (`corepack enable pnpm`). In a terminal on your Mac:
 

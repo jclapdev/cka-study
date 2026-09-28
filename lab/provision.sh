@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build the CKA practice lab: three Ubuntu VMs with every kubeadm prerequisite
-# installed, and nothing else.
+# installed, and nothing else, plus `base`, the bare machine you start on, as in
+# the exam.
 #
 #   ./provision.sh          VMs + prerequisites only; the cluster is yours to build
 #   ./provision.sh --auto   also runs kubeadm init/join and installs Flannel
@@ -20,13 +21,13 @@ AUTO=""
 command -v limactl >/dev/null || { echo "lima not installed: brew install lima"; exit 1; }
 
 launch() {
-  local name=$1 cpus=$2 mem=$3
+  local name=$1 cpus=$2 mem=$3 disk=${4:-15}
   case "$(limactl list --format '{{.Name}} {{.Status}}' 2>/dev/null | grep "^$name " || true)" in
     "$name Running") echo "== $name running" ;;
     "$name "*)       echo "== starting $name"; limactl start "$name" ;;
     *)               echo "== creating $name ($cpus cpu, ${mem}GiB)"
                      limactl create --name "$name" --cpus "$cpus" --memory "$mem" \
-                       --disk 15 --tty=false "$HERE/node.yaml"
+                       --disk "$disk" --tty=false "$HERE/node.yaml"
                      limactl start "$name" ;;
   esac
 }
@@ -74,7 +75,11 @@ nodeip() { limactl shell --workdir / "$1" ip route get 1.1.1.1 2>/dev/null | awk
 launch controlplane 2 4
 launch node01       2 2
 launch node02       2 2
+launch base         1 1 10
 for n in controlplane node01 node02; do prep "$n"; done
+# The exam's base host has none of the Kubernetes tools, so base gets only its name.
+limactl shell --workdir / base sudo bash -c "hostnamectl set-hostname base
+  grep -q ' base\$' /etc/hosts || echo '127.0.1.1 base' >> /etc/hosts"
 
 CP_IP=$(nodeip controlplane)
 echo
@@ -84,7 +89,7 @@ if [ -z "$AUTO" ]; then
   cat <<EOF
 
 VMs are ready; no cluster exists yet — that is exercise 01.
-  limactl shell controlplane
+  limactl shell base      # then: ssh controlplane
 
 Back up the clean VMs before anything destructive:  ./snapshot.sh save clean
 EOF

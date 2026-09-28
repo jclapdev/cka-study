@@ -4,7 +4,7 @@
 
 Exam domain: <Domain name as in EXAM.md> (<weight>%).
 
-Starts from the [`<lab-name>` lab](../../lab/README.md#<lab-name>). Every command runs on `controlplane` unless a step says otherwise.
+Starts from the [`<lab-name>` lab](../../lab/README.md#<lab-name>). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -50,12 +50,15 @@ explains it: [<section heading>](../../references/<concept>.md#<section-anchor>)
    <the lines to add, at their real indentation>
    ```
 
-5. On `node01`, <instruction for work on a worker>:
+5. On `node01`, <instruction for work on a worker>. Go back to `base` first, because ssh from
+   one host to another is refused, as in the exam:
 
    ```shell
+   exit               # back to base
    ssh node01
    <command>
    exit
+   ssh controlplane
    ```
 
 ## <Next step group>
@@ -87,6 +90,7 @@ Start from a fresh [`<lab-name>` lab](../../lab/README.md#<lab-name>). When time
 Task 1:
 
 ```shell
+ssh controlplane
 k <command>
 vim <file>
 ```
@@ -98,6 +102,7 @@ vim <file>
 Task 2:
 
 ```shell
+exit               # back to base
 ssh node01
 <commands>
 exit

@@ -1,14 +1,18 @@
+import { execFile } from "node:child_process";
+import path from "node:path";
+import { promisify } from "node:util";
 import { useCallback, useState } from "react";
 import { data, Link, useSearchParams } from "react-router";
 import type { Route } from "./+types/topic";
 import { labSection, parseExercise, referenceCovers, referenceLinks, renderDoc } from "~/content/parse";
-import { listReferences, readMarkdown, topicReadme } from "~/content/repo";
+import { hasGrader, listReferences, readMarkdown, REPO, topicReadme } from "~/content/repo";
 import { addAttempt, setMark, setNote, topicState } from "~/db/progress";
 import { Markdown } from "~/components/Markdown";
 import { Notes } from "~/components/Notes";
 import { PracticeRun } from "~/components/PracticeRun";
 import { RecallCard } from "~/components/RecallCard";
 import { Step } from "~/components/Step";
+import { Terminal } from "~/components/Terminal";
 
 async function load(params: Route.LoaderArgs["params"]) {
   const file = topicReadme(params.domain, params.topic);
@@ -30,7 +34,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     }),
   );
   const mine = referenceLinks(md).map((f) => f.replace(/^references\/|\.md$/g, ""));
-  return { id, exercise, state: topicState(id), labHtml, references, mine };
+  return { id, exercise, state: topicState(id), labHtml, references, mine, grader: hasGrader(params.domain, params.topic) };
 }
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.exercise.title ?? "Topic"} · CKA study` }];
@@ -61,6 +65,11 @@ export async function action({ params, request }: Route.ActionArgs) {
       });
       break;
     }
+    case "grade": {
+      if (!hasGrader(params.domain, params.topic)) throw data("No grade.sh", { status: 400 });
+      const run = await promisify(execFile)(path.join(REPO, id, "grade.sh"), { timeout: 120_000 }).catch((e) => e);
+      return { grade: `${run.stdout ?? ""}${run.stderr ?? ""}`.trim() || String(run.message) };
+    }
     default:
       throw data("Unknown intent", { status: 400 });
   }
@@ -68,15 +77,22 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function Topic({ loaderData }: Route.ComponentProps) {
-  const { id, exercise, state, labHtml, references, mine } = loaderData;
+  const { id, exercise, state, labHtml, references, mine, grader } = loaderData;
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.key === params.get("tab")) ?? TABS[1]).key;
   const [running, setRunning] = useState(false);
+  const [term, setTerm] = useState(false);
   const [missedOnly, setMissedOnly] = useState(false);
   const onRunning = useCallback((r: boolean) => setRunning(r), []);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
 
-  return (
+  const openTerminal = (
+    <button onClick={() => setTerm(true)} className="rounded border border-line px-3 py-1.5 text-sm font-semibold hover:border-accent">
+      Open terminal
+    </button>
+  );
+
+  const article = (
     <article key={id} className={`mx-auto ${tab === "references" && !running ? "max-w-5xl" : "max-w-3xl"}`}>
       {!running && (
         <header className="mb-10">
@@ -96,6 +112,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
                 {i + 1}. {t.label}
               </button>
             ))}
+            {!term && <div className="mb-1 ml-auto">{openTerminal}</div>}
           </div>
         </header>
       )}
@@ -160,7 +177,9 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
                   practice={s}
                   checkHtml={check?.kind === "plain" ? check.html : null}
                   attempts={state.attempts}
+                  grader={grader}
                   onRunning={onRunning}
+                  terminalButton={term ? null : openTerminal}
                 />
               </Section>
             );
@@ -175,6 +194,22 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
 
       {tab === "exercise" && !running && <Notes key={id} body={state.note} />}
     </article>
+  );
+
+  // With the terminal open, a workspace like the exam's: the page on the left and the terminal on
+  // the right, each filling the screen beside the topic list (17rem, from root.tsx) and scrolling
+  // on its own. Below lg the terminal takes the bottom half. The page pane keeps main's padding,
+  // which the timed run's sticky clock bar relies on. The elements stay the same either way, so
+  // opening or hiding the terminal never resets a timed run.
+  return (
+    <div className={term ? "fixed inset-0 z-20 grid grid-rows-2 bg-paper lg:left-[17rem] lg:grid-cols-2 lg:grid-rows-1" : ""}>
+      <div className={term ? "min-h-0 overflow-y-auto px-4 py-8 sm:px-10" : ""}>{article}</div>
+      {term && (
+        <div className="min-h-0 border-t border-line lg:border-l lg:border-t-0">
+          <Terminal onHide={() => setTerm(false)} />
+        </div>
+      )}
+    </div>
   );
 }
 

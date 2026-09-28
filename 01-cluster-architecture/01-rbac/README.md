@@ -5,7 +5,7 @@ identity behind a request against the rules that have been bound to it.
 
 Exam domain: Cluster Architecture, Installation and Configuration (25%).
 
-Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`.
+Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -491,6 +491,7 @@ Start from a fresh [`cluster` lab](../../lab/README.md#cluster). When time is up
 <details><summary>Solution</summary>
 
 ```shell
+ssh controlplane
 # 1.
 k create namespace web
 k create serviceaccount ci -n web
