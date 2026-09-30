@@ -21,10 +21,12 @@ export function terminal(): Plugin {
       const wss = new WebSocketServer({ noServer: true });
       server.httpServer?.on("upgrade", (req, socket, head) => {
         if (req.url !== "/terminal") return; // Vite's own hot-reload socket shares this server.
-        // A shell on the lab: refuse pages from any other site.
-        if (req.headers.origin !== `http://${req.headers.host}`) return socket.destroy();
+        // A shell on the lab: refuse pages from any other site, including one whose own name
+        // was pointed at this computer, which sends a matching Origin and Host.
+        const host = req.headers.host?.replace(/:\d+$/, "");
+        if (req.headers.origin !== `http://${req.headers.host}` || (host !== "localhost" && host !== "127.0.0.1")) return socket.destroy();
         wss.handleUpgrade(req, socket, head, (ws) => {
-          const shell = pty.spawn("limactl", ["shell", "base"], { name: "xterm-256color", cols: 80, rows: 24, env: process.env as Record<string, string> });
+          const shell = pty.spawn("docker", ["exec", "-it", "-e", "TERM=xterm-256color", "base", "bash", "-l"], { name: "xterm-256color", cols: 80, rows: 24, env: process.env as Record<string, string> });
           let exited = false;
           shell.onData((d) => ws.send(d));
           shell.onExit(({ exitCode }) => {

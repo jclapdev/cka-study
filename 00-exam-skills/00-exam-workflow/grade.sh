@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Grades the exam workflow drill's Practice it on the running lab. Run on the Mac.
+# Grades the exam workflow drill's Practice it on the running lab. Run on a machine with docker, such as the app container.
 source "$(dirname "$0")/../../lab/grade-lib.sh"
 grade <<'CHECKS'
 j() { k get "$@" -o jsonpath="$JP" 2>/dev/null; }

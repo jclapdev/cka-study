@@ -6,6 +6,9 @@ import { terminal } from "./terminal.ts";
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), terminal()],
   server: { host: "127.0.0.1" },
+  // Find every dependency at startup. Otherwise the first page load finds more, and Vite
+  // reloads the page, dropping a lab that is starting.
+  optimizeDeps: { entries: ["app/**/*.{ts,tsx}"] },
   resolve: {
     tsconfigPaths: true,
   },

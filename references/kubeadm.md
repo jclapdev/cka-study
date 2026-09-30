@@ -32,13 +32,13 @@ The files it leaves on the control plane node:
 `--apiserver-advertise-address` is the address the apiserver tells the rest of the cluster to reach it on. `init` writes it into the apiserver's certificate, into every kubeconfig, and into the join command. In the lab:
 
 ```
-[certs] apiserver serving cert is signed for DNS names [controlplane kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.104.5]
+[certs] apiserver serving cert is signed for DNS names [controlplane kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.104.10]
 ```
 
 A client that connects on an address missing from that list fails the certificate check:
 
 ```
-Unable to connect to the server: tls: failed to verify certificate: x509: certificate is valid for 10.96.0.1, 192.168.104.5, not 127.0.0.1
+Unable to connect to the server: tls: failed to verify certificate: x509: certificate is valid for 10.96.0.1, 192.168.104.10, not 127.0.0.1
 ```
 
 Changing the address means `kubeadm reset` and a new `init`.

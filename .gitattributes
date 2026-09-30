@@ -1,0 +1,2 @@
+# Scripts run inside Linux containers, so a Windows checkout must keep LF line endings.
+* text=auto eol=lf

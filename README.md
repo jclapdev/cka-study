@@ -4,22 +4,22 @@ Hands-on labs for the Certified Kubernetes Administrator (CKA) exam. Each topic 
 
 ## Getting started
 
-1. Build the lab once by following [first-time setup](lab/README.md#first-time-setup) in a terminal on your Mac.
-2. Start the app, below, and open a topic.
-3. On the topic's **Lab** tab, press **Start lab**. It takes about a minute.
-4. Press **Open terminal**. You start on `base`, as in the exam. Run `ssh controlplane` to reach the cluster.
+1. Install [Docker Desktop](https://docs.docker.com/desktop/) on Windows or macOS, or [Docker Engine](https://docs.docker.com/engine/install/) on Linux, and start it.
+2. In a terminal, inside this project's folder, start the app:
+
+   ```shell
+   docker compose up -d
+   ```
+
+3. Open <http://localhost:5173> and open a topic.
+4. On the topic's **Lab** tab, press **Start lab**. The first time takes about 6 minutes, because it builds the lab. After that it takes under a minute.
+5. Press **Open terminal**. You start on `base`, as in the exam. Run `ssh controlplane` to reach the cluster.
 
 ## App
 
 Each topic page has three tabs: **Lab**, **Exercise** and **References**. **Open terminal** opens a shell on `base` beside the page. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the exam terminal.
 
-Your progress is saved in `app/data/progress.db`. It needs Node 24 and pnpm (`corepack enable pnpm`). In a terminal on your Mac:
-
-```shell
-cd ~/projects/cka-prep/app && pnpm install && pnpm dev
-```
-
-Then open <http://127.0.0.1:5173>. The terminal works only under `pnpm dev`, not `pnpm start`. Delete `app/data/progress.db` to start over.
+Your progress is saved in `app/data/progress.db`. Delete it to start over. `docker compose --profile lab down` stops the app and the lab, and `docker compose up -d` starts the app again.
 
 ## How the exam asks questions
 

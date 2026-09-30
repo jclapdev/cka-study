@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Grades the <topic> Practice it on the running lab. Run on the Mac.
+# Grades the <topic> Practice it on the running lab. Run on a machine with docker, such as the app container.
 # One `task` per Practice it task, with its weight; one `check` per sub-task.
 # Checks inspect only the final state, never how it was reached.
 source "$(dirname "$0")/../../lab/grade-lib.sh"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Places the files Practice it task 3 hands over, as the exam does under /opt/course.
-# Run on the Mac by lab/start.sh, after it restores and starts the cluster starting state.
+# Run by lab/lab.sh start, after it restores the cluster lab.
 set -euo pipefail
-limactl shell --workdir / controlplane bash -eo pipefail -c '
+docker exec -i -u ubuntu -w /home/ubuntu controlplane bash -eo pipefail -c '
   sudo rm -rf /opt/course/3 && sudo mkdir -p /opt/course/3/base /opt/course/3/overlay
   sudo chown -R "$(id -u):$(id -g)" /opt/course
   cd /opt/course/3
@@ -12,4 +12,4 @@ limactl shell --workdir / controlplane bash -eo pipefail -c '
   printf "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: tools-api\nspec:\n  replicas: 2\n" > overlay/replicas.yaml
   printf "resources:\n- ../base\n- namespace.yaml\nnamespace: tools\nnamePrefix: tools-\npatches:\n  - path: replicas.yaml\n" > overlay/kustomization.yaml
   find /opt/course/3 -type f | sort
-' 2> >(grep -v "PS1: unbound" >&2)
+'

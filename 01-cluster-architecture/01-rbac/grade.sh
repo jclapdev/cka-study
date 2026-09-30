@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Grades the RBAC Practice it on the running lab. Run on the Mac.
+# Grades the RBAC Practice it on the running lab. Run on a machine with docker, such as the app container.
 source "$(dirname "$0")/../../lab/grade-lib.sh"
 grade <<'CHECKS'
 SA=system:serviceaccount:web:ci

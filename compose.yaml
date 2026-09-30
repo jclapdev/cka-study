@@ -1,0 +1,69 @@
+# The study app and the lab. `docker compose up -d`, then open http://localhost:5173.
+# lab/lab.sh recreates the three nodes from a saved copy by setting COPY.
+name: cka
+
+x-node: &node
+  profiles: [lab]
+  build: { context: lab, target: node }
+  privileged: true
+  cgroup: private
+  tmpfs: [/run, /run/lock, /tmp]
+  stop_signal: SIGRTMIN+3
+  # `reboot` ends the container, so start it again, as a real machine would come back.
+  restart: unless-stopped
+  depends_on:
+    conntrack: { condition: service_started }
+
+services:
+  app:
+    build: app
+    image: cka-app
+    container_name: cka-app
+    ports: ["127.0.0.1:5173:5173"]
+    volumes:
+      - .:/repo
+      - /repo/app/node_modules
+      - /var/run/docker.sock:/var/run/docker.sock
+  # kube-proxy raises the connection-tracking limit when it starts, and only Docker's
+  # own machine may change it, so raise it here first. It never lowers the limit.
+  # It stays up and restarts with Docker, because a restart resets the limit and
+  # brings the nodes back without `docker compose up`.
+  conntrack:
+    profiles: [lab]
+    restart: unless-stopped
+    init: true
+    build: { context: lab, target: node }
+    image: cka-controlplane:clean
+    privileged: true
+    network_mode: host
+    entrypoint: ["sh", "-c", 'f=/proc/sys/net/netfilter/nf_conntrack_max; n=$$((32768 * $$(nproc))); [ "$$(cat $$f)" -ge $$n ] || echo $$n > $$f; exec sleep infinity']
+  controlplane:
+    <<: *node
+    image: cka-controlplane:${COPY:-clean}
+    hostname: controlplane
+    container_name: controlplane
+    networks: { lab: { ipv4_address: 192.168.104.10 } }
+  node01:
+    <<: *node
+    image: cka-node01:${COPY:-clean}
+    hostname: node01
+    container_name: node01
+    networks: { lab: { ipv4_address: 192.168.104.11 } }
+  node02:
+    <<: *node
+    image: cka-node02:${COPY:-clean}
+    hostname: node02
+    container_name: node02
+    networks: { lab: { ipv4_address: 192.168.104.12 } }
+  base:
+    profiles: [lab]
+    build: { context: lab, target: base }
+    image: cka-base
+    hostname: base
+    container_name: base
+    networks: { lab: { ipv4_address: 192.168.104.2 } }
+
+networks:
+  lab:
+    name: cka-lab
+    ipam: { config: [{ subnet: 192.168.104.0/24 }] }

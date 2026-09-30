@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Grades the Kustomize Practice it on the running lab. Run on the Mac.
+# Grades the Kustomize Practice it on the running lab. Run on a machine with docker, such as the app container.
 source "$(dirname "$0")/../../lab/grade-lib.sh"
 grade <<'CHECKS'
 jp() { k get "$1" "$2" -n "$3" -o jsonpath="$4"; }

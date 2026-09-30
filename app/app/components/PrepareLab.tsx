@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 type Status = "idle" | "running" | "ready" | "failed";
 
-/** Runs `lab/start.sh <state>` on the Mac through POST /lab/:state and shows its output as it arrives. */
+/** Runs `lab/lab.sh start <state>` through POST /lab/:state and shows its output as it arrives. */
 export function PrepareLab({ state, onOpenTerminal }: { state: string; onOpenTerminal: () => void }) {
   const [status, setStatus] = useState<Status>("idle");
   const [out, setOut] = useState("");
@@ -48,7 +48,7 @@ export function PrepareLab({ state, onOpenTerminal }: { state: string; onOpenTer
           {status === "running" ? "Starting…" : "Start lab"}
         </button>
       </div>
-      {status === "running" && <p className="mt-3 text-sm text-muted">This takes about a minute.</p>}
+      {status === "running" && <p className="mt-3 text-sm text-muted">This takes under a minute, or about 6 minutes the first time.</p>}
       {out && (
         <pre ref={box} aria-label="Lab output" className="mt-3 max-h-72 overflow-y-auto whitespace-pre-wrap rounded border border-line bg-paper px-4 py-3 font-mono text-sm">
           {out}

@@ -8,7 +8,7 @@ import { readMarkdown, REPO } from "~/content/repo";
 // One lab at a time: two restores at once would clone over each other.
 let busy = false;
 
-/** POST /lab/:state runs `lab/start.sh <state>` on the Mac and streams its output. */
+/** POST /lab/:state runs `lab/lab.sh start <state>` and streams its output. */
 export async function action({ params, request }: Route.ActionArgs) {
   // It wipes the machines, so only the app's own pages may ask.
   if (request.headers.get("origin") !== new URL(request.url).origin) throw data("Forbidden", { status: 403 });
@@ -18,7 +18,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   if (busy) throw data("A lab is already being prepared.", { status: 409 });
   busy = true;
 
-  const child = spawn(path.join(REPO, "lab/start.sh"), [state], { cwd: REPO });
+  const child = spawn(path.join(REPO, "lab/lab.sh"), ["start", state], { cwd: REPO });
   // If the page goes away, the script still finishes: stopping a restore halfway leaves
   // broken machines. Its output just stops being sent, since writing to a closed stream
   // throws and would stop the dev server.
