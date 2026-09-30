@@ -4,8 +4,6 @@ Kustomize builds a final set of manifests from plain YAML files plus a `kustomiz
 lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is
 built into `kubectl`, so no template language and no extra tool is involved.
 
-Exam domain: Cluster Architecture, Installation and Configuration (25%).
-
 Starts from the [`kustomize` lab](../../lab/README.md#kustomize). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
@@ -480,7 +478,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    `prod-web-config-hc7d4825hb` and not the older ConfigMap. That one goes because its
    namespace is deleted: [namespaces](../../references/namespaces.md).
 
-## Recall
+## Quiz
 
 Answer before opening.
 
@@ -528,7 +526,7 @@ pods that use it are replaced and read the new values.
 template. `includeSelectors: true` adds it to the pod template and the selectors.
 </details>
 
-## Practice it
+## Practice
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
@@ -661,7 +659,7 @@ k apply -k /opt/course/3/overlay
    staging
    ```
 
-## What's next
+## Next
 
 * [kustomize](../../references/kustomize.md) has the fields an overlay can set, patches,
   generated names and the failure modes in one place.

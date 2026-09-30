@@ -1,6 +1,6 @@
 # The lab
 
-The lab is four Ubuntu 24.04 virtual machines running on your Mac. Every command in every exercise runs on one of these machines, never on the Mac itself. The study app prepares them and gives you a terminal on them; the Mac's own terminal is needed only for first-time setup and the commands at the end of this page. The exercises only say which machine a command runs on; this page covers how to get there.
+The lab is four Ubuntu 24.04 virtual machines running on your Mac. Every command in every exercise runs on one of these machines, never on the Mac itself. You need the Mac's own terminal only for first-time setup and the commands at the end of this page.
 
 | Machine | Role | CPUs | Memory |
 | --- | --- | --- | --- |
@@ -41,23 +41,23 @@ Do this once, in a terminal on the Mac, inside this project's folder (`cd ~/proj
    lab/snapshot.sh save clean
    ```
 
-## Starting states
+## Labs
 
-Each exercise starts from one of the starting states below and names it at the top. A starting state is a saved copy of `controlplane`, `node01` and `node02`, plus a setup script for some. Preparing one puts those machines back exactly as they were saved, whatever you did to them since. `base` is not in the saved copies, because no exercise changes it.
+Each exercise uses one of the labs below and names it at the top. A lab is a saved copy of `controlplane`, `node01` and `node02`, plus a setup script for some. Starting a lab puts those machines back exactly as they were saved, whatever you did to them since. `base` is not saved, because no exercise changes it.
 
-To prepare a starting state, press **Prepare lab** on the topic's Set up the lab tab in the study app. It shows the output as it goes and takes about a minute. Then open the terminal. Without the app, run `lab/start.sh <state>` in a terminal on the Mac, inside this project's folder, then `limactl shell base`.
+To start a lab, press **Start lab** on the topic's Lab tab. It takes about a minute. Then press **Open terminal**. Without the app, run `lab/start.sh <state>` in a terminal on the Mac, inside this project's folder, then `limactl shell base`.
 
 ### vms
 
-Three bare machines with the Kubernetes tools installed and no cluster yet. Press **Prepare lab**, or run `lab/start.sh vms`.
+Three bare machines with the Kubernetes tools installed and no cluster yet.
 
 If it says `no backup controlplane-clean`, do [first-time setup](README.md#first-time-setup) first.
 
 ### cluster
 
-A working three-node cluster, built with kubeadm, with the Flannel pod network and both workers labelled. Press **Prepare lab**, or run `lab/start.sh cluster`.
+A working three-node cluster, built with kubeadm, with the Flannel pod network and both workers labelled.
 
-If it says `no backup controlplane-built`, the working cluster has not been saved yet. In a terminal on the Mac, inside this project's folder, do one of these, then prepare the lab again:
+If it says `no backup controlplane-built`, the working cluster has not been saved yet. In a terminal on the Mac, inside this project's folder, do one of these, then start the lab again:
 
 * Finish the [kubeadm exercise](../01-cluster-architecture/00-kubeadm-install/README.md), then save what you built:
 
@@ -75,19 +75,19 @@ If it says `no backup controlplane-built`, the working cluster has not been save
 
 ### helm
 
-The `cluster` starting state with Helm installed on `controlplane`, and one release, `legacy`, that Practice it task 5 has to find. Press **Prepare lab**, or run `lab/start.sh helm`. It downloads the latest Helm onto `controlplane`, installs `legacy`, and prints Helm's version.
+The `cluster` lab with Helm installed on `controlplane`, and one release, `legacy`, that Practice task 5 has to find.
 
 If it says `no backup controlplane-built`, follow the note under [`cluster`](#cluster) first.
 
 ### kustomize
 
-The `cluster` starting state with the files Practice it task 3 hands over, under `/opt/course/3`. Press **Prepare lab**, or run `lab/start.sh kustomize`. It writes the task's files and lists them.
+The `cluster` lab with the files Practice task 3 hands over, under `/opt/course/3`.
 
 If it says `no backup controlplane-built`, follow the note under [`cluster`](#cluster) first.
 
 ### crds
 
-The `cluster` starting state with Helm installed on `controlplane`, and empty folders under `/opt/course` for Practice it's answers. Press **Prepare lab**, or run `lab/start.sh crds`. It installs Helm and prints its version.
+The `cluster` lab with Helm installed on `controlplane`, and empty folders under `/opt/course` for the Practice answers.
 
 If it says `no backup controlplane-built`, follow the note under [`cluster`](#cluster) first.
 
@@ -103,21 +103,21 @@ exit               # back to base (twice after sudo -i)
 
 Go back to `base` before moving to another machine. ssh from one of `controlplane`, `node01` and `node02` to another is refused, because the exam does not support it either.
 
-The study app's terminal, opened with **Open terminal** on a topic page, starts on `base`. From a terminal on the Mac, `limactl shell base` does the same, and `limactl shell <machine>` opens a shell on any machine directly.
+**Open terminal** on a topic page starts on `base`. From a terminal on the Mac, `limactl shell base` does the same, and `limactl shell <machine>` opens a shell on any machine directly.
 
 `kubectl` only works on `controlplane`, because only it has the admin kubeconfig. On a worker it fails with `localhost:8080 was refused`. `k` is an alias for `kubectl` with bash completion, as in the exam.
 
-If `base` is stopped, `limactl shell base` and the study app's terminal ask `Do you want to start the instance now?`. Answer `Y`.
+If `base` is stopped, `limactl shell base` and the app's terminal ask `Do you want to start the instance now?`. Answer `Y`.
 
 ## Grading
 
-A topic whose Practice it can be graded has a `grade.sh` in its folder. After a timed run, press **Finish and mark**, then **Run grader**. Without the app, run the script in a terminal on the Mac, inside this project's folder, for example `01-cluster-architecture/03-kustomize/grade.sh`.
+A topic whose Practice can be graded has a `grade.sh` in its folder. After a practice exam, press **Finish**, then **Check my work**. Without the app, run the script in a terminal on the Mac, inside this project's folder, for example `01-cluster-architecture/03-kustomize/grade.sh`.
 
-It checks only the cluster's final state, one sub-task at a time, and prints each result, each task's share of its weight, and the total against the 66% pass mark. How you got there is never checked, which is how the exam grades. Tick the tasks it passed to keep the score with your notes.
+It checks only the cluster's final state, one sub-task at a time, and prints each result, each task's share of its weight, and the total against the 66% pass mark. How you got there is never checked, which is how the exam grades. Mark the tasks it passed, then press **Save score**.
 
 ## After an exercise
 
-Nothing is needed. The next exercise prepares its own starting state, which throws away whatever you changed. The machines keep running until you stop them, in a terminal on the Mac:
+Nothing is needed. Starting the next exercise's lab throws away whatever you changed. The machines keep running until you stop them, in a terminal on the Mac:
 
 ```shell
 limactl stop controlplane node01 node02 base
@@ -125,25 +125,25 @@ limactl stop controlplane node01 node02 base
 
 ## Commands
 
-Every lab command, run in a terminal on the Mac inside this project's folder (`cd ~/projects/cka-prep`). The study app runs `lab/start.sh` and `grade.sh` for you.
+Every lab command, run in a terminal on the Mac inside this project's folder (`cd ~/projects/cka-prep`). The app runs `lab/start.sh` and `grade.sh` for you.
 
 | Command | What it does |
 | --- | --- |
 | `lab/provision.sh` | Creates the machines and installs the Kubernetes tools. Safe to re-run; it skips what exists. |
 | `lab/provision.sh --auto` | Does the same, then builds a cluster with kubeadm and Flannel. |
-| `lab/start.sh <state>` | Prepares a starting state: restores its saved copy, starts all four machines, and runs its setup script. What **Prepare lab** runs. |
+| `lab/start.sh <state>` | Starts a lab: restores its saved copy, starts all four machines, and runs its setup script. What **Start lab** runs. |
 | `limactl start controlplane && limactl start node01 && limactl start node02 && limactl start base` | Starts the machines. |
 | `limactl stop controlplane node01 node02 base` | Stops the machines. |
-| `limactl shell <machine>` | Opens a shell on a machine. The study app's terminal is `limactl shell base`. |
+| `limactl shell <machine>` | Opens a shell on a machine. The app's terminal is `limactl shell base`. |
 | `lab/snapshot.sh save <name>` | Saves a copy of `controlplane`, `node01` and `node02` under a name, replacing any copy with that name, then restarts them. |
 | `lab/snapshot.sh restore <name>` | Puts those three machines back to that copy and leaves them stopped. `base` is not touched. |
 | `lab/snapshot.sh list` | Lists the machines and saved copies. |
 | `lab/exam-mode.sh` | Sets up `ssh` from `base` to the other three, removes ssh between those three, and installs the `k` alias and `yq`. Run it after `provision.sh`, before saving. |
-| `<topic folder>/grade.sh` | Grades that topic's Practice it on the running machines. What **Run grader** runs. |
+| `<topic folder>/grade.sh` | Grades that topic's Practice on the running machines. What **Check my work** runs. |
 
 Saving over `clean` leaves no way back to bare machines short of deleting them and running `lab/provision.sh` again.
 
-An exercise that needs more than a restore, such as an add-on installed or a component broken on purpose, has a `setup.sh` in its own folder, and `lab/start.sh` runs it for that starting state.
+An exercise that needs more than a restore, such as an add-on installed or a component broken on purpose, has a `setup.sh` in its own folder, and `lab/start.sh` runs it for that lab.
 
 ## When something goes wrong
 
@@ -153,7 +153,7 @@ An exercise that needs more than a restore, such as an add-on installed or a com
 ip route get 1.1.1.1 | awk '{print $7; exit}'
 ```
 
-**`kubeadm join` times out.** The worker cannot reach `controlplane` on port 6443. It almost always means `kubeadm init` was given the private address instead of the `192.168.104.x` one. The address is written into the cluster's certificates, so the fix is `sudo kubeadm reset -f` on every machine and a new `kubeadm init` on `controlplane`. Restoring the `vms` starting state is faster.
+**`kubeadm join` times out.** The worker cannot reach `controlplane` on port 6443. It almost always means `kubeadm init` was given the private address instead of the `192.168.104.x` one. The address is written into the cluster's certificates, so the fix is `sudo kubeadm reset -f` on every machine and a new `kubeadm init` on `controlplane`. Starting the `vms` lab is faster.
 
 **`ssh controlplane` from `base` says `Permission denied`.** `base` has not been given its key yet. Run `lab/exam-mode.sh` on the Mac with all four machines started.
 

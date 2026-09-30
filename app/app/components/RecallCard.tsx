@@ -31,7 +31,7 @@ export function RecallCard({ item, grade }: { item: RecallItem; grade?: "got" | 
                   : "border-line hover:border-accent"
               }`}
             >
-              {v === "got" ? "I knew it" : "I missed it"}
+              {v === "got" ? "Got it" : "Missed it"}
             </button>
           ))}
         </fetcher.Form>

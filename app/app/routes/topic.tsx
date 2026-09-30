@@ -38,7 +38,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   return { id, exercise, state: topicState(id), labHtml, references, mine, grader: hasGrader(params.domain, params.topic) };
 }
 
-export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.exercise.title ?? "Topic"} · CKA study` }];
+export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.exercise.title ?? "Topic"} · CKA Prep` }];
 
 export async function action({ params, request }: Route.ActionArgs) {
   const { id, exercise } = await load(params);
@@ -54,7 +54,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       break;
     case "attempt": {
       const practice = exercise.sections.find((s) => s.kind === "practice");
-      if (practice?.kind !== "practice") throw data("No Practice it section", { status: 400 });
+      if (practice?.kind !== "practice") throw data("No Practice section", { status: 400 });
       const passed = (JSON.parse(str("passed")) as unknown[]).map(Number).filter((n) => practice.tasks.some((t) => t.n === n));
       addAttempt({
         topic: id,
@@ -100,7 +100,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{exercise.title}</h1>
           <Markdown html={exercise.introHtml} className="mt-4" />
           <div role="tablist" className="mt-8 flex flex-wrap gap-2 border-b border-line">
-            {TABS.map((t, i) => (
+            {TABS.map((t) => (
               <button
                 key={t.key}
                 role="tab"
@@ -110,7 +110,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
                   tab === t.key ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
                 }`}
               >
-                {i + 1}. {t.label}
+                {t.label}
               </button>
             ))}
             {!term && <div className="mb-1 ml-auto">{openTerminal}</div>}
@@ -124,7 +124,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         {labHtml ? (
           <Markdown html={labHtml} />
         ) : (
-          <p className="text-muted">This exercise names no lab starting state.</p>
+          <p className="text-muted">This topic has no lab.</p>
         )}
       </section>
 
@@ -154,15 +154,14 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
             const items = missedOnly ? s.items.filter((i) => state.recall[i.key] === "missed") : s.items;
             return (
               <Section key={s.slug} s={s}>
-                <div className="mb-4 flex items-center justify-between text-sm text-muted">
-                  <span>Answer each one in your head before you open it.</span>
-                  {missed > 0 && (
+                {missed > 0 && (
+                  <div className="mb-4 flex justify-end text-sm text-muted">
                     <label className="flex cursor-pointer items-center gap-2">
                       <input type="checkbox" checked={missedOnly} onChange={(e) => setMissedOnly(e.target.checked)} />
-                      Only the {missed} I missed
+                      Show missed only ({missed})
                     </label>
-                  )}
-                </div>
+                  </div>
+                )}
                 <div className="space-y-3">
                   {items.map((item) => (
                     <RecallCard key={item.key} item={item} grade={state.recall[item.key]} />
@@ -200,8 +199,8 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   // With the terminal open, a workspace like the exam's: the page on the left and the terminal on
   // the right, each filling the screen beside the topic list (17rem, from root.tsx) and scrolling
   // on its own. Below lg the terminal takes the bottom half. The page pane keeps main's padding,
-  // which the timed run's sticky clock bar relies on. The elements stay the same either way, so
-  // opening or hiding the terminal never resets a timed run.
+  // which the practice exam's sticky clock bar relies on. The elements stay the same either way, so
+  // opening or hiding the terminal never resets a practice exam.
   return (
     <div className={term ? "fixed inset-0 z-20 grid grid-rows-2 bg-paper lg:left-[17rem] lg:grid-cols-2 lg:grid-rows-1" : ""}>
       <div className={term ? "min-h-0 overflow-y-auto px-4 py-8 sm:px-10" : ""}>{article}</div>
@@ -220,7 +219,7 @@ type Reference = { name: string; covers: string; title: string; headings: { id: 
 function References({ references, mine }: { references: Reference[]; mine: string[] }) {
   const [params] = useSearchParams();
   const selected = references.find((r) => r.name === params.get("ref")) ?? references.find((r) => r.name === mine[0]);
-  if (!selected) return <p className="text-muted">This exercise links to no reference pages.</p>;
+  if (!selected) return <p className="text-muted">This topic has no references.</p>;
   const listed = mine.includes(selected.name) ? mine : [...mine, selected.name];
   return (
     <div className="mb-14 md:grid md:grid-cols-[14rem_1fr] md:gap-10">
@@ -267,7 +266,7 @@ function References({ references, mine }: { references: Reference[]; mine: strin
 }
 
 const TABS = [
-  { key: "lab", label: "Set up the lab" },
+  { key: "lab", label: "Lab" },
   { key: "exercise", label: "Exercise" },
   { key: "references", label: "References" },
 ] as const;

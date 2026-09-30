@@ -38,20 +38,19 @@ export function PrepareLab({ state, onOpenTerminal }: { state: string; onOpenTer
     <div className="mb-8 rounded-md border border-line bg-surface px-5 py-4">
       <div className="flex flex-wrap items-center gap-4">
         <p className="min-w-0 flex-1">
-          Starting state <span className="font-mono font-semibold">{state}</span>. Preparing it throws away whatever is on
-          the machines now.
+          This topic uses the <span className="font-mono font-semibold">{state}</span> lab. Starting it resets all machines.
         </p>
         <button
           onClick={prepare}
           disabled={status === "running"}
           className="rounded bg-accent px-4 py-2 font-semibold text-paper hover:opacity-90 disabled:opacity-60"
         >
-          {status === "running" ? "Preparing…" : "Prepare lab"}
+          {status === "running" ? "Starting…" : "Start lab"}
         </button>
       </div>
-      {status === "running" && <p className="mt-3 text-sm text-muted">This takes about a minute, longer when a setup script downloads tools.</p>}
+      {status === "running" && <p className="mt-3 text-sm text-muted">This takes about a minute.</p>}
       {out && (
-        <pre ref={box} aria-label="Prepare lab output" className="mt-3 max-h-72 overflow-y-auto whitespace-pre-wrap rounded border border-line bg-paper px-4 py-3 font-mono text-sm">
+        <pre ref={box} aria-label="Lab output" className="mt-3 max-h-72 overflow-y-auto whitespace-pre-wrap rounded border border-line bg-paper px-4 py-3 font-mono text-sm">
           {out}
         </pre>
       )}
@@ -65,8 +64,7 @@ export function PrepareLab({ state, onOpenTerminal }: { state: string; onOpenTer
       )}
       {status === "failed" && (
         <p className="mt-3 text-missed">
-          Preparing failed. The output above says why, and <a href="/doc/lab/README.md#when-something-goes-wrong" className="underline">lab problems</a> lists
-          the common causes.
+          The lab failed to start. See <a href="/doc/lab/README.md#when-something-goes-wrong" className="underline">troubleshooting</a>.
         </p>
       )}
     </div>

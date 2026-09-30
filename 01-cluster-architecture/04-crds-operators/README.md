@@ -4,8 +4,6 @@ A CustomResourceDefinition (CRD) adds a new resource type to the apiserver, and 
 controller that watches objects of that type and does the work they describe. Installing an
 operator usually means installing its CRDs and its controller together, often from a Helm chart.
 
-Exam domain: Cluster Architecture, Installation and Configuration (25%).
-
 Starts from the [`crds` lab](../../lab/README.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
@@ -437,7 +435,7 @@ Exam tasks often ask for a list or a piece of documentation in a file. Only the 
        Requested set of X509 certificate subject attributes.
    ```
 
-## Recall
+## Quiz
 
 Answer before opening.
 
@@ -475,7 +473,7 @@ The operator creates it again, because its custom resource still asks for it. To
 result, change the custom resource.
 </details>
 
-## Practice it
+## Practice
 
 Do it again without the steps above, the way the exam asks. Give yourself **18 minutes**.
 
@@ -620,7 +618,7 @@ k apply -f nightly.yaml
    6
    ```
 
-## What's next
+## Next
 
 * [crds](../../references/crds.md) has the parts of a CRD, validation, operators and the failure
   modes in one place.

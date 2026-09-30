@@ -1,11 +1,9 @@
-# Working the Way the Exam Works
+# Exam Workflow
 
 The exam gives each task on a different host, grades only the final state, and allows no tool
-beyond a terminal, vim and the kubernetes.io docs. This drill practises the moves every other
-exercise relies on: reaching the right host, getting YAML without typing it, finding a snippet
-in the docs, and changing and checking live objects.
-
-Exam domain: all of them. The [exam page](../../EXAM.md) has the format and how grading works.
+beyond a terminal, vim and the kubernetes.io docs. In this exercise you reach the right host,
+generate YAML instead of typing it, copy snippets from the docs, and change and check live
+objects. The [exam page](../../EXAM.md) covers the format and grading.
 
 Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
@@ -429,7 +427,7 @@ The grader reads the cluster, so read back the exact value a task asked for:
        Image:         nginx:1.28
    ```
 
-## Recall
+## Quiz
 
 Answer before opening.
 
@@ -467,7 +465,7 @@ from your edited copy.
 No. Each task is a new `ssh` session. Only `k` and its completion are always there.
 </details>
 
-## Practice it
+## Practice
 
 Do it again without the steps above, the way the exam asks. Give yourself **12 minutes**.
 
@@ -564,7 +562,7 @@ k scale deploy api --replicas=3 -n shop
    containerd github.com/containerd/containerd/v2 2.2.1
    ```
 
-## What's next
+## Next
 
 * [exam-workflow](../../references/exam-workflow.md) has every command above, the vim keys and
   the docs pages worth knowing, in one place.

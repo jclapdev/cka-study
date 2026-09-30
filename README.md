@@ -1,19 +1,19 @@
 # CKA practice labs
 
-Hands-on labs for the Certified Kubernetes Administrator (CKA) exam. Each topic folder is one exercise with a single `README.md` that walks you through the concept step by step, then asks for the same result in exam wording so you can practise it unaided.
+Hands-on labs for the Certified Kubernetes Administrator (CKA) exam. Each topic has step-by-step exercises, a quiz, and a timed practice exam in the real exam's format.
 
 ## Getting started
 
-1. Set up the lab once, following [first-time setup](lab/README.md#first-time-setup) in a terminal on your Mac. The lab is four virtual machines where every exercise's commands run, and [lab/README.md](lab/README.md) explains all of it.
-2. Start the study app, below, and open a topic.
-3. On the topic's **Set up the lab** tab, press **Prepare lab**. It puts the machines into the starting state the exercise needs, in about a minute.
-4. Press **Open terminal**. You start on `base`, as in the exam, and `ssh controlplane` takes you to where the exercise's commands run.
+1. Build the lab once by following [first-time setup](lab/README.md#first-time-setup) in a terminal on your Mac.
+2. Start the app, below, and open a topic.
+3. On the topic's **Lab** tab, press **Start lab**. It takes about a minute.
+4. Press **Open terminal**. You start on `base`, as in the exam. Run `ssh controlplane` to reach the cluster.
 
-## Study app
+## App
 
-`app/` is a local web page with one page per topic. Each page has three tabs: **Set up the lab**, with the Prepare lab button; **Exercise**, with a tick on every step, Recall questions you grade yourself, a timed Practice it run with a Run grader button, and notes; and **References**, with the concept pages the exercise links. **Open terminal** puts a shell on `base` beside whichever tab is open. It copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, the exam terminal's keys.
+Each topic page has three tabs: **Lab**, **Exercise** and **References**. **Open terminal** opens a shell on `base` beside the page. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the exam terminal.
 
-The app reads the READMEs directly, so there is nothing to sync, and keeps your progress in `app/data/progress.db`. It needs Node 24 and pnpm (`corepack enable pnpm`). In a terminal on your Mac:
+Your progress is saved in `app/data/progress.db`. It needs Node 24 and pnpm (`corepack enable pnpm`). In a terminal on your Mac:
 
 ```shell
 cd ~/projects/cka-prep/app && pnpm install && pnpm dev
@@ -23,7 +23,7 @@ Then open <http://127.0.0.1:5173>. The terminal works only under `pnpm dev`, not
 
 ## How the exam asks questions
 
-The "Practice it" sections are written to match the real exam:
+The Practice sections match the real exam:
 
 - 15 to 20 hands-on tasks in 2 hours, on Kubernetes 1.35, with a 66% pass mark.
 - Each task names the host to `ssh` into and shows its weight as a percentage.
@@ -34,7 +34,7 @@ The "Practice it" sections are written to match the real exam:
 
 ## Exercises
 
-Status is **ready** when the README has steps and a Practice it section, **steps only** when it has no Practice it section yet, and blank when the folder is not written.
+Status is **ready** when a topic has steps and a Practice section, **steps only** when it has no Practice section yet, and blank when it is coming soon.
 
 | Domain | Topic | Status |
 | --- | --- | --- |

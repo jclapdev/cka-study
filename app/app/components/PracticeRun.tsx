@@ -79,10 +79,10 @@ export function PracticeRun({
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-line bg-surface px-5 py-4">
           <p>
             {practice.tasks.length} tasks
-            {practice.minutes && <> in {practice.minutes} minutes</>}. The clock and the tasks replace the page until you finish.
+            {practice.minutes && <>, {practice.minutes} minutes</>}.
           </p>
           <button onClick={start} className="rounded bg-accent px-4 py-2 font-semibold text-paper hover:opacity-90">
-            Start timed run
+            Start practice exam
           </button>
         </div>
         <Markdown html={practice.introHtml} />
@@ -115,11 +115,11 @@ export function PracticeRun({
         <div className="flex gap-2">
           {terminalButton}
           <button onClick={reset} className="rounded border border-line px-3 py-2 text-sm hover:border-accent">
-            Abandon
+            Quit
           </button>
           {!endedAt && (
             <button onClick={() => setEndedAt(Date.now())} className="rounded bg-accent px-4 py-2 font-semibold text-paper">
-              Finish and mark
+              Finish
             </button>
           )}
         </div>
@@ -132,7 +132,7 @@ export function PracticeRun({
         </>
       ) : (
         <>
-          <p>Took {clock(elapsed)}. Run the checks below, then tick every task that passed.</p>
+          <p>You took {clock(elapsed)}. Mark each task you passed.</p>
           <Tasks tasks={practice.tasks} passed={passed} onToggle={(n) => setPassed((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]))} />
           <div className="flex flex-wrap items-center gap-4 rounded-md border border-line bg-surface px-5 py-4">
             <p className="text-lg">
@@ -140,7 +140,7 @@ export function PracticeRun({
               <span className="ml-2 text-sm text-muted">pass mark {PASS_MARK}%</span>
             </p>
             <button onClick={save} className="ml-auto rounded bg-accent px-4 py-2 font-semibold text-paper">
-              Save attempt
+              Save score
             </button>
           </div>
           {grader && (
@@ -150,7 +150,7 @@ export function PracticeRun({
                 disabled={grading.state !== "idle"}
                 className="rounded border border-line px-4 py-2 font-semibold hover:border-accent disabled:opacity-60"
               >
-                {grading.state !== "idle" ? "Grading…" : "Run grader"}
+                {grading.state !== "idle" ? "Checking…" : "Check my work"}
               </button>
               {grading.data?.grade && (
                 <pre className="mt-3 overflow-x-auto rounded-md border border-line bg-surface px-5 py-4 font-mono text-sm">{grading.data.grade}</pre>
@@ -184,7 +184,7 @@ function Tasks({ tasks, passed, onToggle }: { tasks: Task[]; passed?: number[]; 
             {onToggle ? (
               <label className="flex cursor-pointer items-center gap-2 font-semibold">
                 <input type="checkbox" checked={passed!.includes(t.n)} onChange={() => onToggle(t.n)} className="size-4 accent-done" />
-                Task {t.n} passed
+                Task {t.n}
               </label>
             ) : (
               <span className="font-semibold">Task {t.n}</span>
@@ -204,12 +204,12 @@ function Tasks({ tasks, passed, onToggle }: { tasks: Task[]; passed?: number[]; 
 function History({ attempts }: { attempts: Attempt[] }) {
   return (
     <section>
-      <h3 className="mb-2 font-bold">Past attempts</h3>
+      <h3 className="mb-2 font-bold">History</h3>
       <table className="w-full text-left text-sm">
         <thead className="text-muted">
           <tr>
             <th className="py-1 font-normal">Date</th>
-            <th className="py-1 font-normal">Time taken</th>
+            <th className="py-1 font-normal">Time</th>
             <th className="py-1 text-right font-normal">Score</th>
           </tr>
         </thead>

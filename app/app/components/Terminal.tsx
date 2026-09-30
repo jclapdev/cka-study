@@ -71,7 +71,7 @@ export function Terminal({ onHide }: { onHide: () => void }) {
         <span className="font-semibold">Terminal</span>
         {failed && (
           <span className="text-[#8b97a8]">
-            Machines stopped? See <Link to="?tab=lab" className="underline">Set up the lab</Link>.
+            Disconnected. <Link to="?tab=lab" className="underline">Restart the lab</Link>.
           </span>
         )}
         <button onClick={() => setSession((s) => s + 1)} className="ml-auto rounded border border-white/20 px-2 py-1 hover:border-white/60">

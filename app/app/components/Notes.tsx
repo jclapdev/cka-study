@@ -19,7 +19,7 @@ export function Notes({ body }: { body: string }) {
     <section aria-labelledby="notes" className="mt-16">
       <div className="flex items-baseline justify-between">
         <h2 id="notes" className="text-xl font-bold">
-          Your notes
+          Notes
         </h2>
         <span className="text-sm text-muted" aria-live="polite">
           {status}
@@ -29,7 +29,7 @@ export function Notes({ body }: { body: string }) {
         value={text}
         onChange={(e) => change(e.target.value)}
         rows={8}
-        placeholder="What tripped you up, flags to remember, commands worth keeping."
+        placeholder="Add notes"
         className="mt-3 w-full rounded-md border border-line bg-surface p-4 font-mono text-sm leading-6 focus:border-accent focus:outline-none"
       />
     </section>

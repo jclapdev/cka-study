@@ -14,7 +14,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   if (request.headers.get("origin") !== new URL(request.url).origin) throw data("Forbidden", { status: 403 });
   const state = params.state;
   if (!/^[a-z]+$/.test(state) || !labSection(readMarkdown("lab/README.md") ?? "", state))
-    throw data(`No starting state ${state}`, { status: 400 });
+    throw data(`No lab named ${state}`, { status: 400 });
   if (busy) throw data("A lab is already being prepared.", { status: 409 });
   busy = true;
 

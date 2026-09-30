@@ -7,14 +7,13 @@ export default function Home() {
   const { domains } = useRouteLoaderData<typeof rootLoader>("root")!;
   const written = domains.flatMap((d) => d.topics).filter((t) => t.progress);
   const next = written.find((t) => t.progress!.stepsDone < t.progress!.steps) ?? written[0];
+  const finished = written.filter((t) => t.progress!.steps && t.progress!.stepsDone === t.progress!.steps).length;
 
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="text-3xl font-bold sm:text-4xl">Where you are</h1>
-      <p className="mt-3 max-w-2xl text-muted">
-        {written.length} of {domains.flatMap((d) => d.topics).length} topics are written. Commands run in your own terminal; this page
-        keeps your ticks, Recall grades, timed runs and notes. Start with the <Link to="/doc/lab/README.md" className="text-accent underline">lab guide</Link> if the
-        VMs are not built yet, and read the <Link to="/doc/EXAM.md" className="text-accent underline">exam format</Link> once.
+      <h1 className="text-3xl font-bold sm:text-4xl">Dashboard</h1>
+      <p className="mt-3 text-muted">
+        You have finished {finished} of {written.length} available topics.
       </p>
       {next && (
         <Link
@@ -30,16 +29,16 @@ export default function Home() {
           <thead className="text-sm text-muted">
             <tr>
               <th className="py-2 font-normal">Topic</th>
-              <th className="w-44 py-2 font-normal">Steps</th>
-              <th className="py-2 text-right font-normal">Recall missed</th>
-              <th className="py-2 text-right font-normal">Best run</th>
+              <th className="w-44 py-2 font-normal">Progress</th>
+              <th className="py-2 text-right font-normal">Quiz missed</th>
+              <th className="py-2 text-right font-normal">Best score</th>
             </tr>
           </thead>
           {domains.map((d) => (
             <tbody key={d.name}>
               <tr>
                 <th colSpan={4} className="pt-6 pb-2 text-left font-bold">
-                  {pretty(d.name)} {d.weight !== null && <span className="font-normal text-muted">({d.weight}% of the exam)</span>}
+                  {pretty(d.name)} {d.weight !== null && <span className="font-normal text-muted">{d.weight}%</span>}
                 </th>
               </tr>
               {d.topics.map((t) => (
@@ -60,14 +59,14 @@ export default function Home() {
                         {t.progress.stepsDone}/{t.progress.steps}
                       </span>
                     ) : (
-                      <span className="text-sm text-muted/70">Not written</span>
+                      <span className="text-sm text-muted/70">Coming soon</span>
                     )}
                   </td>
                   <td className={`py-2 text-right tabular-nums ${t.progress?.missed ? "text-missed" : "text-muted"}`}>
                     {t.progress?.recall ? `${t.progress.missed} of ${t.progress.recall}` : ""}
                   </td>
                   <td className="py-2 text-right tabular-nums">
-                    {t.progress?.bestScore != null ? `${t.progress.bestScore}%` : t.progress?.hasPractice ? <span className="text-muted">Not run</span> : ""}
+                    {t.progress?.bestScore != null ? `${t.progress.bestScore}%` : t.progress?.hasPractice ? <span className="text-muted">Not attempted</span> : ""}
                   </td>
                 </tr>
               ))}

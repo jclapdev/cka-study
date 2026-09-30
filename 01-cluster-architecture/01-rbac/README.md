@@ -3,8 +3,6 @@
 Role-based access control (RBAC) decides which requests the apiserver allows, by matching the
 identity behind a request against the rules that have been bound to it.
 
-Exam domain: Cluster Architecture, Installation and Configuration (25%).
-
 Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
@@ -421,7 +419,7 @@ themselves: [namespaced and cluster-scoped resources](../../references/namespace
    network, and `kubeadm:get-nodes` to the bootstrap. That leaves 4 meant for people:
    `cluster-admin`, `admin`, `edit` and `view`.
 
-## Recall
+## Quiz
 
 Answer before opening.
 
@@ -468,7 +466,7 @@ so a binding can reference a user that no one can create or delete.
 group to `cluster-admin`.
 </details>
 
-## Practice it
+## Practice
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
@@ -525,7 +523,7 @@ k auth can-i list pods -n default --as=anyone --as-group=auditors
 ```
 </details>
 
-## What's next
+## Next
 
 * [rbac](../../references/rbac.md) has the object model, the subject kinds, the roles every
   subject gets, and the failure modes in one place.

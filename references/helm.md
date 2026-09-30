@@ -57,7 +57,7 @@ A chart installs the CustomResourceDefinitions (CRDs) in its `crds/` folder befo
 
 ## In this lab
 
-The `helm` starting state installs Helm on `controlplane` only, the one machine with the admin kubeconfig.
+The `helm` lab installs Helm on `controlplane` only, the one machine with the admin kubeconfig.
 
 A release of the podinfo chart creates a Deployment, a Service and one Secret per revision:
 

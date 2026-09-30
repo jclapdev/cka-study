@@ -13,7 +13,7 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export const meta: Route.MetaFunction = () => [{ title: "CKA study" }];
+export const meta: Route.MetaFunction = () => [{ title: "CKA Prep" }];
 
 export async function loader() {
   return { domains: overview() };
@@ -37,8 +37,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+const NAMES: Record<string, string> = {
+  rbac: "RBAC", crds: "CRDs", ha: "HA", pv: "PV", pvc: "PVC", api: "API", coredns: "CoreDNS",
+  etcd: "etcd", kubeadm: "kubeadm", configmaps: "ConfigMaps", storageclasses: "StorageClasses",
+};
+
 export const pretty = (folder: string) => {
-  const s = folder.replace(/^\d\d-/, "").replace(/-/g, " ");
+  const s = folder.replace(/^\d\d-/, "").replace(/-/g, " ").replace(/\b\w+\b/g, (w) => NAMES[w] ?? w);
   return s[0].toUpperCase() + s.slice(1);
 };
 
@@ -51,7 +56,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       <nav className="border-b border-line bg-surface lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between px-5 py-4">
           <NavLink to="/" className="text-lg font-bold">
-            CKA study
+            CKA Prep
           </NavLink>
           <button
             onClick={() => setOpen(!open)}
@@ -66,17 +71,16 @@ export default function App({ loaderData }: Route.ComponentProps) {
           <li>
             <ul>
               {[
-                ["/doc/lab/README.md", "Lab", "The machines, starting states and fixes"],
-                ["/doc/EXAM.md", "Exam", "Format and every competency"],
-                ["/doc/references/README.md", "References", "Every concept page, in one list"],
-              ].map(([to, label, hint]) => (
+                ["/doc/lab/README.md", "Lab"],
+                ["/doc/EXAM.md", "Exam"],
+                ["/doc/references/README.md", "References"],
+              ].map(([to, label]) => (
                 <li key={to}>
                   <NavLink
                     to={to}
                     className={({ isActive }) => `block rounded px-2 py-1.5 hover:bg-paper ${isActive ? "bg-paper font-semibold" : ""}`}
                   >
                     {label}
-                    <span className="block text-xs text-muted">{hint}</span>
                   </NavLink>
                 </li>
               ))}
@@ -101,7 +105,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                           <span className="flex items-baseline justify-between gap-2">
                             {pretty(t.topic)}
                             {t.progress.missed > 0 && (
-                              <span className="text-xs text-missed" title="Recall questions you missed">
+                              <span className="text-xs text-missed" title="Quiz questions you missed">
                                 {t.progress.missed} missed
                               </span>
                             )}
@@ -109,7 +113,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                           <Meter done={t.progress.stepsDone} total={t.progress.steps} />
                         </NavLink>
                       ) : (
-                        <span className="block px-2 py-1 text-[0.95rem] text-muted/70" title="Not written yet">
+                        <span className="block px-2 py-1 text-[0.95rem] text-muted/70" title="Coming soon">
                           {pretty(t.topic)}
                         </span>
                       )}
@@ -140,12 +144,12 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   const notFound = isRouteErrorResponse(error) && error.status === 404;
   return (
     <main className="mx-auto max-w-2xl p-10">
-      <h1 className="text-2xl font-bold">{notFound ? "No such page" : "Something failed"}</h1>
+      <h1 className="text-2xl font-bold">{notFound ? "No such page" : "Something went wrong"}</h1>
       <p className="mt-2 text-muted">
-        {notFound ? "That topic or file is not in the repo." : error instanceof Error ? error.message : String(error)}
+        {notFound ? "Page not found." : error instanceof Error ? error.message : String(error)}
       </p>
       <a href="/" className="mt-4 inline-block text-accent underline">
-        Back to all topics
+        Back to dashboard
       </a>
     </main>
   );

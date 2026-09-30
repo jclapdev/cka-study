@@ -55,7 +55,7 @@ function splitSections(md: string) {
       const text = toString(node);
       const slug = slugger.slug(text);
       let kind: Section["kind"] = "plain";
-      if (/^recall/i.test(text)) kind = "recall";
+      if (/^(recall|quiz)/i.test(text)) kind = "recall";
       else if (/^practice/i.test(text)) kind = "practice";
       if (kind !== "plain" || /^check your work/i.test(text)) taught = false;
       else if (taught) kind = "steps";

@@ -11,7 +11,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   return renderDoc(md, file);
 }
 
-export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.title ?? "Doc"} · CKA study` }];
+export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.title ?? "Doc"} · CKA Prep` }];
 
 export default function Doc({ loaderData }: Route.ComponentProps) {
   return (

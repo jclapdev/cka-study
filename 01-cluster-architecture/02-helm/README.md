@@ -4,8 +4,6 @@ Helm installs a packaged application, called a chart, into a cluster as a named 
 keeps a numbered history of that release so it can be upgraded, rolled back and uninstalled as
 one unit.
 
-Exam domain: Cluster Architecture, Installation and Configuration (25%).
-
 Starts from the [`helm` lab](../../lab/README.md#helm). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
@@ -39,7 +37,7 @@ charts and their versions: [charts, repositories and releases](../../references/
    ```
 
    `-A` means all namespaces, as it does for `kubectl`. The lab installed one release,
-   `legacy`, for Practice it to find.
+   `legacy`, for the Practice section to find.
 
 2. Add a repository under a local name and download its index:
 
@@ -406,7 +404,7 @@ installing anything: [rendering without installing](../../references/helm.md#ren
    revisions. The namespace stays, because `--create-namespace` made it outside the release:
    [revisions and where releases are stored](../../references/helm.md#revisions-and-where-releases-are-stored).
 
-## Recall
+## Quiz
 
 Answer before opening.
 
@@ -452,7 +450,7 @@ including the defaults.
 No. The namespace is not part of the release, so it stays.
 </details>
 
-## Practice it
+## Practice
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
@@ -526,7 +524,7 @@ helm uninstall legacy -n legacy
    kind: Deployment
    ```
 
-## What's next
+## Next
 
 * [helm](../../references/helm.md) has the model, where releases are stored, and the error
   messages in one place.

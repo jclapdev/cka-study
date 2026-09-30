@@ -2,8 +2,6 @@
 
 <One paragraph: what this tool or concept does, in plain words.>
 
-Exam domain: <Domain name as in EXAM.md> (<weight>%).
-
 Starts from the [`<lab-name>` lab](../../lab/README.md#<lab-name>). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
@@ -65,7 +63,7 @@ explains it: [<section heading>](../../references/<concept>.md#<section-anchor>)
 
 ...
 
-## Recall
+## Quiz
 
 Answer before opening.
 
@@ -74,7 +72,7 @@ Answer before opening.
 <Answer, two to four lines.>
 </details>
 
-## Practice it
+## Practice
 
 Do it again without the steps above, the way the exam asks. Give yourself **<N> minutes**.
 
@@ -124,6 +122,6 @@ Run these on `controlplane`.
    <expected output>
    ```
 
-## What's next
+## Next
 
 * [<kubernetes.io page>](https://kubernetes.io/docs/...) <says what it adds beyond this exercise>.

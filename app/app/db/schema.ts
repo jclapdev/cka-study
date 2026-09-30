@@ -21,7 +21,7 @@ export const note = sqliteTable("note", {
   updatedAt: text().notNull().$defaultFn(now),
 });
 
-/** One finished Practice it run. Score is stored so later weight edits do not rewrite history. */
+/** One finished practice exam. Score is stored so later weight edits do not rewrite history. */
 export const attempt = sqliteTable("attempt", {
   id: integer().primaryKey({ autoIncrement: true }),
   topic: text().notNull(),

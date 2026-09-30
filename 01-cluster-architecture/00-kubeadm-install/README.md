@@ -4,8 +4,6 @@
 Kubernetes cluster. It generates the certificates, writes the control plane's static pod
 manifests, and prints a command that joins other machines to what it built.
 
-Exam domain: Cluster Architecture, Installation and Configuration (25%).
-
 Starts from the [`vms` lab](../../lab/README.md#vms). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
@@ -401,7 +399,7 @@ own address, because the control plane pods and both DaemonSets use the host net
 When the cluster is healthy, no pod is `CrashLoopBackOff`, `Error` or `Pending`. What each of
 those means: [phases](../../references/pod.md#phases).
 
-## Recall
+## Quiz
 
 Answer before opening.
 
@@ -442,7 +440,7 @@ certificate and in every join command, so a wrong choice is not fixable without 
 reset.
 </details>
 
-## Practice it
+## Practice
 
 Do it again without the steps above, the way the exam asks. Give yourself **25 minutes**.
 
@@ -556,7 +554,7 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
    kubectl get pods -n kube-system
    ```
 
-## What's next
+## Next
 
 * [Creating a cluster with kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
   is the upstream version of these steps, including the options not used here.
