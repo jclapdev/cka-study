@@ -94,7 +94,7 @@ describe("lab", () => {
   });
 
   it("gives the lab page an anchor for each starting state", async () => {
-    const doc = await renderDoc(readMarkdown("lab/README.md")!, "lab/README.md");
+    const doc = await renderDoc(readMarkdown("lab/labs.md")!, "lab/labs.md");
     expect(doc.html).toContain('id="vms"');
     expect(doc.html).toContain('id="cluster"');
   });
@@ -102,11 +102,14 @@ describe("lab", () => {
 
 describe("bundle", () => {
   it("pulls each exercise's lab section out of the lab guide", () => {
-    const guide = readMarkdown("lab/README.md")!;
+    const guide = readMarkdown("lab/labs.md")!;
     expect(labSection(guide, "vms")).toContain("no cluster yet");
     expect(labSection(guide, "vms")).not.toContain("working three-node cluster");
     expect(labSection(guide, "cluster")).toContain("working three-node cluster");
     expect(labSection(guide, "nope")).toBe("");
+    const machines = labSection(readMarkdown("lab/README.md")!, "Machines", "##");
+    expect(machines).toContain("controlplane");
+    expect(machines).not.toContain("## Grading");
   });
 
   it("lists the reference pages an exercise links to", () => {

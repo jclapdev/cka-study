@@ -13,7 +13,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   // It wipes the machines, so only the app's own pages may ask.
   if (request.headers.get("origin") !== new URL(request.url).origin) throw data("Forbidden", { status: 403 });
   const state = params.state;
-  if (!/^[a-z]+$/.test(state) || !labSection(readMarkdown("lab/README.md") ?? "", state))
+  if (!/^[a-z]+$/.test(state) || !labSection(readMarkdown("lab/labs.md") ?? "", state))
     throw data(`No lab named ${state}`, { status: 400 });
   if (busy) throw data("A lab is already being prepared.", { status: 409 });
   busy = true;

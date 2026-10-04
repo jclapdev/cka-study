@@ -2,7 +2,7 @@
 
 <One paragraph: what this tool or concept does, in plain words.>
 
-Starts from the [`<lab-name>` lab](../../lab/README.md#<lab-name>). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+Starts from the [`<lab-name>` lab](../../lab/labs.md#<lab-name>). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -19,13 +19,15 @@ explains it: [<section heading>](../../references/<concept>.md#<section-anchor>)
    <command>
    ```
 
+   <Only when the reader has to read the output:>
    The output is similar to this:
 
    ```
    <trimmed output, captured from the lab>
    ```
 
-   <One sentence on what to notice, with a link to the reference page that explains it.>
+   <One sentence on what to notice, with a link to the reference page that explains it. A one-line
+   result goes here instead of in an output block.>
 
 2. <Instruction for a manifest kubectl can write>:
 
@@ -65,8 +67,6 @@ explains it: [<section heading>](../../references/<concept>.md#<section-anchor>)
 
 ## Quiz
 
-Answer before opening.
-
 <details><summary><Question?></summary>
 
 <Answer, two to four lines.>
@@ -76,7 +76,7 @@ Answer before opening.
 
 Do it again without the steps above, the way the exam asks. Give yourself **<N> minutes**.
 
-Start from a fresh [`<lab-name>` lab](../../lab/README.md#<lab-name>). When time is up,
+Start from a fresh [`<lab-name>` lab](../../lab/labs.md#<lab-name>). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight <N>%.** <Task in exam wording, no steps. Name any file the

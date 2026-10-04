@@ -4,7 +4,7 @@ A CustomResourceDefinition (CRD) adds a new resource type to the apiserver, and 
 controller that watches objects of that type and does the work they describe. Installing an
 operator usually means installing its CRDs and its controller together, often from a Helm chart.
 
-Starts from the [`crds` lab](../../lab/README.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
+Starts from the [`crds` lab](../../lab/labs.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -57,7 +57,6 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
    The output is similar to this:
 
    ```
-   customresourcedefinition.apiextensions.k8s.io/crontabs.stable.example.com created
    NAME                          CREATED AT
    crontabs.stable.example.com   2026-09-28T00:16:22Z
    NAME       SHORTNAMES   APIVERSION              NAMESPACED   KIND
@@ -112,15 +111,7 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
    k get ct
    ```
 
-   The output is similar to this:
-
-   ```
-   crontab.stable.example.com/my-new-cron-object created
-   NAME                 AGE
-   my-new-cron-object   0s
-   NAME                 AGE
-   my-new-cron-object   0s
-   ```
+   Both commands list `my-new-cron-object`, because `ct` is the short name the CRD defines.
 
 2. Try an object whose `replicas` is text. Copy `my-crontab.yaml` to `bad.yaml`, and in vim
    change the name to `bad` and the `spec` to:
@@ -219,9 +210,6 @@ create a `Certificate` object, and its controller writes the key and certificate
    The output is similar to this:
 
    ```
-   deployment.apps/cert-manager condition met
-   deployment.apps/cert-manager-cainjector condition met
-   deployment.apps/cert-manager-webhook condition met
    NAME                                       READY   STATUS    RESTARTS   AGE
    cert-manager-bc44b5799-rv2r8               1/1     Running   0          15s
    cert-manager-cainjector-784846b495-pbwzx   1/1     Running   0          15s
@@ -300,8 +288,6 @@ reads the fields from the CRD's schema, and marks the required ones:
    The output is similar to this:
 
    ```
-   namespace/demo created
-   issuer.cert-manager.io/selfsigned created
    NAME         READY   AGE
    selfsigned   True    0s
    ```
@@ -334,7 +320,6 @@ reads the fields from the CRD's schema, and marks the required ones:
    The output is similar to this:
 
    ```
-   certificate.cert-manager.io/demo created
    NAME                               READY   SECRET     AGE
    certificate.cert-manager.io/demo   True    demo-tls   5s
 
@@ -371,7 +356,6 @@ reads the fields from the CRD's schema, and marks the required ones:
    The output is similar to this:
 
    ```
-   secret "demo-tls" deleted from demo namespace
    NAME       TYPE                DATA   AGE
    demo-tls   kubernetes.io/tls   3      5s
    ```
@@ -437,8 +421,6 @@ Exam tasks often ask for a list or a piece of documentation in a file. Only the 
 
 ## Quiz
 
-Answer before opening.
-
 <details><summary>What does creating a CRD add to the cluster, and what does it not add?</summary>
 
 A new resource type the apiserver stores and validates, at `/apis/<group>/<version>/<plural>`.
@@ -477,7 +459,7 @@ result, change the custom resource.
 
 Do it again without the steps above, the way the exam asks. Give yourself **18 minutes**.
 
-Start from a fresh [`crds` lab](../../lab/README.md#crds). When time is up,
+Start from a fresh [`crds` lab](../../lab/labs.md#crds). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Install cert-manager with Helm from the chart

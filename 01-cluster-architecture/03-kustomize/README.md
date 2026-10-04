@@ -4,7 +4,7 @@ Kustomize builds a final set of manifests from plain YAML files plus a `kustomiz
 lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is
 built into `kubectl`, so no template language and no extra tool is involved.
 
-Starts from the [`kustomize` lab](../../lab/README.md#kustomize). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
+Starts from the [`kustomize` lab](../../lab/labs.md#kustomize). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -71,15 +71,7 @@ A base is a folder of ordinary manifests with a `kustomization.yaml` that lists 
 4. Build again:
 
    ```shell
-   k kustomize base | head -3
-   ```
-
-   The output is similar to this:
-
-   ```
-   apiVersion: v1
-   kind: Service
-   metadata:
+   k kustomize base
    ```
 
    `k kustomize` prints both objects and sends nothing to the cluster:
@@ -107,13 +99,6 @@ A base is a folder of ordinary manifests with a `kustomization.yaml` that lists 
 
    ```shell
    k delete -f base/deployment.yaml -f base/service.yaml
-   ```
-
-   The output is similar to this:
-
-   ```
-   deployment.apps "web" deleted from default namespace
-   service "web" deleted from default namespace
    ```
 
 ## Write an overlay
@@ -322,10 +307,6 @@ the fields to add or replace: [patches](../../references/kustomize.md#patches).
    The output is similar to this:
 
    ```
-   namespace/prod created
-   service/prod-web created
-   deployment.apps/prod-web created
-   deployment "prod-web" successfully rolled out
    3 nginx:1.28 {"memory":"128Mi"}
    ```
 
@@ -400,16 +381,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    k exec -n prod deploy/prod-web -- printenv GREETING
    ```
 
-   The output is similar to this:
-
-   ```
-   namespace/prod unchanged
-   configmap/prod-web-config-f655md8fbd created
-   service/prod-web unchanged
-   deployment.apps/prod-web configured
-   deployment "prod-web" successfully rolled out
-   hello
-   ```
+   The pod prints `hello`.
 
 5. In `vim base/kustomization.yaml`, change `GREETING=hello` to `GREETING=hi`. Then see what
    would change in the cluster:
@@ -442,11 +414,6 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    The output is similar to this:
 
    ```
-   namespace/prod unchanged
-   configmap/prod-web-config-hc7d4825hb created
-   service/prod-web unchanged
-   deployment.apps/prod-web configured
-   deployment "prod-web" successfully rolled out
    hi
    NAME                         DATA   AGE
    kube-root-ca.crt             1      7s
@@ -465,22 +432,11 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    k delete -k prod
    ```
 
-   The output is similar to this:
-
-   ```
-   namespace "prod" deleted
-   configmap "prod-web-config-hc7d4825hb" deleted from prod namespace
-   service "prod-web" deleted from prod namespace
-   deployment.apps "prod-web" deleted from prod namespace
-   ```
-
-   `delete -k` deletes only what the kustomization renders now, so it names
-   `prod-web-config-hc7d4825hb` and not the older ConfigMap. That one goes because its
+   `delete -k` deletes only what the kustomization renders now, which includes
+   `prod-web-config-hc7d4825hb` but not the older ConfigMap. That one goes because its
    namespace is deleted: [namespaces](../../references/namespaces.md).
 
 ## Quiz
-
-Answer before opening.
 
 <details><summary>What is the difference between `k kustomize dir`, `k apply -k dir` and `k apply -f dir`?</summary>
 
@@ -530,7 +486,7 @@ template. `includeSelectors: true` adds it to the pod template and the selectors
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
-Start from a fresh [`kustomize` lab](../../lab/README.md#kustomize). When time is up,
+Start from a fresh [`kustomize` lab](../../lab/labs.md#kustomize). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 25%.** In `~/shop/base`, create a kustomization with a

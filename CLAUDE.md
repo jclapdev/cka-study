@@ -1,6 +1,6 @@
 # CKA practice labs
 
-The reader is studying for the CKA. [README.md](README.md) is the entry point and lists every topic with its status. [lab/README.md](lab/README.md) covers the lab machines and the labs. [EXAM.md](EXAM.md) covers the exam. `app/` is the study app that shows each topic as three tabs: lab setup, exercise, and references.
+The reader is studying for the CKA. [README.md](README.md) is the entry point and lists every topic with its status. [lab/README.md](lab/README.md) is the Getting started page: setup, the machines, grading and troubleshooting. [lab/labs.md](lab/labs.md) describes each lab an exercise starts from. [EXAM.md](EXAM.md) covers the exam. `app/` is the study app that shows each topic as three tabs: lab setup, exercise, and references.
 
 ## Skills
 
@@ -8,7 +8,7 @@ The reader is studying for the CKA. [README.md](README.md) is the entry point an
 
 ## Lab details live in one place
 
-Everything about the lab lives in `lab/README.md` and nowhere else: the machines, the labs and how to reach them, opening a shell on another machine, resetting, and lab-specific problems. An exercise names its lab in its lab line and never mentions `docker`, saved copies, the computer it runs on or the lab's IP addresses.
+Everything about the lab lives in `lab/README.md` and `lab/labs.md` and nowhere else: the machines and how to reach them, the labs, resetting, and lab-specific problems. How the lab is built never appears in either. An exercise names its lab in its lab line and never mentions `docker`, saved copies, the computer it runs on or the lab's IP addresses.
 
 ## Wording
 

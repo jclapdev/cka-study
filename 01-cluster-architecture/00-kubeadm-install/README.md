@@ -4,7 +4,7 @@
 Kubernetes cluster. It generates the certificates, writes the control plane's static pod
 manifests, and prints a command that joins other machines to what it built.
 
-Starts from the [`vms` lab](../../lab/README.md#vms). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+Starts from the [`vms` lab](../../lab/labs.md#vms). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -61,12 +61,6 @@ wrong one is not fixable without `kubeadm reset`: [the advertise address](../../
 
    ```shell
    CP_IP=$(ip route get 1.1.1.1 | awk '{print $7; exit}'); echo "$CP_IP"
-   ```
-
-   The output is similar to this:
-
-   ```
-   192.168.104.10
    ```
 
    The address must be one the other nodes can reach. `ip route get` prints the address the
@@ -154,13 +148,6 @@ sudo chown "$(id -u):$(id -g)" ~/.kube/config
 kubectl get nodes
 ```
 
-The output is similar to this:
-
-```
-NAME           STATUS     ROLES           AGE   VERSION
-controlplane   NotReady   control-plane   15s   v1.34.10
-```
-
 The node is `NotReady` until a pod network is installed.
 
 > [!note]
@@ -212,29 +199,11 @@ which CoreDNS does not tolerate, so both CoreDNS pods stay `Pending`:
    kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
    ```
 
-   The output is similar to this:
-
-   ```
-   namespace/kube-flannel created
-   serviceaccount/flannel created
-   clusterrole.rbac.authorization.k8s.io/flannel created
-   clusterrolebinding.rbac.authorization.k8s.io/flannel created
-   configmap/kube-flannel-cfg created
-   daemonset.apps/kube-flannel-ds created
-   ```
-
 2. Watch the node change to Ready, which takes about 20 seconds, then stop the watch with
    `Ctrl-C`:
 
    ```shell
    kubectl get nodes -w
-   ```
-
-   The output is similar to this:
-
-   ```
-   NAME           STATUS   ROLES           AGE   VERSION
-   controlplane   Ready    control-plane   43s   v1.34.10
    ```
 
 3. Confirm what changed on disk and in `kube-system`:
@@ -347,18 +316,7 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
    kubectl get nodes
    ```
 
-   The output is similar to this:
-
-   ```
-   node/node01 labeled
-   node/node02 labeled
-   NAME           STATUS   ROLES           AGE   VERSION
-   controlplane   Ready    control-plane   87s   v1.34.10
-   node01         Ready    worker          35s   v1.34.10
-   node02         Ready    worker          35s   v1.34.10
-   ```
-
-   The value after `=` is empty. The role name comes from the key.
+   `ROLES` now shows `worker` for both. The value after `=` is empty. The role name comes from the key.
 
 ## Check the control plane
 
@@ -401,8 +359,6 @@ those means: [phases](../../references/pod.md#phases).
 
 ## Quiz
 
-Answer before opening.
-
 <details><summary>Why can the apiserver be a pod?</summary>
 
 Static pods. The kubelet starts anything it finds in `/etc/kubernetes/manifests/`
@@ -444,7 +400,7 @@ reset.
 
 Do it again without the steps above, the way the exam asks. Give yourself **25 minutes**.
 
-Start from a fresh [`vms` lab](../../lab/README.md#vms). When time is up,
+Start from a fresh [`vms` lab](../../lab/labs.md#vms). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 19%.** Initialise a control plane with pod network CIDR

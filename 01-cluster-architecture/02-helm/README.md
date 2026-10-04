@@ -4,7 +4,7 @@ Helm installs a packaged application, called a chart, into a cluster as a named 
 keeps a numbered history of that release so it can be upgraded, rolled back and uninstalled as
 one unit.
 
-Starts from the [`helm` lab](../../lab/README.md#helm). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
+Starts from the [`helm` lab](../../lab/labs.md#helm). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -44,15 +44,6 @@ charts and their versions: [charts, repositories and releases](../../references/
    ```shell
    helm repo add podinfo https://stefanprodan.github.io/podinfo
    helm repo update
-   ```
-
-   The output is similar to this:
-
-   ```
-   "podinfo" has been added to your repositories
-   Hang tight while we grab the latest from your chart repositories...
-   ...Successfully got an update from the "podinfo" chart repository
-   Update Complete. ⎈Happy Helming!⎈
    ```
 
    `podinfo` is now a name on this machine only. Charts in the repository are referred to as
@@ -128,21 +119,6 @@ A release is one installed copy of a chart, with its own name, in one namespace:
 
    ```shell
    helm install web podinfo/podinfo --version 6.14.1 -n apps --create-namespace --set replicaCount=2
-   ```
-
-   The output is similar to this:
-
-   ```
-   NAME: web
-   LAST DEPLOYED: Sun Sep 27 18:30:41 2026
-   NAMESPACE: apps
-   STATUS: deployed
-   REVISION: 1
-   DESCRIPTION: Install complete
-   NOTES:
-   1. Get the application URL by running these commands:
-     echo "Visit http://127.0.0.1:8080 to use your application"
-     kubectl -n apps port-forward deploy/web-podinfo 8080:9898
    ```
 
    Without `--create-namespace`, the install fails with
@@ -226,18 +202,6 @@ same release: [revisions and where releases are stored](../../references/helm.md
    helm upgrade web podinfo/podinfo --version 6.15.0 -n apps -f web-values.yaml
    ```
 
-   The output is similar to this:
-
-   ```
-   Release "web" has been upgraded. Happy Helming!
-   NAME: web
-   LAST DEPLOYED: Sun Sep 27 18:31:10 2026
-   NAMESPACE: apps
-   STATUS: deployed
-   REVISION: 2
-   DESCRIPTION: Upgrade complete
-   ```
-
 2. Check the values and the replica count:
 
    ```shell
@@ -270,13 +234,6 @@ same release: [revisions and where releases are stored](../../references/helm.md
    The output is similar to this:
 
    ```
-   Release "web" has been upgraded. Happy Helming!
-   NAME: web
-   LAST DEPLOYED: Sun Sep 27 18:31:10 2026
-   NAMESPACE: apps
-   STATUS: deployed
-   REVISION: 3
-   DESCRIPTION: Upgrade complete
    USER-SUPPLIED VALUES:
    replicaCount: 3
    ui:
@@ -314,7 +271,6 @@ same release: [revisions and where releases are stored](../../references/helm.md
    The output is similar to this:
 
    ```
-   Rollback was a success! Happy Helming!
    REVISION	UPDATED                 	STATUS    	CHART         	APP VERSION	DESCRIPTION
    1       	Sun Sep 27 18:31:07 2026	superseded	podinfo-6.14.1	6.14.1     	Install complete
    2       	Sun Sep 27 18:31:10 2026	superseded	podinfo-6.15.0	6.15.0     	Upgrade complete
@@ -406,8 +362,6 @@ installing anything: [rendering without installing](../../references/helm.md#ren
 
 ## Quiz
 
-Answer before opening.
-
 <details><summary>Which flag installs a specific chart version, and which version do you get without it?</summary>
 
 `--version`. Without it, `helm install` and `helm upgrade` both take the newest version in the
@@ -454,7 +408,7 @@ No. The namespace is not part of the release, so it stays.
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
-Start from a fresh [`helm` lab](../../lab/README.md#helm). When time is up,
+Start from a fresh [`helm` lab](../../lab/labs.md#helm). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 20%.** Add the chart repository

@@ -64,7 +64,7 @@ export function PrepareLab({ state, onOpenTerminal }: { state: string; onOpenTer
       )}
       {status === "failed" && (
         <p className="mt-3 text-missed">
-          The lab failed to start. See <a href="/doc/lab/README.md#when-something-goes-wrong" className="underline">troubleshooting</a>.
+          The lab failed to start. See <a href="/doc/lab/README.md#troubleshooting" className="underline">troubleshooting</a>.
         </p>
       )}
     </div>

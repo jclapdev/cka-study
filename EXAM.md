@@ -19,7 +19,7 @@ Sources: [Linux Foundation tips for the CKA](https://docs.linuxfoundation.org/tc
 
 The remote desktop is XFCE with a terminal and Firefox, and nothing else is on screen. These details change how fast you can go:
 
-- **Copy and paste.** The terminal copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, or with its right-click menu. Firefox uses Ctrl+C and Ctrl+V. The study app's terminal takes the same Ctrl+Shift+C and Ctrl+Shift+V, so use those to build the habit.
+- **Copy and paste.** The terminal copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, or with its right-click menu. Firefox uses Ctrl+C and Ctrl+V.
 - **vim.** The INSERT key is blocked, so enter insert mode with `i`. Pasted YAML can come out re-indented, one step further right per line. Run `:set paste` before pasting to prevent it.
 - **Nothing carries over between tasks.** Each task starts a new `ssh` session, so an alias, an exported variable or a `.vimrc` set in one task is gone in the next. Only what the hosts come with, `k` and its completion, is always there.
 - **Docs search.** The search box on kubernetes.io is allowed, but opening a result outside the allowed sites is not. The Kustomize field reference at `kubectl.docs.kubernetes.io` is not on the allowed list.

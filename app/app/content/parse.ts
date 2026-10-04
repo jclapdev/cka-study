@@ -137,7 +137,7 @@ function rewriteLinks({ file, inTopic }: { file: string; inTopic: boolean }) {
       const suffix = hash ? `#${hash}` : "";
       const topic = rel.match(TOPIC_README);
       const ref = rel.match(/^references\/([\w-]+)\.md$/);
-      if (inTopic && rel === "lab/README.md") el.properties.href = "?tab=lab";
+      if (inTopic && rel === "lab/labs.md") el.properties.href = "?tab=lab";
       else if (inTopic && ref && ref[1] !== "README") el.properties.href = `?tab=references&ref=${ref[1]}${suffix}`;
       else if (topic) el.properties.href = `/t/${topic[1]}/${topic[2]}${suffix}`;
       else if (rel.endsWith(".md")) el.properties.href = `/doc/${rel}${suffix}`;
@@ -192,7 +192,7 @@ export async function parseExercise(md: string, file: string): Promise<Exercise>
   const labLine = introNodes.find((n) => n.type === "paragraph" && /^Starts from/.test(toString(n)));
   const intro = introNodes.filter((n) => n !== labLine);
   let lab: string | null = null;
-  if (labLine) visit(labLine, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/README\.md#([\w-]+)/)?.[1] ?? null));
+  if (labLine) visit(labLine, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/labs\.md#([\w-]+)/)?.[1] ?? null));
   const out: Section[] = [];
 
   for (const s of sections) {
@@ -266,8 +266,8 @@ async function task(item: ListItem, n: number, render: (c: RootContent[]) => Pro
 }
 
 /** The `### <name>` section of the lab guide, without its heading, or "" when there is none. */
-export function labSection(labMd: string, name: string) {
-  const m = labMd.match(new RegExp(`^### ${name}\\n([\\s\\S]*?)(?=^##? |^### |(?![\\s\\S]))`, "m"));
+export function labSection(labMd: string, name: string, level = "###") {
+  const m = labMd.match(new RegExp(`^${level} ${name}\\n([\\s\\S]*?)(?=^#{1,${level.length}} |(?![\\s\\S]))`, "m"));
   return m ? m[1].trim() : "";
 }
 

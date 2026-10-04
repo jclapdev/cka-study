@@ -7,7 +7,7 @@ description: Use this skill when writing, extending, fixing or finishing a CKA e
 
 In the study app, each topic page has three tabs, all built from Markdown in this repo:
 
-1. **Lab** is the `### <lab-name>` section of `lab/README.md` that the exercise's lab line names.
+1. **Lab** is the `### <lab-name>` section of `lab/labs.md` that the exercise's lab line names.
 2. **Exercise** is the topic's `README.md`.
 3. **References** holds every `references/*.md` page the README links to, each with its one-line summary from the table in `references/README.md`.
 
@@ -16,9 +16,9 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 ## Checklist
 
 - [ ] 1. Read the topic's competencies in `EXAM.md` and teach only what the exam tests.
-- [ ] 2. Pick the lab. Use `vms` (bare machines) or `cluster` (working cluster) from `lab/README.md`. If the exercise needs something else, put a `setup.sh` in the topic folder, add a case for the new lab to `start` in `lab/lab.sh` that names a saved copy and the script, and add a `### <lab-name>` section under "Labs" in `lab/README.md` in the same form as the others. The app's Start lab button refuses a lab with no section.
+- [ ] 2. Pick the lab. Use `vms` (bare machines) or `cluster` (working cluster) from `lab/labs.md`. If the exercise needs something else, put a `setup.sh` in the topic folder, add a case for the new lab to `start` in `lab/lab.sh` that names a saved copy and the script, and add a `### <lab-name>` section to `lab/labs.md` in the same form as the others. The app's Start lab button refuses a lab with no section.
 - [ ] 3. Run every command on the lab first and save the real output. Do this for the steps, for each command a reference page will quote, and for each error message a failure-modes table will quote. Nothing that looks like command output is written from memory.
-- [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Each step is a command, its trimmed output from step 3, one sentence on what to notice, and a link to the reference page that explains it. Every step group links at least one reference page. Explanations belong on reference pages, not in steps.
+- [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Each step is a command, one sentence on what to notice, and a link to the reference page that explains it. Show the trimmed output from step 3 only when the reader has to read something in it (see Gotchas). Every step group links at least one reference page. Explanations belong on reference pages, not in steps.
 - [ ] 5. Get every manifest the way the exam allows, fastest source first (the "How to work in the exam" section of `EXAM.md`), and never have the reader type a whole manifest:
   1. `kubectl create`, `run` or `expose` with `--dry-run=client -o yaml > file` whenever one of them can write it.
   2. Otherwise, a snippet from a kubernetes.io page. The step names the search term, links the page section with its anchor, says to copy the block and paste it, then shows the lines to change and the finished file. Prefer the docs' own `cat <<EOF` blocks and example files with copy buttons.
@@ -40,6 +40,7 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 
 ## Gotchas
 
+- **Output blocks** are for output the reader has to read: an error to recognise, a table or YAML whose contents are the lesson, or a value a later step uses. Leave the block out when the command only creates or changes something (`created`, `configured`, `labeled`), when the next step checks the result, or for `ssh`, `exit` and `hostname`. Put a one-word or one-line result in the sentence instead: "The answer is `no`." Trim `created` lines from a block that stays.
 - **Narration** is any sentence about the lesson, the reader, or how much something matters, instead of about Kubernetes. Delete it. These were all removed from the RBAC exercise:
   - Describing the lesson: "In this lesson, you will…", "Nothing here schedules a pod, so nothing waits."
   - Framing importance: "worth recognising on sight", "which is why it is worth reading rather than skimming", "the single most common reason…"
@@ -51,13 +52,13 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 - Test a failure mode on a freshly started lab, not after `kubeadm reset`. Reset leaves `/etc/cni/net.d/` and `/run/flannel/` behind, and a failure test of the kubeadm exercise gave the wrong result because the next cluster reused them.
 - `admin.conf` authenticates in the group `kubeadm:cluster-admins`. `system:masters` belongs to `super-admin.conf`.
 - The app finds sections by heading name: `## Quiz`, `## Practice`, `## Check your work`, `## Next`. Every `##` heading before Quiz is treated as a group of steps.
-- The lab line must read exactly ``Starts from the [`<lab-name>` lab](../../lab/README.md#<lab-name>).``, and `<lab-name>` must match a `### <lab-name>` heading in `lab/README.md`. Otherwise the Lab tab is empty.
+- The lab line must read exactly ``Starts from the [`<lab-name>` lab](../../lab/labs.md#<lab-name>).``, and `<lab-name>` must match a `### <lab-name>` heading in `lab/labs.md`. Otherwise the Lab tab is empty.
 - Each Practice task opens with a bold lead-in, ``**Host `controlplane`, weight 19%.**`` (or ``**Hosts `a`, `b`, weight 25%.**``), and the weights add up to 100. The time budget is a bold ``**N minutes**`` in the section's opening text.
 - Quiz answers and the Practice solution use `<details><summary>…</summary>` with a blank line after `</summary>`.
 - Reference links in an exercise must be relative (`../../references/<page>.md`), or the References tab won't list the page. Links between reference pages are plain `<page>.md`.
 - A step links the section that explains it, not the top of the page: `[values](../../references/helm.md#values)`, with the section's heading as the link text, or the page's name before a generic heading such as `[kubeadm failure modes](…#failure-modes)`. A link on a word inside a sentence keeps the word and still gets the anchor. Link the top of the page only when its opening paragraph is the explanation. The anchor is the heading in lowercase with spaces turned into hyphens and punctuation dropped. A reference page with one section per idea the steps use makes this possible.
 - The table row in `references/README.md` must stay in the form `| [<page>](<page>.md) | <what it covers> |`. The app reads it with a pattern, and a page without a row shows up with no summary.
-- Exercises never mention `docker`, saved copies, the computer the lab runs on or the lab's IP addresses. Those belong only in `lab/README.md`.
+- Exercises never mention `docker`, saved copies, the computer the lab runs on or the lab's IP addresses. Those belong only in `lab/README.md` and `lab/labs.md`.
 - The reader starts on `base`, which has no `kubectl`, as in the exam. Steps run on `controlplane`, reached with `ssh controlplane`. Work on a worker goes `exit` to `base`, `ssh node01`, then `exit` and `ssh controlplane` again. ssh from one cluster machine to another is refused in the lab, as in the exam, so a step that does it fails.
 - The exam's hosts share nothing between tasks: each task is a new `ssh` session. Don't teach an alias, an exported variable or a `.vimrc` as setup the reader can rely on later. `k` and its completion exist everywhere, in the lab too (`lab/exam-mode.sh`).
 - A grader `check` runs on `controlplane` as the lab user. Use `k` there, `ssh node01 …` for a worker, and `sudo` for root-owned files. `ssh` works inside checks only because `lab/grade-lib.sh` lends `controlplane` a key for the run; the reader's `controlplane` has none. A check that fails on a fresh restore and passes after the solution is the only proof it works.

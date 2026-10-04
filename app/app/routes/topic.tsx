@@ -24,8 +24,9 @@ async function load(params: Route.LoaderArgs["params"]) {
 export async function loader({ params }: Route.LoaderArgs) {
   const { id, exercise } = await load(params);
   const md = readMarkdown(topicReadme(params.domain, params.topic)!)!;
-  const lab = exercise.lab ? labSection(readMarkdown("lab/README.md")!, exercise.lab) : "";
-  const labHtml = lab ? (await renderDoc(lab, "lab/README.md")).html : "";
+  const lab = exercise.lab ? labSection(readMarkdown("lab/labs.md")!, exercise.lab) : "";
+  const labHtml = lab ? (await renderDoc(lab, "lab/labs.md")).html : "";
+  const machinesHtml = (await renderDoc(labSection(readMarkdown("lab/README.md")!, "Machines", "##"), "lab/README.md")).html;
   // Every reference is loaded, so a link from one reference to another still opens in this tab.
   const covers = referenceCovers(readMarkdown("references/README.md") ?? "");
   const references = await Promise.all(
@@ -35,7 +36,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     }),
   );
   const mine = referenceLinks(md).map((f) => f.replace(/^references\/|\.md$/g, ""));
-  return { id, exercise, state: topicState(id), labHtml, references, mine, grader: hasGrader(params.domain, params.topic) };
+  return { id, exercise, state: topicState(id), labHtml, machinesHtml, references, mine, grader: hasGrader(params.domain, params.topic) };
 }
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.exercise.title ?? "Topic"} · CKA Prep` }];
@@ -78,7 +79,7 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function Topic({ loaderData }: Route.ComponentProps) {
-  const { id, exercise, state, labHtml, references, mine, grader } = loaderData;
+  const { id, exercise, state, labHtml, machinesHtml, references, mine, grader } = loaderData;
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.key === params.get("tab")) ?? TABS[1]).key;
   const [running, setRunning] = useState(false);
@@ -126,6 +127,10 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         ) : (
           <p className="text-muted">This topic has no lab.</p>
         )}
+        <details className="mt-6 rounded-md border border-line px-5 py-3">
+          <summary className="cursor-pointer font-semibold">Machines</summary>
+          <Markdown html={machinesHtml} className="mt-4" />
+        </details>
       </section>
 
       {tab === "references" && !running && <References references={references} mine={mine} />}

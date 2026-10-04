@@ -47,6 +47,11 @@ export const pretty = (folder: string) => {
   return s[0].toUpperCase() + s.slice(1);
 };
 
+const CHEAT_SHEET = "https://kubernetes.io/docs/reference/kubectl/quick-reference/";
+
+const navItem = ({ isActive }: { isActive: boolean }) =>
+  `block rounded px-2 py-1.5 hover:bg-paper ${isActive ? "bg-paper font-semibold" : ""}`;
+
 export default function App({ loaderData }: Route.ComponentProps) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
@@ -69,22 +74,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
         </div>
         <ul id="topics" className={`space-y-5 px-3 pb-6 lg:block ${open ? "block" : "hidden"}`}>
           <li>
-            <ul>
-              {[
-                ["/doc/lab/README.md", "Lab"],
-                ["/doc/EXAM.md", "Exam"],
-                ["/doc/references/README.md", "References"],
-              ].map(([to, label]) => (
-                <li key={to}>
-                  <NavLink
-                    to={to}
-                    className={({ isActive }) => `block rounded px-2 py-1.5 hover:bg-paper ${isActive ? "bg-paper font-semibold" : ""}`}
-                  >
-                    {label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
+            <NavLink to="/" end className={navItem}>
+              Dashboard
+            </NavLink>
           </li>
             {loaderData.domains.map((d) => (
               <li key={d.name}>
@@ -122,6 +114,26 @@ export default function App({ loaderData }: Route.ComponentProps) {
                 </ul>
               </li>
             ))}
+          <li className="border-t border-line pt-4">
+            <ul>
+              {[
+                ["/doc/lab/README.md", "Getting started"],
+                ["/doc/EXAM.md", "Exam guide"],
+                ["/doc/references/README.md", "References"],
+              ].map(([to, label]) => (
+                <li key={to}>
+                  <NavLink to={to} className={navItem}>
+                    {label}
+                  </NavLink>
+                </li>
+              ))}
+              <li>
+                <a href={CHEAT_SHEET} target="_blank" rel="noreferrer" className="block rounded px-2 py-1.5 hover:bg-paper">
+                  kubectl cheat sheet ↗
+                </a>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
       <main className="min-w-0 px-4 py-8 sm:px-10">

@@ -1,6 +1,6 @@
 # References
 
-Concept summaries shared by every exercise. Each one states the model, how it shows up in this lab, its failure modes, and links to the official docs.
+One-page summaries of the concepts the exercises use.
 
 | File | Covers |
 | --- | --- |
@@ -21,5 +21,3 @@ Concept summaries shared by every exercise. Each one states the model, how it sh
 | [helm](helm.md) | charts, repositories and releases, values and `--reuse-values`, revisions and rollback, where releases are stored, `helm template` |
 | [kustomize](kustomize.md) | bases and overlays, the fields an overlay sets, `labels` and selectors, patches, generated ConfigMap names, `-k` vs `-f` |
 | [crds](crds.md) | what a CRD adds, its parts, schema validation, operators and reconciling, CRDs in Helm charts |
-
-Every new exercise extends this folder: each concept it touches either already has a summary here or gets one written alongside it, and the exercise README links to them.

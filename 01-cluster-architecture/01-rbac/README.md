@@ -3,7 +3,7 @@
 Role-based access control (RBAC) decides which requests the apiserver allows, by matching the
 identity behind a request against the rules that have been bound to it.
 
-Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
+Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -24,13 +24,6 @@ within: [namespaces](../../references/namespaces.md).
    ```shell
    kubectl create namespace dev
    kubectl create namespace prod
-   ```
-
-   The output is similar to this:
-
-   ```
-   namespace/dev created
-   namespace/prod created
    ```
 
 ## Find out why your kubectl can do anything
@@ -83,12 +76,6 @@ credentials, so a cluster cannot create them. It can create a ServiceAccount:
    kubectl create serviceaccount deploy-bot -n dev
    ```
 
-   The output is similar to this:
-
-   ```
-   serviceaccount/deploy-bot created
-   ```
-
 2. Ask what it is allowed to do. `kubectl auth can-i` asks the apiserver's authoriser directly,
    and `--as` impersonates without needing the subject's credentials
    ([impersonation](../../references/authentication.md#commands)). A ServiceAccount is named in full as
@@ -98,13 +85,7 @@ credentials, so a cluster cannot create them. It can create a ServiceAccount:
    kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   no
-   ```
-
-   The account exists and can authenticate, but it cannot do anything, because permissions in
+   The answer is `no`. The account exists and can authenticate, but it cannot do anything, because permissions in
    Kubernetes are purely additive and it has been granted none
    ([subjects](../../references/rbac.md#subjects)).
 
@@ -130,7 +111,6 @@ in one namespace and can only ever name resources in that namespace:
    The output is similar to this:
 
    ```
-   role.rbac.authorization.k8s.io/pod-reader created
    Name:         pod-reader
    Labels:       <none>
    Annotations:  <none>
@@ -151,12 +131,6 @@ in one namespace and can only ever name resources in that namespace:
    kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   no
-   ```
-
    Still `no`. A Role is a definition attached to nobody. Nothing about creating it mentions
    `deploy-bot`, and RBAC never guesses at a subject. When a Role looks right and still grants
    nothing, look for a RoleBinding that names both the Role and the subject.
@@ -174,12 +148,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
    kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   rolebinding.rbac.authorization.k8s.io/deploy-bot-reads-pods created
-   yes
-   ```
+   The answer is now `yes`.
 
 2. Read back what you just made:
 
@@ -208,11 +177,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
    kubectl auth can-i delete pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   no
-   ```
+   The answer is `no`, because the Role names only `get`, `list` and `watch`.
 
 ## Cross a namespace boundary
 
@@ -222,13 +187,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
    kubectl auth can-i list pods -n prod --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   no
-   ```
-
-   Both halves are namespaced, and both are in `dev`: the Role can only describe `dev`
+   The answer is `no` again. Both halves are namespaced, and both are in `dev`: the Role can only describe `dev`
    resources, and the RoleBinding only grants inside `dev`. The subject being a `dev`
    ServiceAccount is not what limits it. The binding's namespace is. Granting the same access
    in `prod` needs a second RoleBinding there, or a ClusterRoleBinding if it should apply
@@ -273,15 +232,7 @@ Role in each: [the model](../../references/rbac.md#the-model).
    kubectl auth can-i list configmaps -n prod --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   clusterrole.rbac.authorization.k8s.io/configmap-reader created
-   rolebinding.rbac.authorization.k8s.io/deploy-bot-reads-configmaps created
-   rolebinding.rbac.authorization.k8s.io/deploy-bot-reads-configmaps created
-   yes
-   yes
-   ```
+   Both answers are `yes`.
 
 2. The ClusterRole did not make the permission cluster-wide. Each RoleBinding still scopes it
    to its own namespace, which a third namespace shows:
@@ -290,11 +241,7 @@ Role in each: [the model](../../references/rbac.md#the-model).
    kubectl auth can-i list configmaps -n kube-system --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   no
-   ```
+   The answer is `no`.
 
 A ClusterRole bound by a RoleBinding is a reusable definition applied per namespace. The
 built-in `view`, `edit` and `admin` roles are meant to be used this way.
@@ -316,8 +263,6 @@ themselves: [namespaced and cluster-scoped resources](../../references/namespace
    The output is similar to this:
 
    ```
-   clusterrole.rbac.authorization.k8s.io/node-reader created
-   rolebinding.rbac.authorization.k8s.io/deploy-bot-reads-nodes created
    Warning: resource 'nodes' is not namespace scoped
 
    no
@@ -336,14 +281,7 @@ themselves: [namespaced and cluster-scoped resources](../../references/namespace
    kubectl auth can-i list nodes --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
-
-   ```
-   clusterrolebinding.rbac.authorization.k8s.io/deploy-bot-reads-nodes created
-   Warning: resource 'nodes' is not namespace scoped
-
-   yes
-   ```
+   The answer is now `yes`.
 
 3. Read back everything the account accumulated:
 
@@ -421,8 +359,6 @@ themselves: [namespaced and cluster-scoped resources](../../references/namespace
 
 ## Quiz
 
-Answer before opening.
-
 <details><summary>A Role and a RoleBinding both exist and the subject still cannot act. What is left?</summary>
 
 The four fields of the rule: verb, resource, API group, namespace. Impersonate a
@@ -470,7 +406,7 @@ group to `cluster-admin`.
 
 Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
 
-Start from a fresh [`cluster` lab](../../lab/README.md#cluster). When time is up,
+Start from a fresh [`cluster` lab](../../lab/labs.md#cluster). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in

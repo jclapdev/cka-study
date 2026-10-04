@@ -5,7 +5,7 @@ beyond a terminal, vim and the kubernetes.io docs. In this exercise you reach th
 generate YAML instead of typing it, copy snippets from the docs, and change and check live
 objects. The [exam page](../../EXAM.md) covers the format and grading.
 
-Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -22,53 +22,32 @@ Starts from the [`cluster` lab](../../lab/README.md#cluster). Every command runs
 You start on `base`, which has no `kubectl`. Each exam task names the host to `ssh` into:
 [hosts and ssh](../../references/exam-workflow.md#hosts-and-ssh).
 
-1. Check where you are, and try `kubectl`:
+1. Try `kubectl` on `base`:
 
    ```shell
-   hostname
    kubectl get nodes
    ```
 
-   The output is similar to this:
+   It fails with `Command 'kubectl' not found`, because `base` has no Kubernetes tools.
 
-   ```
-   base
-   Command 'kubectl' not found, but can be installed with:
-   ```
-
-2. Go to `node01`, become root, and try `kubectl` there:
+2. Go to `node01`, become root, and try again:
 
    ```shell
    ssh node01
    sudo -i
-   whoami
    kubectl get nodes
    ```
 
-   The output is similar to this:
+   This time `kubectl` exists but fails with `localhost:8080 was refused`, because `node01` has
+   no kubeconfig. A task that says to work on `node01` means files and services on that machine,
+   not the cluster.
 
-   ```
-   root
-   The connection to the server localhost:8080 was refused - did you specify the right host or port?
-   ```
-
-   `kubectl` works only where a kubeconfig exists. A task that says to work on `node01` means
-   files and services on that machine, not the cluster.
-
-3. Read the node's container runtime version, then return to `base`:
+3. Read the node's container runtime version, then go back to `base`:
 
    ```shell
    containerd --version
    exit
    exit
-   hostname
-   ```
-
-   The output is similar to this:
-
-   ```
-   containerd github.com/containerd/containerd/v2 2.2.1
-   base
    ```
 
    The first `exit` leaves root, and the second leaves `node01`. `ssh node02` from `node01`
@@ -85,21 +64,10 @@ You start on `base`, which has no `kubectl`. Each exam task names the host to `s
 `k` is `kubectl` with bash completion, on every exam host:
 [the k alias and short names](../../references/exam-workflow.md#the-k-alias-and-short-names).
 
-1. Check the alias:
+1. List the nodes with `k` and the short name `no`:
 
    ```shell
-   type k
    k get no
-   ```
-
-   The output is similar to this:
-
-   ```
-   k is aliased to `kubectl'
-   NAME           STATUS   ROLES           AGE   VERSION
-   controlplane   Ready    control-plane   56d   v1.34.10
-   node01         Ready    worker          56d   v1.34.10
-   node02         Ready    worker          56d   v1.34.10
    ```
 
    Type `k get dep` and press Tab: completion writes `deployments`. It completes object names
@@ -165,13 +133,6 @@ Redirect it to a file to edit before applying:
    k create deployment web --image=nginx:1.27 --replicas=2 --dry-run=client -o yaml > web.yaml
    k create namespace drill
    k apply -f web.yaml -n drill
-   ```
-
-   The output is similar to this:
-
-   ```
-   namespace/drill created
-   deployment.apps/web created
    ```
 
    `web.yaml` has the pod labels `app: web` and a container named `nginx`, after the image.
@@ -273,15 +234,6 @@ PersistentVolumeClaim. The docs have one for each, ready to copy:
 
    ```shell
    k apply -f deny.yaml -n drill
-   k get netpol -n drill
-   ```
-
-   The output is similar to this:
-
-   ```
-   networkpolicy.networking.k8s.io/default-deny-ingress created
-   NAME                   POD-SELECTOR   AGE
-   default-deny-ingress   <none>         0s
    ```
 
    The lab's pod network, Flannel, does not enforce NetworkPolicies, so the policy exists but
@@ -360,18 +312,6 @@ Common changes have their own commands, which are faster than editing YAML:
    k scale deploy web --replicas=3 -n drill
    k label deploy web tier=frontend -n drill
    k rollout status deploy/web -n drill
-   k get deploy web -n drill -o wide --show-labels
-   ```
-
-   The output is similar to this:
-
-   ```
-   deployment.apps/web image updated
-   deployment.apps/web scaled
-   deployment.apps/web labeled
-   deployment "web" successfully rolled out
-   NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES       SELECTOR   LABELS
-   web    3/3     3            3           27s   nginx        nginx:1.28   app=web    app=web,tier=frontend
    ```
 
    `set image` takes the container's name, `nginx`, then the new image.
@@ -386,7 +326,6 @@ Common changes have their own commands, which are faster than editing YAML:
    In vim, change `"3600"` to `"7200"` under `args`, and `:wq`. The output is similar to this:
 
    ```
-   pod/tool created
    error: pods "tool" is invalid
    A copy of your changes has been stored to "/tmp/kubectl-edit-2739834084.yaml"
    error: Edit cancelled, no valid changes were saved.
@@ -398,13 +337,6 @@ Common changes have their own commands, which are faster than editing YAML:
 
    ```shell
    k replace --force -f /tmp/kubectl-edit-2739834084.yaml
-   ```
-
-   The output is similar to this:
-
-   ```
-   pod "tool" deleted from drill namespace
-   pod/tool replaced
    ```
 
 ## Check the result
@@ -428,8 +360,6 @@ The grader reads the cluster, so read back the exact value a task asked for:
    ```
 
 ## Quiz
-
-Answer before opening.
 
 <details><summary>A task says to work on `node01`. Where does `kubectl` work, and how do you get back?</summary>
 
@@ -469,7 +399,7 @@ No. Each task is a new `ssh` session. Only `k` and its completion are always the
 
 Do it again without the steps above, the way the exam asks. Give yourself **12 minutes**.
 
-Start from a fresh [`cluster` lab](../../lab/README.md#cluster). When time is up,
+Start from a fresh [`cluster` lab](../../lab/labs.md#cluster). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `shop`, and in it a Deployment `api`

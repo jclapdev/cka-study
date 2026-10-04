@@ -4,22 +4,7 @@ Hands-on labs for the Certified Kubernetes Administrator (CKA) exam. Each topic 
 
 ## Getting started
 
-1. Install [Docker Desktop](https://docs.docker.com/desktop/) on Windows or macOS, or [Docker Engine](https://docs.docker.com/engine/install/) on Linux, and start it.
-2. In a terminal, inside this project's folder, start the app:
-
-   ```shell
-   docker compose up -d
-   ```
-
-3. Open <http://localhost:5173> and open a topic.
-4. On the topic's **Lab** tab, press **Start lab**. The first time takes about 6 minutes, because it builds the lab. After that it takes under a minute.
-5. Press **Open terminal**. You start on `base`, as in the exam. Run `ssh controlplane` to reach the cluster.
-
-## App
-
-Each topic page has three tabs: **Lab**, **Exercise** and **References**. **Open terminal** opens a shell on `base` beside the page. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the exam terminal.
-
-Your progress is saved in `app/data/progress.db`. Delete it to start over. `docker compose --profile lab down` stops the app and the lab, and `docker compose up -d` starts the app again.
+With Docker running, run `docker compose up -d` in this folder and open <http://localhost:5173>. [Getting started](lab/README.md) has the requirements, setup and troubleshooting.
 
 ## How the exam asks questions
 
@@ -33,8 +18,6 @@ The Practice sections match the real exam:
 [EXAM.md](EXAM.md) has the full format and every competency the topics below map to.
 
 ## Exercises
-
-Status is **ready** when a topic has steps and a Practice section, **steps only** when it has no Practice section yet, and blank when it is coming soon.
 
 | Domain | Topic | Status |
 | --- | --- | --- |

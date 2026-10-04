@@ -7,11 +7,21 @@ export default function Home() {
   const { domains } = useRouteLoaderData<typeof rootLoader>("root")!;
   const written = domains.flatMap((d) => d.topics).filter((t) => t.progress);
   const next = written.find((t) => t.progress!.stepsDone < t.progress!.steps) ?? written[0];
+  const started = written.some((t) => t.progress!.stepsDone > 0);
   const finished = written.filter((t) => t.progress!.steps && t.progress!.stepsDone === t.progress!.steps).length;
 
   return (
     <div className="mx-auto max-w-4xl">
       <h1 className="text-3xl font-bold sm:text-4xl">Dashboard</h1>
+      {!started && (
+        <div className="mt-6 rounded-md border border-line bg-surface px-5 py-4">
+          <h2 className="font-bold">Getting started</h2>
+          <p className="mt-1 text-muted">Set up the lab, then start with the first topic.</p>
+          <Link to="/doc/lab/README.md" className="mt-3 inline-block font-semibold text-accent hover:underline">
+            Set up the lab
+          </Link>
+        </div>
+      )}
       <p className="mt-3 text-muted">
         You have finished {finished} of {written.length} available topics.
       </p>
