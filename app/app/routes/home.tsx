@@ -3,6 +3,11 @@ import type { loader as rootLoader } from "~/root";
 import { Meter, pretty } from "~/root";
 
 
+type Topic = Awaited<ReturnType<typeof rootLoader>>["domains"][number]["topics"][number];
+const missed = (t: Topic) => (t.progress?.recall ? `${t.progress.missed} of ${t.progress.recall}` : "");
+const score = (t: Topic) =>
+  t.progress?.bestScore != null ? `${t.progress.bestScore}%` : t.progress?.hasPractice ? "Not attempted" : "";
+
 export default function Home() {
   const { domains } = useRouteLoaderData<typeof rootLoader>("root")!;
   const written = domains.flatMap((d) => d.topics).filter((t) => t.progress);
@@ -35,13 +40,13 @@ export default function Home() {
       )}
 
       <div className="mt-10 overflow-x-auto">
-        <table className="w-full min-w-[36rem] text-left">
+        <table className="w-full text-left sm:min-w-[36rem]">
           <thead className="text-sm text-muted">
             <tr>
               <th className="py-2 font-normal">Topic</th>
-              <th className="w-44 py-2 font-normal">Progress</th>
-              <th className="py-2 text-right font-normal">Quiz missed</th>
-              <th className="py-2 text-right font-normal">Best score</th>
+              <th className="w-28 py-2 font-normal sm:w-44">Progress</th>
+              <th className="hidden py-2 text-right font-normal sm:table-cell">Quiz missed</th>
+              <th className="hidden py-2 text-right font-normal sm:table-cell">Best score</th>
             </tr>
           </thead>
           {domains.map((d) => (
@@ -51,6 +56,11 @@ export default function Home() {
                   {pretty(d.name)} {d.weight !== null && <span className="font-normal text-muted">{d.weight}%</span>}
                 </th>
               </tr>
+              {d.topics.length === 0 && (
+                <tr className="border-t border-line">
+                  <td colSpan={4} className="py-2 text-sm text-muted">Coming soon</td>
+                </tr>
+              )}
               {d.topics.map((t) => (
                 <tr key={t.id} className="border-t border-line">
                   <td className="py-2">
@@ -59,7 +69,12 @@ export default function Home() {
                         {pretty(t.topic)}
                       </Link>
                     ) : (
-                      <span className="text-muted/70">{pretty(t.topic)}</span>
+                      <span className="text-muted">{pretty(t.topic)}</span>
+                    )}
+                    {(missed(t) || score(t)) && (
+                      <span className="mt-0.5 block text-sm text-muted sm:hidden">
+                        {[missed(t) && `Quiz missed ${missed(t)}`, score(t) && `Best score ${score(t)}`].filter(Boolean).join(" · ")}
+                      </span>
                     )}
                   </td>
                   <td className="py-2 pr-4">
@@ -69,14 +84,14 @@ export default function Home() {
                         {t.progress.stepsDone}/{t.progress.steps}
                       </span>
                     ) : (
-                      <span className="text-sm text-muted/70">Coming soon</span>
+                      <span className="text-sm text-muted">Coming soon</span>
                     )}
                   </td>
-                  <td className={`py-2 text-right tabular-nums ${t.progress?.missed ? "text-missed" : "text-muted"}`}>
-                    {t.progress?.recall ? `${t.progress.missed} of ${t.progress.recall}` : ""}
+                  <td className={`hidden py-2 text-right tabular-nums sm:table-cell ${t.progress?.missed ? "text-missed" : "text-muted"}`}>
+                    {missed(t)}
                   </td>
-                  <td className="py-2 text-right tabular-nums">
-                    {t.progress?.bestScore != null ? `${t.progress.bestScore}%` : t.progress?.hasPractice ? <span className="text-muted">Not attempted</span> : ""}
+                  <td className={`hidden py-2 text-right tabular-nums sm:table-cell ${t.progress?.bestScore != null ? "" : "text-muted"}`}>
+                    {score(t)}
                   </td>
                 </tr>
               ))}
@@ -87,3 +102,5 @@ export default function Home() {
     </div>
   );
 }
+
+export { Problem as ErrorBoundary } from "~/root";

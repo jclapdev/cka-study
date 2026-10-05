@@ -11,8 +11,8 @@
   --color-muted: #5b6778;
   --color-line: #d9dfe7;
   --color-accent: #2f5fd0;
-  --color-done: #2e8b57;
-  --color-missed: #b7791f;
+  --color-done: #26784d;
+  --color-missed: #946010;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -61,6 +61,7 @@ body {
 }
 .md :where(code):not(pre code) {
   @apply rounded bg-line/60 px-1 py-0.5 font-normal;
+  overflow-wrap: anywhere;
 }
 .md :where(code):not(pre code)::before,
 .md :where(code):not(pre code)::after {
@@ -103,6 +104,12 @@ body {
 .md pre:hover .copy-btn,
 .copy-btn:focus-visible {
   @apply opacity-100;
+}
+/* Touch screens have no hover, so the button stays visible. */
+@media (hover: none) {
+  .copy-btn {
+    @apply opacity-100;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

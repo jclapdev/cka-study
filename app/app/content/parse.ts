@@ -174,7 +174,7 @@ function renderer(file: string, inTopic = TOPIC_README.test(file)) {
     .use(rehypeRaw)
     .use(rehypeSlug)
     .use(rewriteLinks, { file, inTopic })
-    .use(rehypeShiki, { themes: { light: "github-light", dark: "github-dark" }, defaultColor: false })
+    .use(rehypeShiki, { themes: { light: "github-light", dark: "github-dark-default" }, defaultColor: false })
     .use(rehypeStringify);
   const nodes = async (children: RootContent[]) => {
     if (!children.length) return "";

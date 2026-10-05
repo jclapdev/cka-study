@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { isRouteErrorResponse, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, useLocation } from "react-router";
+import { isRouteErrorResponse, Link, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, useLocation, useRouteError } from "react-router";
 import type { Route } from "./+types/root";
 import { overview } from "./db/progress";
 import "./app.css";
@@ -84,6 +84,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                   <span>{pretty(d.name)}</span>
                   {d.weight !== null && <span>{d.weight}%</span>}
                 </p>
+                {d.topics.length === 0 && <p className="px-2 py-1 text-[0.95rem] text-muted">Coming soon</p>}
                 <ul>
                   {d.topics.map((t) => (
                     <li key={t.id}>
@@ -105,7 +106,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                           <Meter done={t.progress.stepsDone} total={t.progress.steps} />
                         </NavLink>
                       ) : (
-                        <span className="block px-2 py-1 text-[0.95rem] text-muted/70" title="Coming soon">
+                        <span className="block px-2 py-1 text-[0.95rem] text-muted" title="Coming soon">
                           {pretty(t.topic)}
                         </span>
                       )}
@@ -152,17 +153,28 @@ export function Meter({ done, total }: { done: number; total: number }) {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+/** The error page. Each route uses it so the topic list stays beside it; root uses it when the layout itself fails. */
+export function Problem() {
+  const error = useRouteError();
   const notFound = isRouteErrorResponse(error) && error.status === 404;
+  useEffect(() => {
+    if (!notFound) console.error(error);
+  }, [error, notFound]);
   return (
-    <main className="mx-auto max-w-2xl p-10">
-      <h1 className="text-2xl font-bold">{notFound ? "No such page" : "Something went wrong"}</h1>
-      <p className="mt-2 text-muted">
-        {notFound ? "Page not found." : error instanceof Error ? error.message : String(error)}
-      </p>
-      <a href="/" className="mt-4 inline-block text-accent underline">
+    <div className="mx-auto max-w-2xl">
+      <h1 className="text-2xl font-bold">{notFound ? "Page not found" : "Something went wrong"}</h1>
+      {!notFound && <p className="mt-2 text-muted">Reload the page to try again.</p>}
+      <Link to="/" className="mt-4 inline-block text-accent underline">
         Back to dashboard
-      </a>
+      </Link>
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  return (
+    <main className="p-10">
+      <Problem />
     </main>
   );
 }

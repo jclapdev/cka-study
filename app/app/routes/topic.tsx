@@ -87,6 +87,16 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   const [missedOnly, setMissedOnly] = useState(false);
   const onRunning = useCallback((r: boolean) => setRunning(r), []);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
+  const select = (key: string) => setParams(key === "exercise" ? {} : { tab: key }, { replace: true, preventScrollReset: true });
+  // Left and Right move between the tabs, the way a desktop tab strip does.
+  const onTabKey = (e: React.KeyboardEvent) => {
+    const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (!step) return;
+    const from = TABS.findIndex((t) => `tab-${t.key}` === (e.target as HTMLElement).id);
+    const next = TABS[(from + step + TABS.length) % TABS.length].key;
+    select(next);
+    document.getElementById(`tab-${next}`)?.focus();
+  };
 
   const openTerminal = (
     <button onClick={() => setTerm(true)} className="rounded border border-line px-3 py-1.5 text-sm font-semibold hover:border-accent">
@@ -100,27 +110,32 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         <header className="mb-10">
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{exercise.title}</h1>
           <Markdown html={exercise.introHtml} className="mt-4" />
-          <div role="tablist" className="mt-8 flex flex-wrap gap-2 border-b border-line">
-            {TABS.map((t) => (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={tab === t.key}
-                onClick={() => setParams(t.key === "exercise" ? {} : { tab: t.key }, { replace: true, preventScrollReset: true })}
-                className={`-mb-px border-b-2 px-4 py-2 font-semibold ${
-                  tab === t.key ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div className="mt-8 flex flex-wrap items-end gap-2 border-b border-line">
+            <div role="tablist" className="flex gap-2" onKeyDown={onTabKey}>
+              {TABS.map((t) => (
+                <button
+                  key={t.key}
+                  id={`tab-${t.key}`}
+                  role="tab"
+                  aria-selected={tab === t.key}
+                  aria-controls={`panel-${t.key}`}
+                  tabIndex={tab === t.key ? 0 : -1}
+                  onClick={() => select(t.key)}
+                  className={`-mb-px border-b-2 px-4 py-2 font-semibold ${
+                    tab === t.key ? "border-accent text-ink" : "border-transparent text-muted hover:text-ink"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
             {!term && <div className="mb-1 ml-auto">{openTerminal}</div>}
           </div>
         </header>
       )}
 
       {/* Hidden rather than removed on other tabs, so a lab being prepared keeps showing its output. */}
-      <section className="mb-14" hidden={tab !== "lab" || running}>
+      <section id="panel-lab" role="tabpanel" aria-labelledby="tab-lab" className="mb-14" hidden={tab !== "lab" || running}>
         {exercise.lab && <PrepareLab state={exercise.lab} onOpenTerminal={() => setTerm(true)} />}
         {labHtml ? (
           <Markdown html={labHtml} />
@@ -133,71 +148,79 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         </details>
       </section>
 
-      {tab === "references" && !running && <References references={references} mine={mine} />}
+      {tab === "references" && !running && (
+        <div id="panel-references" role="tabpanel" aria-labelledby="tab-references">
+          <References references={references} mine={mine} />
+        </div>
+      )}
 
-      {(tab === "exercise" || running) && exercise.sections.map((s) => {
-        if (running && s.kind !== "practice") return null;
-        switch (s.kind) {
-          case "steps":
-            return (
-              <Section key={s.slug} s={s}>
-                {s.blocks.map((b, i) =>
-                  "html" in b ? (
-                    <Markdown key={i} html={b.html} className="mb-6" />
-                  ) : (
-                    <ol key={i} className="mb-2">
-                      {b.steps.map((step, j) => (
-                        <Step key={step.key} step={step} done={!!state.steps[step.key]} last={j === b.steps.length - 1} />
+      {(tab === "exercise" || running) && (
+        <div {...(!running && { id: "panel-exercise", role: "tabpanel", "aria-labelledby": "tab-exercise" })}>
+          {exercise.sections.map((s) => {
+            if (running && s.kind !== "practice") return null;
+            switch (s.kind) {
+              case "steps":
+                return (
+                  <Section key={s.slug} s={s}>
+                    {s.blocks.map((b, i) =>
+                      "html" in b ? (
+                        <Markdown key={i} html={b.html} className="mb-6" />
+                      ) : (
+                        <ol key={i} className="mb-2">
+                          {b.steps.map((step, j) => (
+                            <Step key={step.key} step={step} done={!!state.steps[step.key]} last={j === b.steps.length - 1} />
+                          ))}
+                        </ol>
+                      ),
+                    )}
+                  </Section>
+                );
+              case "recall": {
+                const missed = s.items.filter((i) => state.recall[i.key] === "missed").length;
+                const items = missedOnly ? s.items.filter((i) => state.recall[i.key] === "missed") : s.items;
+                return (
+                  <Section key={s.slug} s={s}>
+                    {missed > 0 && (
+                      <div className="mb-4 flex justify-end text-sm text-muted">
+                        <label className="flex cursor-pointer items-center gap-2">
+                          <input type="checkbox" checked={missedOnly} onChange={(e) => setMissedOnly(e.target.checked)} />
+                          Show missed only ({missed})
+                        </label>
+                      </div>
+                    )}
+                    <div className="space-y-3">
+                      {items.map((item) => (
+                        <RecallCard key={item.key} item={item} grade={state.recall[item.key]} />
                       ))}
-                    </ol>
-                  ),
-                )}
-              </Section>
-            );
-          case "recall": {
-            const missed = s.items.filter((i) => state.recall[i.key] === "missed").length;
-            const items = missedOnly ? s.items.filter((i) => state.recall[i.key] === "missed") : s.items;
-            return (
-              <Section key={s.slug} s={s}>
-                {missed > 0 && (
-                  <div className="mb-4 flex justify-end text-sm text-muted">
-                    <label className="flex cursor-pointer items-center gap-2">
-                      <input type="checkbox" checked={missedOnly} onChange={(e) => setMissedOnly(e.target.checked)} />
-                      Show missed only ({missed})
-                    </label>
-                  </div>
-                )}
-                <div className="space-y-3">
-                  {items.map((item) => (
-                    <RecallCard key={item.key} item={item} grade={state.recall[item.key]} />
-                  ))}
-                </div>
-              </Section>
-            );
-          }
-          case "practice":
-            return (
-              <Section key={s.slug} s={s} hideTitle={running}>
-                <PracticeRun
-                  practice={s}
-                  checkHtml={check?.kind === "plain" ? check.html : null}
-                  attempts={state.attempts}
-                  grader={grader}
-                  onRunning={onRunning}
-                  terminalButton={term ? null : openTerminal}
-                />
-              </Section>
-            );
-          default:
-            return (
-              <Section key={s.slug} s={s}>
-                <Markdown html={s.html} />
-              </Section>
-            );
-        }
-      })}
+                    </div>
+                  </Section>
+                );
+              }
+              case "practice":
+                return (
+                  <Section key={s.slug} s={s} hideTitle={running}>
+                    <PracticeRun
+                      practice={s}
+                      checkHtml={check?.kind === "plain" ? check.html : null}
+                      attempts={state.attempts}
+                      grader={grader}
+                      onRunning={onRunning}
+                      terminalButton={term ? null : openTerminal}
+                    />
+                  </Section>
+                );
+              default:
+                return (
+                  <Section key={s.slug} s={s}>
+                    <Markdown html={s.html} />
+                  </Section>
+                );
+            }
+          })}
 
-      {tab === "exercise" && !running && <Notes key={id} body={state.note} />}
+          {!running && <Notes key={id} body={state.note} />}
+        </div>
+      )}
     </article>
   );
 
@@ -284,3 +307,5 @@ function Section({ s, hideTitle, children }: { s: { slug: string; title: string 
     </section>
   );
 }
+
+export { Problem as ErrorBoundary } from "~/root";

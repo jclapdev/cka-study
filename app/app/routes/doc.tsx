@@ -20,3 +20,5 @@ export default function Doc({ loaderData }: Route.ComponentProps) {
     </article>
   );
 }
+
+export { Problem as ErrorBoundary } from "~/root";

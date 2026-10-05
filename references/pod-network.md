@@ -8,11 +8,11 @@ Kubernetes requires that every pod gets its own IP and that any pod can reach an
 | --- | --- | --- | --- |
 | Pod CIDR | [`kubeadm init`](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/) `--pod-network-cidr` | none | pods |
 | Service CIDR | `kubeadm init --service-cidr` | `10.96.0.0/12` | ClusterIPs |
-| Node network | the infrastructure | in the lab, the Docker network `cka-lab`: `192.168.104.0/24` | node interfaces |
+| Node network | the infrastructure | none | node interfaces |
 
 ```mermaid
 flowchart LR
-  subgraph nodes["node network — 192.168.104.0/24, owned by Docker"]
+  subgraph nodes["node network, owned by the infrastructure"]
     n1["controlplane"]
     n2["node01"]
     n3["node02"]
@@ -92,7 +92,7 @@ kube-apiserver-controlplane            true
 kube-proxy-4wdrl                       true
 ```
 
-So in `kubectl get pods -A -o wide`, these pods show the node's address, `192.168.104.x`, and only CoreDNS shows a `10.244.x` address.
+So in `kubectl get pods -A -o wide`, these pods show the node's address, and only CoreDNS shows a `10.244.x` address.
 
 ## CoreDNS
 
