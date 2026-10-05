@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { listDomains, listReferences, readMarkdown, topicReadme } from "../app/content/repo";
-import { labSection, parseExercise, referenceCovers, referenceLinks, renderDoc, summarize } from "../app/content/parse";
+import { listDomains, listPages, readMarkdown, topicReadme } from "../app/content/repo";
+import { labSection, pageCovers, pageLinks, parseExercise, renderDoc, summarize } from "../app/content/parse";
 
 const KUBEADM = "01-cluster-architecture/00-kubeadm-install/README.md";
 const RBAC = "01-cluster-architecture/01-rbac/README.md";
+const HELM = "01-cluster-architecture/02-helm/README.md";
 
 describe("repo", () => {
   it("lists every domain and topic folder", () => {
@@ -113,7 +114,7 @@ describe("bundle", () => {
   });
 
   it("lists the reference pages an exercise links to", () => {
-    expect(referenceLinks(readMarkdown(KUBEADM)!)).toEqual([
+    expect(pageLinks(readMarkdown(KUBEADM)!, "references")).toEqual([
       "references/workers.md",
       "references/kubeconfig.md",
       "references/kubeadm.md",
@@ -124,7 +125,7 @@ describe("bundle", () => {
       "references/daemonsets.md",
       "references/namespaces.md",
     ]);
-    expect(referenceLinks(readMarkdown(RBAC)!)).toContain("references/rbac.md");
+    expect(pageLinks(readMarkdown(RBAC)!, "references")).toContain("references/rbac.md");
   });
 });
 
@@ -139,8 +140,30 @@ describe("references tab", () => {
   });
 
   it("reads the Covers line for each reference", () => {
-    const covers = referenceCovers(readMarkdown("references/README.md")!);
-    expect(Object.keys(covers).sort()).toEqual(listReferences().map((f) => f.replace(/^references\/|\.md$/g, "")).sort());
+    const covers = pageCovers(readMarkdown("references/README.md")!);
+    expect(Object.keys(covers).sort()).toEqual(listPages("references").map((f) => f.replace(/^references\/|\.md$/g, "")).sort());
     expect(covers.pod).toBe("pods, phases, reading Pending vs CrashLoopBackOff");
+  });
+});
+
+describe("learn tab", () => {
+  it("lists the Learn pages an exercise links to, and none for a topic without them", () => {
+    expect(pageLinks(readMarkdown(HELM)!, "learn")).toContain("learn/helm.md");
+    expect(pageLinks("[pods](../../references/pod.md)", "learn")).toEqual([]);
+  });
+
+  it("opens a Learn link from an exercise in the Learn tab", async () => {
+    const ex = await parseExercise(readMarkdown(HELM)!, HELM);
+    expect(JSON.stringify(ex)).toContain('href=\\"?tab=learn&#x26;ref=helm\\"');
+  });
+
+  it("opens a reference link from a Learn page in the References tab", async () => {
+    const file = "learn/helm.md";
+    expect((await renderDoc(readMarkdown(file)!, file, true)).html).toContain('href="?tab=references&#x26;ref=helm');
+  });
+
+  it("reads the Covers line for each Learn page", () => {
+    const covers = pageCovers(readMarkdown("learn/README.md")!);
+    expect(Object.keys(covers).sort()).toEqual(listPages("learn").map((f) => f.replace(/^learn\/|\.md$/g, "")).sort());
   });
 });

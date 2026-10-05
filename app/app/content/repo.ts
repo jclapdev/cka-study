@@ -62,11 +62,13 @@ export function readMarkdown(rel: string): string | null {
   }
 }
 
-/** Repo-relative paths of every reference page, without the index. */
-export function listReferences(): string[] {
+/** Repo-relative paths of every page in a folder of pages (`references` or `learn`), without the index. */
+export function listPages(folder: string): string[] {
+  const dir = path.join(REPO, folder);
+  if (!fs.existsSync(dir)) return [];
   return fs
-    .readdirSync(path.join(REPO, "references"))
+    .readdirSync(dir)
     .filter((f) => f.endsWith(".md") && f !== "README.md")
     .sort()
-    .map((f) => `references/${f}`);
+    .map((f) => `${folder}/${f}`);
 }

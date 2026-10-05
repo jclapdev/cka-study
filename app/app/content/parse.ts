@@ -136,9 +136,9 @@ function rewriteLinks({ file, inTopic }: { file: string; inTopic: boolean }) {
       const rel = path.posix.normalize(path.posix.join(path.posix.dirname(file), p));
       const suffix = hash ? `#${hash}` : "";
       const topic = rel.match(TOPIC_README);
-      const ref = rel.match(/^references\/([\w-]+)\.md$/);
+      const ref = rel.match(/^(references|learn)\/([\w-]+)\.md$/);
       if (inTopic && rel === "lab/labs.md") el.properties.href = "?tab=lab";
-      else if (inTopic && ref && ref[1] !== "README") el.properties.href = `?tab=references&ref=${ref[1]}${suffix}`;
+      else if (inTopic && ref && ref[2] !== "README") el.properties.href = `?tab=${ref[1]}&ref=${ref[2]}${suffix}`;
       else if (topic) el.properties.href = `/t/${topic[1]}/${topic[2]}${suffix}`;
       else if (rel.endsWith(".md")) el.properties.href = `/doc/${rel}${suffix}`;
     });
@@ -271,9 +271,9 @@ export function labSection(labMd: string, name: string, level = "###") {
   return m ? m[1].trim() : "";
 }
 
-/** Repo-relative paths of the reference pages a README links to, in first-mention order. */
-export function referenceLinks(md: string) {
-  return [...new Set([...md.matchAll(/\]\((?:\.\.\/)*(references\/[\w-]+\.md)/g)].map((m) => m[1]))];
+/** Repo-relative paths of the pages in `folder` (`references` or `learn`) a README links to, in first-mention order. */
+export function pageLinks(md: string, folder: string) {
+  return [...new Set([...md.matchAll(new RegExp(`\\]\\((?:\\.\\./)*(${folder}/[\\w-]+\\.md)`, "g"))].map((m) => m[1]))];
 }
 
 /**
@@ -289,8 +289,8 @@ export async function renderDoc(md: string, file: string, inTopic = false) {
   };
 }
 
-/** The one-line "Covers" text for each reference, read from the table in references/README.md. */
-export function referenceCovers(indexMd: string): Record<string, string> {
+/** The one-line "Covers" text for each page, read from the table in references/README.md or learn/README.md. */
+export function pageCovers(indexMd: string): Record<string, string> {
   return Object.fromEntries(
     [...indexMd.matchAll(/^\| \[[^\]]+\]\(([\w-]+)\.md\) \| (.+?) \|$/gm)].map((m) => [m[1], m[2].replace(/`/g, "")]),
   );
