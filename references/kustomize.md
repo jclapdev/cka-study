@@ -2,7 +2,7 @@
 
 Kustomize builds a set of manifests from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. The lab's `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
 
-Kustomize and [Helm](helm.md) both install sets of objects, and they differ in what they keep. Helm renders templates and records a release with revisions it can roll back. Kustomize only produces manifests, and `kubectl apply` sends them, so nothing records what was applied.
+[How Kustomize works](../learn/kustomize.md) explains bases and overlays and compares Kustomize with Helm.
 
 ## Bases and overlays
 
@@ -12,14 +12,6 @@ A kustomization is a folder with a `kustomization.yaml`. Its `resources` lists m
 - An **overlay** lists a base, usually as `../../base`, and changes what the base produces. Several overlays, such as `dev` and `prod`, can share one base.
 
 The base files are never edited by an overlay. Everything is applied when the overlay is built.
-
-```mermaid
-flowchart LR
-  B[base/<br/>deployment.yaml<br/>service.yaml<br/>kustomization.yaml] --> D[overlays/dev/<br/>kustomization.yaml]
-  B --> P[overlays/prod/<br/>kustomization.yaml<br/>namespace.yaml<br/>resources-patch.yaml]
-  P -->|kubectl kustomize| M[manifests]
-  M -->|kubectl apply -k| C[cluster]
-```
 
 ## What an overlay can set
 

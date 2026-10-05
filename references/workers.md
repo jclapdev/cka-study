@@ -32,19 +32,7 @@ Active: activating (auto-restart) (Result: exit-code)
 
 `kubeadm join <apiserver>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>`
 
-```mermaid
-sequenceDiagram
-  participant W as kubelet on node01
-  participant A as kube-apiserver on controlplane
-  W->>A: connect to the advertise address on 6443
-  A-->>W: serving certificate
-  W->>W: hash the cluster CA, compare to --discovery-token-ca-cert-hash
-  W->>A: authenticate with the bootstrap token, submit a CSR
-  A-->>W: signed client certificate, into /var/lib/kubelet/pki/
-  W->>A: register the node under its own identity
-```
-
-At the start neither side trusts the other, so the join line carries one secret in each direction. The CA hash lets the node check that it reached the right apiserver. The token lets the apiserver accept the node for long enough to sign a client certificate for it ([TLS bootstrapping](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/)). After the join, the node authenticates with that certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem`.
+The CA hash lets the node check that it reached the right apiserver, and the token lets the apiserver accept the node for long enough to sign it a client certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem` ([joining a node](../learn/kubeadm.md#joining-a-node)).
 
 Tokens expire 24 hours after they are created ([bootstrap tokens](https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/)), so the join line printed by `kubeadm init` stops working after a day. Print a new one on the control plane node:
 

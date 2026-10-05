@@ -2,6 +2,7 @@
 
 Role-based access control (RBAC) decides which requests the apiserver allows, by matching the
 identity behind a request against the rules that have been bound to it.
+[How access control works](../../learn/access-control.md) explains the model.
 
 Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 

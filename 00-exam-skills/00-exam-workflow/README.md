@@ -3,7 +3,8 @@
 The exam gives each task on a different host, grades only the final state, and allows no tool
 beyond a terminal, vim and the kubernetes.io docs. In this exercise you reach the right host,
 generate YAML instead of typing it, copy snippets from the docs, and change and check live
-objects. The [exam page](../../EXAM.md) covers the format and grading.
+objects. The [exam page](../../EXAM.md) covers the format and grading, and
+[how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command does.
 
 Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 

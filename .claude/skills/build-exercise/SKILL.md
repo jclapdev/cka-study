@@ -1,15 +1,16 @@
 ---
 name: build-exercise
-description: Use this skill when writing, extending, fixing or finishing a CKA exercise or reference page in this repo. That includes filling in an empty (greyed-out) topic folder such as 02-helm, adding a Quiz or Practice section to an existing exercise, adding a new lab, writing or extending a concept page in references/, and cleaning up an exercise that has filler prose or concepts with no reference page. Use it even when the request only names the topic ("do the etcd backup one", "write up network policies").
+description: Use this skill when writing, extending, fixing or finishing a CKA exercise, reference page or Learn page in this repo. That includes filling in an empty (greyed-out) topic folder such as 02-helm, adding a Quiz or Practice section to an existing exercise, adding a new lab, writing or extending a page in references/ or learn/, and cleaning up an exercise that has filler prose or concepts with no reference page. Use it even when the request only names the topic ("do the etcd backup one", "write up network policies").
 ---
 
 # Build an exercise
 
-In the study app, each topic page has three tabs, all built from Markdown in this repo:
+In the study app, each topic page has four tabs, all built from Markdown in this repo:
 
-1. **Lab** is the `### <lab-name>` section of `lab/labs.md` that the exercise's lab line names.
-2. **Exercise** is the topic's `README.md`.
-3. **References** holds every `references/*.md` page the README links to, each with its one-line summary from the table in `references/README.md`.
+1. **Learn** holds every `learn/*.md` page the README links to: how a technology works and why, with diagrams and further reading.
+2. **Lab** is the `### <lab-name>` section of `lab/labs.md` that the exercise's lab line names.
+3. **Exercise** is the topic's `README.md`.
+4. **References** holds every `references/*.md` page the README links to: the facts, commands and errors to look up. Each page in either tab shows its one-line summary from the table in that folder's `README.md`.
 
 `01-cluster-architecture/03-kustomize/` is the finished example. Match it.
 
@@ -18,7 +19,7 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 - [ ] 1. Read the topic's competencies in `EXAM.md` and teach only what the exam tests.
 - [ ] 2. Pick the lab. Use `vms` (bare machines) or `cluster` (working cluster) from `lab/labs.md`. If the exercise needs something else, put a `setup.sh` in the topic folder, add a case for the new lab to `start` in `lab/lab.sh` that names a saved copy and the script, and add a `### <lab-name>` section to `lab/labs.md` in the same form as the others. The app's Start lab button refuses a lab with no section.
 - [ ] 3. Run every command on the lab first and save the real output. Do this for the steps, for each command a reference page will quote, and for each error message a failure-modes table will quote. Nothing that looks like command output is written from memory.
-- [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Each step is a command, one sentence on what to notice, and a link to the reference page that explains it. Show the trimmed output from step 3 only when the reader has to read something in it (see Gotchas). Every step group links at least one reference page. Explanations belong on reference pages, not in steps.
+- [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Each step is a command, one sentence on what to notice, and a link to the reference page that explains it. Show the trimmed output from step 3 only when the reader has to read something in it (see Gotchas). Every step group links at least one reference page. Explanations belong on Learn and reference pages, not in steps.
 - [ ] 5. Get every manifest the way the exam allows, fastest source first (the "How to work in the exam" section of `EXAM.md`), and never have the reader type a whole manifest:
   1. `kubectl create`, `run` or `expose` with `--dry-run=client -o yaml > file` whenever one of them can write it.
   2. Otherwise, a snippet from a kubernetes.io page. The step names the search term, links the page section with its anchor, says to copy the block and paste it, then shows the lines to change and the finished file. Prefer the docs' own `cat <<EOF` blocks and example files with copy buttons.
@@ -29,14 +30,15 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
   - It has a page: link that page.
   - It is a detail of a concept that already has a page (for example, the roles every subject gets belong to `rbac.md`): add a section to that page.
   - Other topics will use it too (for example, namespaces or API groups): write a new page from [the reference template](assets/reference-template.md).
-- [ ] 7. A reference page covers what this and earlier exercises use, plus what `EXAM.md` lists for that concept, and nothing else. Every claim links to the kubernetes.io section that supports it. Before you link a section, fetch the page to confirm the anchor exists. Diagrams are mermaid. A link outside the exam's allowed docs goes only in the page's Docs list, marked "(not available in the exam)".
+- [ ] 7. A reference page covers what this and earlier exercises use, plus what `EXAM.md` lists for that concept, and nothing else. Every claim links to the kubernetes.io section that supports it. Before you link a section, fetch the page to confirm the anchor exists. A reference page holds facts to look up, not explanations or diagrams of how parts fit together, which go on the Learn page (step 9). A link outside the exam's allowed docs goes only in the page's Docs list, marked "(not available in the exam)".
 - [ ] 8. Add each new reference page's row to the table in `references/README.md`.
-- [ ] 9. Write the Practice section the way the exam asks: a host lead-in and weight per task, a solution that starts each task with `ssh <host>` from `base`, and a `setup.sh` that places any files the exam would hand over (for example a kustomization under `/opt/course/<n>/`). The solution uses `k`.
-- [ ] 10. Write `grade.sh` in the topic folder from [the grader template](assets/grade-template.sh). One `task` per Practice task with its weight, and one `check` per sub-task that inspects only the final state. Start the lab and run it: it must score 0%. Run the solution and run it again: it must score 100%. The exercise links [grading](../../lab/README.md#grading) and never says how the grader runs.
-- [ ] 11. Reread every sentence you wrote. Delete narration, and check the wording rules in `CLAUDE.md` (see Gotchas).
-- [ ] 12. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`.
-- [ ] 13. Set the topic's status in the root `README.md`: **ready** with Practice, **steps only** without.
-- [ ] 14. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Start lab and wait for "The lab is ready", open the terminal and run the first steps from `base`, then check that every step renders and each reference opens from the list.
+- [ ] 9. Check that each technology the exercise uses has a Learn page in `learn/`, and write any that is missing from [the Learn template](assets/learn-template.md). A Learn page explains why the technology exists and how its parts work together, with mermaid diagrams, and links the reference pages for the facts. It covers one technology across every topic that uses it, so extend an existing page before writing a new one. Link each Learn page from the README's opening paragraph, and add its row to the table in `learn/README.md`.
+- [ ] 10. Write the Practice section the way the exam asks: a host lead-in and weight per task, a solution that starts each task with `ssh <host>` from `base`, and a `setup.sh` that places any files the exam would hand over (for example a kustomization under `/opt/course/<n>/`). The solution uses `k`.
+- [ ] 11. Write `grade.sh` in the topic folder from [the grader template](assets/grade-template.sh). One `task` per Practice task with its weight, and one `check` per sub-task that inspects only the final state. Start the lab and run it: it must score 0%. Run the solution and run it again: it must score 100%. The exercise links [grading](../../lab/README.md#grading) and never says how the grader runs.
+- [ ] 12. Reread every sentence you wrote. Delete narration, and check the wording rules in `CLAUDE.md` (see Gotchas).
+- [ ] 13. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`.
+- [ ] 14. Set the topic's status in the root `README.md`: **ready** with Practice, **steps only** without.
+- [ ] 15. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Start lab and wait for "The lab is ready", open the terminal and run the first steps from `base`, then check that every step renders, each Learn page and reference opens from its list, and each diagram draws.
 
 ## Gotchas
 
@@ -55,7 +57,8 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
 - The lab line must read exactly ``Starts from the [`<lab-name>` lab](../../lab/labs.md#<lab-name>).``, and `<lab-name>` must match a `### <lab-name>` heading in `lab/labs.md`. Otherwise the Lab tab is empty.
 - Each Practice task opens with a bold lead-in, ``**Host `controlplane`, weight 19%.**`` (or ``**Hosts `a`, `b`, weight 25%.**``), and the weights add up to 100. The time budget is a bold ``**N minutes**`` in the section's opening text.
 - Quiz answers and the Practice solution use `<details><summary>…</summary>` with a blank line after `</summary>`.
-- Reference links in an exercise must be relative (`../../references/<page>.md`), or the References tab won't list the page. Links between reference pages are plain `<page>.md`.
+- Reference and Learn links in an exercise must be relative (`../../references/<page>.md`, `../../learn/<page>.md`), or the tab won't list the page. Links within one folder are plain `<page>.md`, and between the folders `../references/<page>.md` or `../learn/<page>.md`.
+- A Learn page may link sources outside the exam's allowed docs in its Further reading list, each marked "(not available in the exam)". It never mentions how the lab is built.
 - A step links the section that explains it, not the top of the page: `[values](../../references/helm.md#values)`, with the section's heading as the link text, or the page's name before a generic heading such as `[kubeadm failure modes](…#failure-modes)`. A link on a word inside a sentence keeps the word and still gets the anchor. Link the top of the page only when its opening paragraph is the explanation. The anchor is the heading in lowercase with spaces turned into hyphens and punctuation dropped. A reference page with one section per idea the steps use makes this possible.
 - The table row in `references/README.md` must stay in the form `| [<page>](<page>.md) | <what it covers> |`. The app reads it with a pattern, and a page without a row shows up with no summary.
 - Exercises never mention `docker`, saved copies, the computer the lab runs on or the lab's IP addresses. Those belong only in `lab/README.md` and `lab/labs.md`.

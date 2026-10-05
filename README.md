@@ -52,4 +52,4 @@ The Practice sections match the real exam:
 | | 04-services-networking-debug | |
 | 99-mock-exams | Full sets of 15 to 20 mixed tasks in 2 hours. | |
 
-[references/](references/README.md) holds one-page concept summaries that the exercises link to.
+[learn/](learn/README.md) explains how each technology works, with diagrams and further reading. [references/](references/README.md) holds the facts, commands and errors to look up.

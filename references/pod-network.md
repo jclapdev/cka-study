@@ -1,6 +1,6 @@
 # Pod network
 
-Kubernetes requires that every pod gets its own IP and that any pod can reach any other pod on any node without NAT ([the Kubernetes network model](https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model)). Kubernetes does not implement this. A [CNI plugin](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) does, and [kubeadm](kubeadm.md) installs none.
+Kubernetes requires that every pod gets its own IP and that any pod can reach any other pod on any node without NAT ([the Kubernetes network model](https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model)). Kubernetes does not implement this. A [CNI plugin](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) does, and [kubeadm](kubeadm.md) installs none. [How the pod network works](../learn/pod-network.md) explains the model.
 
 ## Three CIDRs, not one
 
@@ -10,28 +10,7 @@ Kubernetes requires that every pod gets its own IP and that any pod can reach an
 | Service CIDR | `kubeadm init --service-cidr` | `10.96.0.0/12` | ClusterIPs |
 | Node network | the infrastructure | none | node interfaces |
 
-```mermaid
-flowchart LR
-  subgraph nodes["node network, owned by the infrastructure"]
-    n1["controlplane"]
-    n2["node01"]
-    n3["node02"]
-  end
-  subgraph pods["pod CIDR — 10.244.0.0/16, owned by the CNI"]
-    p1["controlplane: 10.244.0.0/24"]
-    p2["node01: 10.244.1.0/24"]
-    p3["node02: 10.244.2.0/24"]
-  end
-  subgraph svcs["service CIDR — 10.96.0.0/12, owned by the apiserver"]
-    s1["kubernetes: 10.96.0.1"]
-    s2["kube-dns: 10.96.0.10"]
-  end
-  n1 --- p1
-  n2 --- p2
-  n3 --- p3
-```
-
-Service IPs are the odd ones out: no interface anywhere holds one. They exist only as iptables/IPVS rules that kube-proxy writes ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)) on every node, which is why a ClusterIP answers but never appears in `ip addr`.
+No interface holds a Service IP. kube-proxy writes iptables or IPVS rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
 
 All three must be disjoint. The controller-manager splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. In the lab:
 
@@ -58,13 +37,6 @@ Read it with `kubectl logs -n kube-flannel -l app=flannel`.
 - `/etc/cni/net.d/` is empty (root-only directory: `sudo ls /etc/cni/net.d/`)
 
 After a CNI installs, that directory holds a `*.conflist`, `10-flannel.conflist` for Flannel, and the kubelet marks the node `Ready`. In the lab this takes 16 seconds.
-
-```mermaid
-stateDiagram-v2
-  [*] --> NotReady: kubelet registers with the apiserver
-  NotReady --> Ready: a conflist file appears in /etc/cni/net.d/
-  Ready --> NotReady: CNI agent dies, or the kubelet stops reporting
-```
 
 The file is the only thing the kubelet checks. Flannel's `install-cni` init container copies it in before the Flannel agent starts, so the node goes `Ready` even when the agent then crash-loops. `Ready` means the configuration exists. Both CoreDNS pods `Running` means pods are getting addresses.
 

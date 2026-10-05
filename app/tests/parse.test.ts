@@ -70,7 +70,7 @@ describe("parse", () => {
   });
 
   it("leaves mermaid for the browser", async () => {
-    const file = "references/control-plane.md";
+    const file = "learn/cluster-architecture.md";
     const ex = await parseExercise(readMarkdown(file)!, file);
     expect(JSON.stringify(ex)).toContain('<pre class=\\"mermaid\\">');
   });

@@ -1,8 +1,7 @@
 # RBAC
 
-Authorisation in Kubernetes. Every request the apiserver accepts has already been
-authenticated into a subject; RBAC decides whether that subject may perform that
-verb on that resource.
+RBAC decides whether an authenticated subject may perform a verb on a resource.
+[How access control works](../learn/access-control.md) explains the model.
 
 ## The model
 
@@ -14,16 +13,7 @@ a permission that is never bound grants nothing.
 | Namespaced | [`Role`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole) | [`RoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding) |
 | Cluster-wide | [`ClusterRole`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole) | [`ClusterRoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding) |
 
-The pairs cross in one direction only:
-
-```mermaid
-flowchart LR
-  R[Role<br/>namespaced] --> RB[RoleBinding<br/>namespaced]
-  CR[ClusterRole<br/>cluster-scoped] --> RB
-  CR --> CRB[ClusterRoleBinding<br/>cluster-scoped]
-  RB --> N[permissions inside<br/>one namespace]
-  CRB --> C[permissions across<br/>every namespace, plus<br/>cluster-scoped resources]
-```
+The pairs cross in one direction only.
 
 A `RoleBinding` may reference a `ClusterRole`. The permissions still apply only
 inside the binding's own namespace — the `ClusterRole` is being used as a reusable

@@ -1,10 +1,10 @@
 # <Concept>
 
-<One paragraph: what it is and what it decides or does, with a link to its kubernetes.io page.>
+<One or two sentences: what it is, with a link to its kubernetes.io page and to its Learn page.>
 
 ## <The model, named for the idea, e.g. "Namespaced and cluster-scoped resources">
 
-<How it works, in full sentences. A table when comparing kinds against the same criteria. A mermaid diagram when the relationships are the point.>
+<The facts a step relies on, in full sentences. A table when comparing kinds against the same criteria. Why it works this way goes on the Learn page.>
 
 ## In this lab
 

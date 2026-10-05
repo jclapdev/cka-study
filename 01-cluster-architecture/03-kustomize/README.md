@@ -3,6 +3,7 @@
 Kustomize builds a final set of manifests from plain YAML files plus a `kustomization.yaml` that
 lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is
 built into `kubectl`, so no template language and no extra tool is involved.
+[How Kustomize works](../../learn/kustomize.md) explains bases, overlays and generated names.
 
 Starts from the [`kustomize` lab](../../lab/labs.md#kustomize). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 

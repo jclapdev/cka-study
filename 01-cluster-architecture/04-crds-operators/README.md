@@ -3,6 +3,7 @@
 A CustomResourceDefinition (CRD) adds a new resource type to the apiserver, and an operator is a
 controller that watches objects of that type and does the work they describe. Installing an
 operator usually means installing its CRDs and its controller together, often from a Helm chart.
+[How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 Starts from the [`crds` lab](../../lab/labs.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
