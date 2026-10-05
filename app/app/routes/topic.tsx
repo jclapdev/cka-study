@@ -4,8 +4,8 @@ import { promisify } from "node:util";
 import { useCallback, useState } from "react";
 import { data, Link, useSearchParams } from "react-router";
 import type { Route } from "./+types/topic";
-import { labSection, parseExercise, referenceCovers, referenceLinks, renderDoc } from "~/content/parse";
-import { hasGrader, listReferences, readMarkdown, REPO, topicReadme } from "~/content/repo";
+import { labSection, pageCovers, pageLinks, parseExercise, renderDoc } from "~/content/parse";
+import { hasGrader, listPages, readMarkdown, REPO, topicReadme } from "~/content/repo";
 import { addAttempt, setMark, setNote, topicState } from "~/db/progress";
 import { Markdown } from "~/components/Markdown";
 import { Notes } from "~/components/Notes";
@@ -27,16 +27,21 @@ export async function loader({ params }: Route.LoaderArgs) {
   const lab = exercise.lab ? labSection(readMarkdown("lab/labs.md")!, exercise.lab) : "";
   const labHtml = lab ? (await renderDoc(lab, "lab/labs.md")).html : "";
   const machinesHtml = (await renderDoc(labSection(readMarkdown("lab/README.md")!, "Machines", "##"), "lab/README.md")).html;
-  // Every reference is loaded, so a link from one reference to another still opens in this tab.
-  const covers = referenceCovers(readMarkdown("references/README.md") ?? "");
-  const references = await Promise.all(
-    listReferences().map(async (f) => {
-      const name = f.replace(/^references\/|\.md$/g, "");
-      return { name, covers: covers[name] ?? "", ...(await renderDoc(readMarkdown(f)!, f, true)) };
-    }),
+  const [learn, references] = await Promise.all([pages(md, "learn"), pages(md, "references")]);
+  return { id, exercise, state: topicState(id), labHtml, machinesHtml, learn, references, grader: hasGrader(params.domain, params.topic) };
+}
+
+/**
+ * Every page in `folder`, so a link from one page to another still opens in its tab,
+ * and the names of the ones this topic's README links to.
+ */
+async function pages(md: string, folder: "learn" | "references") {
+  const covers = pageCovers(readMarkdown(`${folder}/README.md`) ?? "");
+  const name = (f: string) => f.slice(folder.length + 1, -3);
+  const all = await Promise.all(
+    listPages(folder).map(async (f) => ({ name: name(f), covers: covers[name(f)] ?? "", ...(await renderDoc(readMarkdown(f)!, f, true)) })),
   );
-  const mine = referenceLinks(md).map((f) => f.replace(/^references\/|\.md$/g, ""));
-  return { id, exercise, state: topicState(id), labHtml, machinesHtml, references, mine, grader: hasGrader(params.domain, params.topic) };
+  return { all, mine: pageLinks(md, folder).map(name) };
 }
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.exercise.title ?? "Topic"} · CKA Prep` }];
@@ -79,9 +84,9 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function Topic({ loaderData }: Route.ComponentProps) {
-  const { id, exercise, state, labHtml, machinesHtml, references, mine, grader } = loaderData;
+  const { id, exercise, state, labHtml, machinesHtml, learn, references, grader } = loaderData;
   const [params, setParams] = useSearchParams();
-  const tab = (TABS.find((t) => t.key === params.get("tab")) ?? TABS[1]).key;
+  const tab = (TABS.find((t) => t.key === params.get("tab")) ?? TABS[2]).key;
   const [running, setRunning] = useState(false);
   const [term, setTerm] = useState(false);
   const [missedOnly, setMissedOnly] = useState(false);
@@ -105,7 +110,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   );
 
   const article = (
-    <article key={id} className={`mx-auto ${tab === "references" && !running ? "max-w-5xl" : "max-w-3xl"}`}>
+    <article key={id} className={`mx-auto ${(tab === "learn" || tab === "references") && !running ? "max-w-5xl" : "max-w-3xl"}`}>
       {!running && (
         <header className="mb-10">
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{exercise.title}</h1>
@@ -148,9 +153,15 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         </details>
       </section>
 
+      {tab === "learn" && !running && (
+        <div id="panel-learn" role="tabpanel" aria-labelledby="tab-learn">
+          <PageList tab="learn" pages={learn} empty="Coming soon." />
+        </div>
+      )}
+
       {tab === "references" && !running && (
         <div id="panel-references" role="tabpanel" aria-labelledby="tab-references">
-          <References references={references} mine={mine} />
+          <PageList tab="references" pages={references} empty="This topic has no references." />
         </div>
       )}
 
@@ -241,28 +252,29 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   );
 }
 
-type Reference = { name: string; covers: string; title: string; headings: { id: string; text: string }[]; html: string };
+type Page = { name: string; covers: string; title: string; headings: { id: string; text: string }[]; html: string };
 
-/** A list of this topic's references beside the one selected, which `?ref=` names. */
-function References({ references, mine }: { references: Reference[]; mine: string[] }) {
+/** A list of this topic's Learn or References pages beside the one selected, which `?ref=` names. */
+function PageList({ tab, pages, empty }: { tab: string; pages: { all: Page[]; mine: string[] }; empty: string }) {
   const [params] = useSearchParams();
-  const selected = references.find((r) => r.name === params.get("ref")) ?? references.find((r) => r.name === mine[0]);
-  if (!selected) return <p className="text-muted">This topic has no references.</p>;
+  const { all, mine } = pages;
+  const selected = all.find((r) => r.name === params.get("ref")) ?? all.find((r) => r.name === mine[0]);
+  if (!selected) return <p className="text-muted">{empty}</p>;
   const listed = mine.includes(selected.name) ? mine : [...mine, selected.name];
   return (
     <div className="mb-14 md:grid md:grid-cols-[14rem_1fr] md:gap-10">
       <nav
-        aria-label="References for this topic"
+        aria-label={tab === "learn" ? "Learn pages for this topic" : "References for this topic"}
         className="mb-8 md:sticky md:top-6 md:mb-0 md:max-h-[calc(100vh-3rem)] md:self-start md:overflow-y-auto"
       >
         <ul className="space-y-1">
           {listed.map((name) => {
-            const r = references.find((x) => x.name === name);
+            const r = all.find((x) => x.name === name);
             if (!r) return null;
             return (
               <li key={name}>
                 <Link
-                  to={`?tab=references&ref=${name}`}
+                  to={`?tab=${tab}&ref=${name}`}
                   replace
                   aria-current={r === selected ? "page" : undefined}
                   className={`block rounded px-3 py-2 hover:bg-surface ${r === selected ? "bg-surface font-semibold" : ""}`}
@@ -294,6 +306,7 @@ function References({ references, mine }: { references: Reference[]; mine: strin
 }
 
 const TABS = [
+  { key: "learn", label: "Learn" },
   { key: "lab", label: "Lab" },
   { key: "exercise", label: "Exercise" },
   { key: "references", label: "References" },

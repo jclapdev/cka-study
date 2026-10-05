@@ -1,6 +1,6 @@
 # References
 
-One-page summaries of the concepts the exercises use.
+The facts, commands and errors for each concept the exercises use. [Learn](../learn/README.md) explains how each technology works.
 
 | File | Covers |
 | --- | --- |

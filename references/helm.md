@@ -1,6 +1,6 @@
 # Helm
 
-Helm is a package manager for Kubernetes. It installs a [chart](#charts-repositories-and-releases), which is a package of templated [manifests](exam-workflow.md#generating-yaml), into a cluster as a release, and records every change to that release as a numbered revision so it can be upgraded, rolled back or uninstalled as one unit ([introduction to Helm](https://helm.sh/docs/intro/introduction/)). The lab runs Helm 4.3.0.
+Helm is a package manager for Kubernetes. It installs a [chart](#charts-repositories-and-releases), which is a package of templated [manifests](exam-workflow.md#generating-yaml), into a cluster as a release, and keeps a numbered revision for every change to it. [How Helm works](../learn/helm.md) explains the model. The lab runs Helm 4.3.0.
 
 ## Charts, repositories and releases
 
@@ -17,16 +17,6 @@ OCI (Open Container Initiative) is the standard for container images and the reg
 One chart can be installed many times in the same cluster, and each install is a separate release with its own name.
 
 A chart has two version numbers ([charts and versioning](https://helm.sh/docs/topics/charts/#charts-and-versioning), [the appVersion field](https://helm.sh/docs/topics/charts/#the-appversion-field)). `version` is the version of the package, and it is what `--version` selects. `appVersion` is the version of the application inside it, for information only. `helm search repo` prints them as `CHART VERSION` and `APP VERSION`.
-
-```mermaid
-flowchart LR
-  R[repository<br/>index.yaml] -->|helm repo add / update| C[chart version]
-  C --> I[helm install]
-  V[values:<br/>chart defaults<br/>+ -f file<br/>+ --set] --> I
-  I --> REL[release revision 1<br/>objects + Secret v1]
-  REL -->|helm upgrade| REL2[revision 2]
-  REL2 -->|helm rollback 1| REL3[revision 3<br/>= chart and values of 1]
-```
 
 ## Values
 

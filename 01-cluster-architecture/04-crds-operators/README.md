@@ -3,6 +3,7 @@
 A [CustomResourceDefinition](../../references/crds.md) ([CRD](../../references/crds.md)) adds a new resource type to the [apiserver](../../references/control-plane.md#components), and an [operator](../../references/crds.md#operators) is a
 [controller](../../references/control-plane.md#components) that watches objects of that type and does the work they describe. Installing an
 operator usually means installing its CRDs and its controller together, often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases).
+[How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 Starts from the [`crds` lab](../../lab/labs.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 

@@ -2,7 +2,7 @@
 
 [Helm](../../references/helm.md) installs a packaged application, called a [chart](../../references/helm.md#charts-repositories-and-releases), into a cluster as a named release, and
 keeps a numbered history of that release so it can be upgraded, rolled back and uninstalled as
-one unit.
+one unit. [How Helm works](../../learn/helm.md) explains what happens during an install.
 
 Starts from the [`helm` lab](../../lab/labs.md#helm). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 

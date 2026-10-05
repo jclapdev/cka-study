@@ -3,6 +3,8 @@
 `kubeadm` turns machines that already have a [container runtime](../../references/workers.md#what-a-worker-runs) and a [kubelet](../../references/control-plane.md#components) into a working
 Kubernetes cluster. It generates the [certificates](../../references/certificates.md), writes the [control plane](../../references/control-plane.md)'s [static pod](../../references/control-plane.md#static-pods)
 [manifests](../../references/exam-workflow.md#generating-yaml), and prints a command that joins other machines to what it built.
+[How a cluster works](../../learn/cluster-architecture.md), [how kubeadm builds a cluster](../../learn/kubeadm.md)
+and [how the pod network works](../../learn/pod-network.md) explain the parts.
 
 Starts from the [`vms` lab](../../lab/labs.md#vms). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
@@ -259,7 +261,7 @@ create --print-join-command` prints a new one: [joining](../../references/worker
 
    The hash lets the joining node check that it reached the right apiserver. The token lets
    the apiserver accept the node for long enough to sign a client certificate for it. The
-   sequence: [joining](../../references/workers.md#joining).
+   sequence: [joining a node](../../learn/kubeadm.md#joining-a-node).
 
 2. Copy the command you just printed, then run it on `node01`. Your token and hash differ from
    the ones above, so paste yours. Go back to `base` first:

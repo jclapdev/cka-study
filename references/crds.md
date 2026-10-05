@@ -1,19 +1,10 @@
 # CRDs and operators
 
-A CustomResourceDefinition (CRD) adds a resource type to the apiserver without changing Kubernetes itself. The apiserver then stores, validates and serves objects of the new type like built-in ones ([custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-resources)). A CRD adds no behaviour. An [operator](#operators) is a [controller](control-plane.md#components) that watches those objects and makes the cluster match them ([operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/#operators-in-kubernetes)).
+A CustomResourceDefinition (CRD) adds a resource type to the apiserver without changing Kubernetes itself. The apiserver then stores, validates and serves objects of the new type like built-in ones ([custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-resources)). A CRD adds no behaviour. An [operator](#operators) is a [controller](control-plane.md#components) that watches those objects and makes the cluster match them ([operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/#operators-in-kubernetes)). [How CRDs and operators extend Kubernetes](../learn/crds-operators.md) explains the model.
 
 ## What a CRD adds
 
 A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions` (short names `crd`, `crds`) in the group `apiextensions.k8s.io`. REST is the style of HTTP API the apiserver offers: each type has its own URL path, and objects are read and written with ordinary HTTP requests. Creating a CRD adds a path for each version it serves, `/apis/<group>/<version>/<plural>` ([create a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition)). After that, `kubectl get`, `apply`, `delete`, `explain`, [RBAC](rbac.md) rules and `-n` all work with the new type as with any other.
-
-```mermaid
-flowchart LR
-  CRD[CRD<br/>certificates.cert-manager.io] -->|adds type| API[apiserver<br/>/apis/cert-manager.io/v1/certificates]
-  U[you: k apply Certificate] --> API
-  API -->|watch| C[controller<br/>the operator's pod]
-  C -->|creates| S[Secret demo-tls]
-  C -->|writes| ST[Certificate status: Ready]
-```
 
 Deleting a CRD deletes every object of its type, in every namespace ([delete a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#delete-a-customresourcedefinition)).
 

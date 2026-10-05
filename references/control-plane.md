@@ -3,51 +3,18 @@
 The control plane is the set of components that store the cluster's desired state and act to
 make the nodes match it. Workloads run on nodes.
 
-In this lab the control plane is a single node, `controlplane`.
-
-```mermaid
-flowchart LR
-  subgraph controlplane["controlplane — control plane"]
-    subgraph sp["static pods"]
-      api["kube-apiserver"]
-      etcd["etcd"]
-      cm["controller-manager"]
-      sched["scheduler"]
-    end
-    k1["kubelet<br/>systemd"]
-    d1["kube-proxy, cni agent<br/>DaemonSet"]
-  end
-  subgraph node01["node01 — worker"]
-    k2["kubelet<br/>systemd"]
-    d2["kube-proxy, cni agent<br/>DaemonSet"]
-  end
-  subgraph node02["node02 — worker"]
-    k3["kubelet<br/>systemd"]
-    d3["kube-proxy, cni agent<br/>DaemonSet"]
-  end
-  k1 --> api
-  k2 --> api
-  k3 --> api
-  cm --> api
-  sched --> api
-  api --> etcd
-```
-
-Each box names how it is deployed ([components](#components), [static pods](#static-pods)),
-which decides how it restarts and where its logs are. Only the apiserver talks to etcd, and everything else talks to the
-apiserver. A worker is a control plane node without the static pods. kube-proxy
-and the pod network agent run as [DaemonSets](daemonsets.md).
+In this lab the control plane is a single node, `controlplane`. [How a cluster works](../learn/cluster-architecture.md) explains how the parts fit together.
 
 ## Components
 
 | Component | What it does | Where kubeadm puts it |
 | --- | --- | --- |
-| [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else — kubectl, kubelets, controllers — talks to it and never to etcd. Serves on 6443. | static pod |
+| [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else — kubectl, kubelets, controllers — talks to it and never to etcd. Serves on 6443. | [static pod](#static-pods) |
 | [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | Key-value store holding all cluster state. | static pod |
 | `kube-controller-manager` | One process running many [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), each a loop comparing desired to actual and acting on the gap (node health, replica counts, service accounts). | static pod |
 | [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes by filtering then scoring. Only writes `spec.nodeName`; the kubelet does the starting. | static pod |
 | [`kubelet`](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) | On *every* node, control plane included. Starts containers, reports node and pod status. | systemd unit, not a pod |
-| [`kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) | On every node. Programs iptables/IPVS so [Service](services.md) IPs work. | DaemonSet |
+| [`kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) | On every node. Programs iptables/IPVS so [Service](services.md) IPs work. | [DaemonSet](daemonsets.md) |
 
 A controller is a loop that compares the state an object asks for with what exists, and acts on
 the difference, such as creating a pod when a [Deployment](workloads.md) has too few.
@@ -59,21 +26,8 @@ the difference, such as creating a pod when a [Deployment](workloads.md) has too
 
 A static pod is a pod defined by a file in `/etc/kubernetes/manifests/` rather than
 by an API object. The kubelet watches that directory directly, so static pods start with no
-apiserver and no scheduler involved. That is how the apiserver itself starts.
+apiserver and no scheduler involved ([how the control plane starts itself](../learn/cluster-architecture.md#how-the-control-plane-starts-itself)).
 Official task page: [create static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/).
-
-```mermaid
-sequenceDiagram
-  participant D as /etc/kubernetes/manifests/
-  participant K as kubelet
-  participant C as containerd
-  participant A as kube-apiserver
-  K->>D: poll the directory
-  D-->>K: etcd.yaml, kube-apiserver.yaml, …
-  K->>C: start these containers
-  C->>A: apiserver process starts
-  A-->>K: node registration, pod assignments
-```
 
 Because the kubelet reads the files directly:
 

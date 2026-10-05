@@ -3,7 +3,7 @@
 RBAC (role-based access control) is how Kubernetes decides what a user may do. Every
 request the [apiserver](control-plane.md#components) accepts has already been
 authenticated into a subject; RBAC decides whether that subject may perform that
-verb on that resource.
+verb on that resource. [How access control works](../learn/access-control.md) explains the model.
 
 ## The model
 
@@ -19,16 +19,7 @@ A Role is a list of permissions inside one namespace, and a ClusterRole is the s
 whole cluster. A RoleBinding grants a Role or a ClusterRole to subjects inside one namespace,
 and a ClusterRoleBinding grants a ClusterRole in every namespace.
 
-The pairs cross in one direction only:
-
-```mermaid
-flowchart LR
-  R[Role<br/>namespaced] --> RB[RoleBinding<br/>namespaced]
-  CR[ClusterRole<br/>cluster-scoped] --> RB
-  CR --> CRB[ClusterRoleBinding<br/>cluster-scoped]
-  RB --> N[permissions inside<br/>one namespace]
-  CRB --> C[permissions across<br/>every namespace, plus<br/>cluster-scoped resources]
-```
+The pairs cross in one direction only.
 
 A `RoleBinding` may reference a `ClusterRole`. The permissions still apply only
 inside the binding's own namespace — the `ClusterRole` is being used as a reusable
