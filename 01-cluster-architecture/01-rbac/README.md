@@ -1,6 +1,6 @@
 # Granting Permissions with RBAC
 
-Role-based access control (RBAC) decides which requests the apiserver allows, by matching the
+Role-based access control ([RBAC](../../references/rbac.md)) decides which requests the [apiserver](../../references/control-plane.md#components) allows, by matching the
 identity behind a request against the rules that have been bound to it.
 
 Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
@@ -8,10 +8,10 @@ Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs o
 ## Objectives
 
 * Find out why your own `kubectl` is allowed to do anything.
-* Create a ServiceAccount that holds no permissions at all.
-* Grant it one verb on one resource, with a Role and a RoleBinding.
+* Create a [ServiceAccount](../../references/service-accounts.md) that holds no permissions at all.
+* Grant it one verb on one resource, with a [Role](../../references/rbac.md#the-model) and a [RoleBinding](../../references/rbac.md#the-model).
 * Watch the same request fail in a second namespace, and read the message that says why.
-* Reuse a single ClusterRole definition across two namespaces.
+* Reuse a single [ClusterRole](../../references/rbac.md#the-model) definition across two namespaces.
 * Reach a cluster-scoped resource, which a RoleBinding cannot do.
 
 ## Create two namespaces
@@ -43,7 +43,7 @@ within: [namespaces](../../references/namespaces.md).
    ```
 
    You are not a Kubernetes object. `kubernetes-admin` is a name asserted by the client
-   certificate in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
+   [certificate](../../references/certificates.md) in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
    same certificate. Neither exists as a resource you could delete. How a certificate becomes
    a user and groups: [client certificates](../../references/authentication.md#client-certificates).
 
@@ -190,7 +190,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
    The answer is `no` again. Both halves are namespaced, and both are in `dev`: the Role can only describe `dev`
    resources, and the RoleBinding only grants inside `dev`. The subject being a `dev`
    ServiceAccount is not what limits it. The binding's namespace is. Granting the same access
-   in `prod` needs a second RoleBinding there, or a ClusterRoleBinding if it should apply
+   in `prod` needs a second RoleBinding there, or a [ClusterRoleBinding](../../references/rbac.md#the-model) if it should apply
    everywhere: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 2. A bare `no` hides which part of the rule failed. Impersonate a real request instead:
@@ -248,8 +248,8 @@ built-in `view`, `edit` and `admin` roles are meant to be used this way.
 
 ## Reach a cluster-scoped resource
 
-Nodes are not in a namespace. They are cluster-scoped, like PersistentVolumes and namespaces
-themselves: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
+[Nodes](../../references/workers.md) are not in a namespace. They are cluster-scoped, like namespaces themselves and
+PersistentVolumes, which are pieces of storage that belong to the whole cluster: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 1. Try to grant access to them the way that has worked so far:
 
@@ -352,9 +352,10 @@ themselves: [namespaced and cluster-scoped resources](../../references/namespace
    view                                                                   2026-08-02T10:49:07Z
    ```
 
-   65 of the 73 carry the `system:` prefix and let the control plane components talk to the
-   apiserver. Of the 8 left, 2 are the ones you just wrote, `flannel` belongs to the pod
-   network, and `kubeadm:get-nodes` to the bootstrap. That leaves 4 meant for people:
+   65 of the 73 carry the `system:` prefix and let the [control plane](../../references/control-plane.md) components talk to the
+   apiserver. Of the 8 left, 2 are the ones you just wrote, `flannel` belongs to the [pod
+   network](../../references/pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node
+   [join](../../references/workers.md#joining). That leaves 4 meant for people:
    `cluster-admin`, `admin`, `edit` and `view`.
 
 ## Quiz
@@ -412,10 +413,10 @@ Start from a fresh [`cluster` lab](../../lab/labs.md#cluster). When time is up,
 1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in
    it.
 2. **Host `controlplane`, weight 25%.** Create a Role `deployer` in `web` that allows only
-   `create`, `update` and `delete` on Deployments, and bind it to `ci` with a RoleBinding
+   `create`, `update` and `delete` on [Deployments](../../references/workloads.md), and bind it to `ci` with a RoleBinding
    `ci-deployer`.
 3. **Host `controlplane`, weight 20%.** Create one ClusterRole `secret-reader` that allows `get`
-   and `list` on Secrets. Use it so that `ci` can read Secrets in `web` and `default` but not in
+   and `list` on [Secrets](../../references/config.md#secrets). Use it so that `ci` can read Secrets in `web` and `default` but not in
    any other namespace. Name each binding `ci-secret-reader`.
 4. **Host `controlplane`, weight 20%.** Allow `ci` to `list` PersistentVolumes, with a
    ClusterRole `pv-lister` and a ClusterRoleBinding `ci-pv-lister`.

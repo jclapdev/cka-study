@@ -1,6 +1,6 @@
 # Labels
 
-A label is a key-value pair on an object, such as `node-role.kubernetes.io/worker=` on a node. Labels have no effect on their own. Other things select objects by them: `kubectl get -l`, a Service choosing its pods, a node selector choosing nodes ([labels and selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)).
+A label is a key-value pair on an object, such as `node-role.kubernetes.io/worker=` on a node. Labels have no effect on their own. Other things select objects by them: `kubectl get -l`, a [Service](services.md) choosing its pods, a node selector choosing nodes ([labels and selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)).
 
 ## Keys and values
 
@@ -8,7 +8,7 @@ A key has an optional prefix and a name, separated by `/`. Prefixes such as `kub
 
 ## In this lab
 
-kubeadm puts these labels on `controlplane`:
+[kubeadm](kubeadm.md) puts these labels on `controlplane`:
 
 ```
 beta.kubernetes.io/arch=arm64,beta.kubernetes.io/os=linux,kubernetes.io/arch=arm64,kubernetes.io/hostname=controlplane,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=

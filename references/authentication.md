@@ -1,6 +1,6 @@
 # Authentication
 
-Authentication is how the apiserver learns who sent a request. It turns the request's credential into a username and a list of groups. It does not decide what that identity may do; [RBAC](rbac.md) does that next ([authenticating](https://kubernetes.io/docs/reference/access-authn-authz/authentication/)).
+Authentication is how the [apiserver](control-plane.md#components) learns who sent a request. It turns the request's credential into a username and a list of groups. It does not decide what that identity may do; [RBAC](rbac.md) does that next ([authenticating](https://kubernetes.io/docs/reference/access-authn-authz/authentication/)).
 
 ## Users and groups have no object
 
@@ -14,15 +14,15 @@ Kubernetes has no User or Group resource ([users in Kubernetes](https://kubernet
 
 ## Client certificates
 
-For a client certificate signed by the cluster CA, the certificate's common name (`CN`) becomes the username, and each organisation (`O`) becomes a group ([X509 client certificates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certificates)).
+For a client [certificate](certificates.md) signed by the cluster [CA](certificates.md), the certificate's common name (`CN`) becomes the username, and each organisation (`O`) becomes a group ([X509 client certificates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certificates)).
 
 ## In this lab
 
-kubeadm writes two admin kubeconfigs, each with a client certificate:
+[kubeadm](kubeadm.md) writes two admin [kubeconfigs](kubeconfig.md), each with a client certificate:
 
 | File | Certificate subject | Why it has full access |
 | --- | --- | --- |
-| `admin.conf` | `O = kubeadm:cluster-admins, CN = kubernetes-admin` | The ClusterRoleBinding `kubeadm:cluster-admins` binds that group to `cluster-admin`. |
+| `admin.conf` | `O = kubeadm:cluster-admins, CN = kubernetes-admin` | The [ClusterRoleBinding](rbac.md#the-model) `kubeadm:cluster-admins` binds that group to `cluster-admin`. |
 | `super-admin.conf` | `O = system:masters, CN = kubernetes-super-admin` | `system:masters` skips RBAC entirely, so the file still works when RBAC is broken ([kubeadm kubeconfig files](https://kubernetes.io/docs/reference/setup-tools/kubeadm/implementation-details/)). |
 
 `~/.kube/config` is a copy of `admin.conf`. To read a kubeconfig's certificate subject:

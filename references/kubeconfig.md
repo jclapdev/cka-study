@@ -1,15 +1,15 @@
 # kubeconfig
 
-The file `kubectl` reads to learn where the apiserver is and how to prove identity. Three lists plus a pointer:
+A kubeconfig is the file `kubectl` reads to learn where the [apiserver](control-plane.md#components) is and how to prove identity. Three lists plus a pointer:
 
 | Section | Holds |
 | --- | --- |
-| `clusters` | apiserver URL and the CA cert that signs it |
+| `clusters` | apiserver URL and the [CA](certificates.md) cert that signs it |
 | `users` | credentials — client cert/key, token, or exec plugin |
 | `contexts` | a named (cluster, user, namespace) triple |
 | `current-context` | which context applies when no flag says otherwise |
 
-Nothing in the file is a permission. It is identity only; what that identity may do is RBAC.
+Nothing in the file is a permission. It is identity only; what that identity may do is [RBAC](rbac.md).
 
 ## Resolution order
 
@@ -19,7 +19,7 @@ The full rules: [merging kubeconfig files](https://kubernetes.io/docs/concepts/c
 2. `$KUBECONFIG` — colon-separated list, merged left to right
 3. `~/.kube/config`
 
-`sudo kubectl` runs as root, so it reads `/root/.kube/config`, not the invoking user's. On the lab's control plane node, root has no kubeconfig, so `sudo kubectl get nodes` fails with `localhost:8080 was refused` while plain `kubectl get nodes` works.
+`sudo kubectl` runs as root, so it reads `/root/.kube/config`, not the invoking user's. On the lab's [control plane](control-plane.md) node, root has no kubeconfig, so `sudo kubectl get nodes` fails with `localhost:8080 was refused` while plain `kubectl get nodes` works.
 
 ## On a kubeadm cluster
 
@@ -27,7 +27,7 @@ The full rules: [merging kubeconfig files](https://kubernetes.io/docs/concepts/c
 
 | File | Identity |
 | --- | --- |
-| `admin.conf` | `kubernetes-admin`, group `kubeadm:cluster-admins`, which a ClusterRoleBinding binds to `cluster-admin` |
+| `admin.conf` | `kubernetes-admin`, group `kubeadm:cluster-admins`, which a [ClusterRoleBinding](rbac.md#the-model) binds to `cluster-admin` |
 | `super-admin.conf` | `kubernetes-super-admin`, group `system:masters`, which skips RBAC entirely. For when RBAC itself is broken ([authentication](authentication.md)) |
 | `kubelet.conf`, `controller-manager.conf`, `scheduler.conf` | the components' own identities |
 

@@ -1,0 +1,151 @@
+# term	home (references/<page>.md[#anchor], inline, or known)
+# Kubernetes and its ecosystem: the home section says what the term is.
+control plane	references/control-plane.md
+apiserver	references/control-plane.md#components
+etcd	references/control-plane.md#components
+controller-manager	references/control-plane.md#components
+scheduler	references/control-plane.md#components
+controller	references/control-plane.md#components
+kubelet	references/control-plane.md#components
+kube-proxy	references/control-plane.md#components
+static pod	references/control-plane.md#static-pods
+Node	references/workers.md
+container runtime	references/workers.md#what-a-worker-runs
+containerd	references/workers.md#what-a-worker-runs
+CRI	references/workers.md#what-a-worker-runs
+crictl	references/workers.md#what-a-worker-runs
+Pod	references/pod.md
+DaemonSet	references/daemonsets.md
+Namespace	references/namespaces.md
+label	references/labels.md
+API group	references/api-groups.md
+kubeadm	references/kubeadm.md
+kubeconfig	references/kubeconfig.md
+RBAC	references/rbac.md
+Role	references/rbac.md#the-model
+ClusterRole	references/rbac.md#the-model
+RoleBinding	references/rbac.md#the-model
+ClusterRoleBinding	references/rbac.md#the-model
+ServiceAccount	references/service-accounts.md
+CRD	references/crds.md
+CustomResourceDefinition	references/crds.md
+REST	references/crds.md#what-a-crd-adds
+OpenAPI	references/crds.md#schemas-and-validation
+operator	references/crds.md#operators
+cert-manager	references/crds.md#operators
+Issuer	references/crds.md#operators
+ClusterIssuer	references/crds.md#operators
+Certificate	references/crds.md#operators
+CertificateRequest	references/crds.md#operators
+ACME	references/crds.md#operators
+Helm	references/helm.md
+chart	references/helm.md#charts-repositories-and-releases
+OCI	references/helm.md#charts-repositories-and-releases
+podinfo	references/helm.md#in-this-lab
+Kustomize	references/kustomize.md
+strategic merge patch	references/kustomize.md#patches
+CNI	references/pod-network.md
+NAT	references/pod-network.md
+CIDR	references/pod-network.md#three-cidrs-not-one
+conflist	references/pod-network.md#until-a-cni-exists
+Flannel	references/pod-network.md#plugins
+Calico	references/pod-network.md#plugins
+CoreDNS	references/pod-network.md#coredns
+Service	references/services.md
+ClusterIP	references/services.md#service-types
+NodePort	references/services.md#service-types
+LoadBalancer	references/services.md#service-types
+IPVS	references/services.md#how-a-service-ip-answers
+taint	references/taints.md
+toleration	references/taints.md
+NoSchedule	references/taints.md#effects
+certificate	references/certificates.md
+CA	references/certificates.md
+X509	references/certificates.md
+x509	references/certificates.md
+PKI	references/certificates.md#on-a-kubeadm-cluster
+TLS	references/certificates.md#client-and-serving-certificates
+CSR	references/certificates.md#certificate-signing-requests
+Deployment	references/workloads.md
+ReplicaSet	references/workloads.md#deployments-and-replicasets
+StatefulSet	references/workloads.md#other-workload-kinds
+Job	references/workloads.md#other-workload-kinds
+CronJob	references/workloads.md#other-workload-kinds
+pod template	references/workloads.md#the-pod-template
+rollout	references/workloads.md#rollouts
+ConfigMap	references/config.md
+Secret	references/config.md#secrets
+manifest	references/exam-workflow.md#generating-yaml
+imperative	references/exam-workflow.md#generating-yaml
+jsonpath	references/exam-workflow.md#checking-your-work
+# Topics not built yet: each page defines the term where it first appears.
+NetworkPolicy	inline
+PersistentVolume	inline
+PersistentVolumeClaim	inline
+StorageClass	inline
+Ingress	inline
+Gateway API	inline
+ResourceQuota	inline
+CSI	inline
+ValidatingAdmissionPolicy	inline
+# Known: Linux, the shell, and ordinary words. Never explained.
+Kubernetes	known
+API	known
+YAML	known
+JSON	known
+URL	known
+IP	known
+DNS	known
+Linux	known
+Docker	known
+Git	known
+Windows	known
+Firefox	known
+XFCE	known
+Ctrl	known
+Esc	known
+Enter	known
+Tab	known
+INSERT	known
+CPU	known
+GiB	known
+CI	known
+CKA	known
+FAQ	known
+EXAM	known
+Linux Foundation	known
+Ready	known
+ERROR	known
+ROLES	known
+STATUS	known
+Forbidden	known
+Practice	known
+Quiz	known
+Certified	known
+Administrator	known
+Desktop	known
+User	known
+Group	known
+Gateway	known
+Network	known
+Policies	known
+Bases	known
+Overlays	known
+Management	known
+Objects	known
+Using	known
+Setting	known
+Customizing	known
+Lease	inline
+Quick Reference	references/exam-workflow.md#snippets-from-the-docs
+HTTPS	known
+Transport Layer Security	known
+EndpointSlice	references/services.md#how-a-service-ip-answers
+PreferNoSchedule	references/taints.md#effects
+NoExecute	references/taints.md#effects
+HTTP	known
+Automatic Certificate Management Environment	known
+Open Container Initiative	known
+Container Network Interface	known
+Let's Encrypt	known
+Container Storage Interface	known

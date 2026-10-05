@@ -1,8 +1,8 @@
 # Extending the API with CRDs and Operators
 
-A CustomResourceDefinition (CRD) adds a new resource type to the apiserver, and an operator is a
-controller that watches objects of that type and does the work they describe. Installing an
-operator usually means installing its CRDs and its controller together, often from a Helm chart.
+A [CustomResourceDefinition](../../references/crds.md) ([CRD](../../references/crds.md)) adds a new resource type to the [apiserver](../../references/control-plane.md#components), and an [operator](../../references/crds.md#operators) is a
+[controller](../../references/control-plane.md#components) that watches objects of that type and does the work they describe. Installing an
+operator usually means installing its CRDs and its controller together, often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases).
 
 Starts from the [`crds` lab](../../lab/labs.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
@@ -11,7 +11,7 @@ Starts from the [`crds` lab](../../lab/labs.md#crds). Every command runs on `con
 * Find the CRDs a cluster has, and the resource types they add.
 * Create a CRD from the docs' example, and objects of the new type.
 * See the schema reject a wrong value and an unknown field.
-* Install an operator, cert-manager, with Helm, and list the CRDs it brought.
+* Install an operator, [cert-manager](../../references/crds.md#operators), with Helm, and list the CRDs it brought.
 * Build a custom resource with `k explain`, and watch the operator act on it.
 * Save a CRD list and a field's documentation to files, as exam tasks ask.
 
@@ -35,7 +35,7 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
    customresourcedefinitions   crd,crds     apiextensions.k8s.io/v1   false        CustomResourceDefinition
    ```
 
-   A new kubeadm cluster with Flannel has none. Every type so far is built into the apiserver.
+   A new [kubeadm](../../references/kubeadm.md) cluster with [Flannel](../../references/pod-network.md#plugins) has none. Every type so far is built into the apiserver.
 
 ## Create a CRD
 
@@ -172,12 +172,12 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
 
 ## Install an operator
 
-An operator is a controller for custom resources. cert-manager issues TLS certificates: you
-create a `Certificate` object, and its controller writes the key and certificate into a Secret:
+An operator is a controller for custom resources. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates](../../references/certificates.md): you
+create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets):
 [operators](../../references/crds.md#operators).
 
 1. Install cert-manager's Helm chart, with its CRDs. An exam task gives the chart and version, or
-   links the operator's install page in its Quick Reference box:
+   links the operator's install page in its [Quick Reference](../../references/exam-workflow.md#snippets-from-the-docs) box:
 
    ```shell
    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
@@ -238,8 +238,8 @@ create a `Certificate` object, and its controller writes the key and certificate
    issuers               iss          cert-manager.io/v1   true         Issuer
    ```
 
-   An Issuer is namespaced and a ClusterIssuer is not, the same split as a Role and a
-   ClusterRole: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
+   An [Issuer](../../references/crds.md#operators) is namespaced and a [ClusterIssuer](../../references/crds.md#operators) is not, the same split as a [Role](../../references/rbac.md#the-model) and a
+   [ClusterRole](../../references/rbac.md#the-model): [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 ## Configure the operator
 
@@ -247,7 +247,7 @@ No `kubectl create` command and no kubernetes.io page writes a cert-manager obje
 reads the fields from the CRD's schema, and marks the required ones:
 [kubectl explain](../../references/exam-workflow.md#kubectl-explain).
 
-1. Find what an Issuer can be, and what a Certificate needs:
+1. Find what an Issuer can be, and what a [Certificate](../../references/crds.md#operators) needs:
 
    ```shell
    k explain issuer.spec | grep -E '^  [a-zA-Z]'
@@ -330,7 +330,7 @@ reads the fields from the CRD's schema, and marks the required ones:
    ```
 
    You created one object. The controller created the CertificateRequest and the Secret, as
-   its ServiceAccount: [operators](../../references/crds.md#operators).
+   its [ServiceAccount](../../references/service-accounts.md): [operators](../../references/crds.md#operators).
 
 4. Read the certificate the Secret holds:
 
@@ -605,6 +605,7 @@ k apply -f nightly.yaml
 * [crds](../../references/crds.md) has the parts of a CRD, validation, operators and the failure
   modes in one place.
 * [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
-  explains when to add a custom resource, and the other way to extend the API, aggregation.
+  explains when to add a custom resource, and the other way to extend the API, aggregation, which
+  puts a separate API server behind the main one.
 * [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) describes
   what operators automate and how they are deployed.

@@ -1,6 +1,7 @@
 # RBAC
 
-Authorisation in Kubernetes. Every request the apiserver accepts has already been
+RBAC (role-based access control) is how Kubernetes decides what a user may do. Every
+request the [apiserver](control-plane.md#components) accepts has already been
 authenticated into a subject; RBAC decides whether that subject may perform that
 verb on that resource.
 
@@ -13,6 +14,10 @@ a permission that is never bound grants nothing.
 | --- | --- | --- |
 | Namespaced | [`Role`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole) | [`RoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding) |
 | Cluster-wide | [`ClusterRole`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole) | [`ClusterRoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding) |
+
+A Role is a list of permissions inside one namespace, and a ClusterRole is the same for the
+whole cluster. A RoleBinding grants a Role or a ClusterRole to subjects inside one namespace,
+and a ClusterRoleBinding grants a ClusterRole in every namespace.
 
 The pairs cross in one direction only:
 
@@ -37,7 +42,7 @@ Three kinds, named in a binding's `subjects` ([referring to subjects](https://ku
 - **ServiceAccount** — an in-cluster identity, referred to in full as
   `system:serviceaccount:<namespace>:<name>`. The only kind Kubernetes creates
   ([service-accounts](service-accounts.md)).
-- **User** — has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a certificate or token
+- **User** — has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a [certificate](certificates.md) or token
   authenticates as that name ([authentication](authentication.md)). `kubeadm` writes `kubernetes-admin` into
   `admin.conf`.
 - **Group** — also has no object, and comes from the same credential. `kubeadm`
@@ -50,8 +55,8 @@ something if any binding allows it, and removing access means removing bindings.
 ## In this lab
 
 The `cluster` lab has 71 ClusterRoles. 65 are prefixed `system:` and let the
-control plane components talk to the apiserver. `flannel` belongs to the pod
-network and `kubeadm:get-nodes` to the bootstrap. The remaining four are meant
+[control plane](control-plane.md) components talk to the apiserver. `flannel` belongs to the [pod
+network](pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node [join](workers.md#joining). The remaining four are meant
 for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
 
 Three ClusterRoleBindings give every authenticated subject a few permissions

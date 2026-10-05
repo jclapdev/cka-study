@@ -1,6 +1,6 @@
 # Helm
 
-Helm is a package manager for Kubernetes. It installs a chart, which is a package of templated manifests, into a cluster as a release, and records every change to that release as a numbered revision so it can be upgraded, rolled back or uninstalled as one unit ([introduction to Helm](https://helm.sh/docs/intro/introduction/)). The lab runs Helm 4.3.0.
+Helm is a package manager for Kubernetes. It installs a [chart](#charts-repositories-and-releases), which is a package of templated [manifests](exam-workflow.md#generating-yaml), into a cluster as a release, and records every change to that release as a numbered revision so it can be upgraded, rolled back or uninstalled as one unit ([introduction to Helm](https://helm.sh/docs/intro/introduction/)). The lab runs Helm 4.3.0.
 
 ## Charts, repositories and releases
 
@@ -8,9 +8,11 @@ Helm works with three things ([key components](https://helm.sh/docs/intro/introd
 
 | Thing | What it is | How you refer to it |
 | --- | --- | --- |
-| [Chart](https://helm.sh/docs/intro/introduction/#chart) | A package: templates, default values, and a `Chart.yaml` with its version. | `<repo>/<chart>`, such as `podinfo/podinfo`, or a folder, a `.tgz` file or an `oci://` address. |
+| [Chart](https://helm.sh/docs/intro/introduction/#chart) | A package: templates, default values, and a `Chart.yaml` with its version. | `<repo>/<chart>`, such as `podinfo/podinfo` ([podinfo](#in-this-lab)), or a folder, a `.tgz` file (a packaged chart) or an `oci://` address. |
 | [Repository](https://helm.sh/docs/intro/introduction/#repository) | A web server with an `index.yaml` listing charts and their versions. | The local name given in `helm repo add`. The name exists only on the machine that added it. |
 | [Release](https://helm.sh/docs/intro/introduction/#release) | One installed copy of a chart, with its own name, in one namespace. | Its release name plus `-n <namespace>`. |
+
+OCI (Open Container Initiative) is the standard for container images and the registries that store them. A chart can be stored in such a registry next to images and installed straight from it with an `oci://` address, with no `helm repo add`.
 
 One chart can be installed many times in the same cluster, and each install is a separate release with its own name.
 
@@ -41,7 +43,7 @@ On an upgrade, values given with `-f` or `--set` start again from the chart's de
 
 Every install, upgrade and rollback adds a revision, starting at 1 ([helm upgrade and helm rollback](https://helm.sh/docs/intro/using_helm/#helm-upgrade-and-helm-rollback-upgrading-a-release-and-recovering-on-failure)). A rollback does not delete later revisions. It writes a new revision with the chart and values of the one named. The newest revision is `deployed`, and the ones before it are `superseded`.
 
-Helm runs only as a command-line tool that talks to the apiserver ([architecture](https://helm.sh/docs/intro/introduction/#architecture)), and it reads the same kubeconfig as `kubectl` ([kubeconfig](kubeconfig.md)). By default, it stores each revision as a Secret in the release's namespace ([storage backends](https://helm.sh/docs/topics/advanced/#storage-backends)), so the Secrets are the release. `helm uninstall` deletes the release's objects and all its Secrets ([helm uninstall](https://helm.sh/docs/intro/using_helm/#helm-uninstall-uninstalling-a-release)).
+Helm runs only as a command-line tool that talks to the [apiserver](control-plane.md#components) ([architecture](https://helm.sh/docs/intro/introduction/#architecture)), and it reads the same kubeconfig as `kubectl` ([kubeconfig](kubeconfig.md)). By default, it stores each revision as a [Secret](config.md#secrets) in the release's namespace ([storage backends](https://helm.sh/docs/topics/advanced/#storage-backends)), so the Secrets are the release. `helm uninstall` deletes the release's objects and all its Secrets ([helm uninstall](https://helm.sh/docs/intro/using_helm/#helm-uninstall-uninstalling-a-release)).
 
 A release belongs to one namespace ([namespaces](namespaces.md)). Every `helm` command without `-n` uses the kubeconfig's current namespace, which is `default` in the lab.
 
@@ -53,13 +55,13 @@ A chart's test pods, in `templates/tests/`, are part of the output unless `--ski
 
 ## Custom resource definitions
 
-A chart installs the CustomResourceDefinitions (CRDs) in its `crds/` folder before anything else, and only on install ([custom resource definitions](https://helm.sh/docs/topics/charts/#custom-resource-definitions-crds)). Helm never upgrades or deletes a CRD, and skips one that already exists ([limitations on CRDs](https://helm.sh/docs/topics/charts/#limitations-on-crds)). `--skip-crds` installs the chart without them.
+A chart installs the [CustomResourceDefinitions](crds.md) ([CRDs](crds.md)) in its `crds/` folder before anything else, and only on install ([custom resource definitions](https://helm.sh/docs/topics/charts/#custom-resource-definitions-crds)). Helm never upgrades or deletes a CRD, and skips one that already exists ([limitations on CRDs](https://helm.sh/docs/topics/charts/#limitations-on-crds)). `--skip-crds` installs the chart without them.
 
 ## In this lab
 
 The `helm` lab installs Helm on `controlplane` only, the one machine with the admin kubeconfig.
 
-A release of the podinfo chart creates a Deployment, a Service and one Secret per revision:
+podinfo is a small demo web application, used in the lab because its chart is small. A release of the podinfo chart creates a [Deployment](workloads.md), a [Service](services.md) and one Secret per revision:
 
 ```
 NAME                          READY   UP-TO-DATE   AVAILABLE   AGE

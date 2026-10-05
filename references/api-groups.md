@@ -1,9 +1,9 @@
 # API groups
 
-Every resource type belongs to an API group, and the group plus a version make up the `apiVersion` field of every object ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)).
+An API group is a family of related resource types, such as `apps` for [Deployments](workloads.md) and [DaemonSets](daemonsets.md). Every type belongs to one, and the group plus a version make up the `apiVersion` field of every object ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)).
 
 - The **core group** has no name. Its objects have `apiVersion: v1`, and it holds the oldest types: pods, services, secrets, configmaps, namespaces, nodes, persistentvolumes and serviceaccounts.
-- **Named groups** appear before the version. Deployments are `apps/v1`, Roles are `rbac.authorization.k8s.io/v1` and Ingresses are `networking.k8s.io/v1` ([API groups](https://kubernetes.io/docs/reference/using-api/#api-groups)).
+- **Named groups** appear before the version. Deployments are `apps/v1`, [Roles](rbac.md#the-model) are `rbac.authorization.k8s.io/v1` and Ingresses are `networking.k8s.io/v1` ([API groups](https://kubernetes.io/docs/reference/using-api/#api-groups)).
 
 ## Where the group matters
 
@@ -50,7 +50,7 @@ roles                                            rbac.authorization.k8s.io/v1   
 | Symptom | Cause |
 | --- | --- |
 | A Role for `deployments` exists, and the Forbidden message says `API group "apps"` | The rule's `apiGroups` is `[""]`. Change it to `["apps"]`. |
-| `no matches for kind "Deployment" in version "v1"` | The manifest's `apiVersion` is missing the group. It must be `apps/v1`. |
+| `no matches for kind "Deployment" in version "v1"` | The [manifest](exam-workflow.md#generating-yaml)'s `apiVersion` is missing the group. It must be `apps/v1`. |
 
 ## Docs
 

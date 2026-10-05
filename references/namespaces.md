@@ -1,6 +1,6 @@
 # Namespaces
 
-A namespace is a named group of objects inside one cluster. Two objects of the same kind can share a name if they are in different namespaces, and a namespace is the boundary that a Role, a RoleBinding, a ResourceQuota and a NetworkPolicy apply within ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
+A namespace is a named group of objects inside one cluster. Two objects of the same kind can share a name if they are in different namespaces, and a namespace is the boundary that a [Role](rbac.md#the-model) and a RoleBinding apply within. So do a ResourceQuota, which is a cap on the CPU, memory and number of objects a namespace may use, and a NetworkPolicy, which is a set of rules for which pods may talk to which ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
 
 ## Namespaced and cluster-scoped resources
 
@@ -18,18 +18,18 @@ kubectl api-resources --namespaced=false
 kubectl api-resources --namespaced=true
 ```
 
-This matters for [RBAC](rbac.md). A RoleBinding grants access inside its own namespace, so it can never reach a cluster-scoped resource. Access to nodes or PersistentVolumes needs a ClusterRoleBinding.
+This matters for [RBAC](rbac.md). A RoleBinding grants access inside its own namespace, so it can never reach a cluster-scoped resource. Access to nodes or PersistentVolumes, which are pieces of storage that belong to the whole cluster, needs a [ClusterRoleBinding](rbac.md#the-model).
 
 ## In this lab
 
-A new kubeadm cluster starts with four namespaces ([initial namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#initial-namespaces)), and Flannel adds a fifth:
+A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#initial-namespaces)), and [Flannel](pod-network.md#plugins) adds a fifth:
 
 | Namespace | Holds |
 | --- | --- |
 | `default` | Anything created without `-n`. |
-| `kube-system` | The control plane pods, CoreDNS and kube-proxy. |
-| `kube-public` | The `cluster-info` ConfigMap. kubeadm binds a Role that lets `system:anonymous` read it, so a joining node can read it before it has credentials. |
-| `kube-node-lease` | One Lease per node, which the kubelet renews as its heartbeat. |
+| `kube-system` | The [control plane](control-plane.md) pods, [CoreDNS](pod-network.md#coredns) and [kube-proxy](control-plane.md#components). |
+| `kube-public` | The `cluster-info` [ConfigMap](config.md). kubeadm binds a Role that lets `system:anonymous` read it, so a joining node can read it before it has credentials. |
+| `kube-node-lease` | One Lease per node. A Lease is a small object with a timestamp, and the [kubelet](control-plane.md#components) renews its node's every few seconds as a heartbeat. |
 | `kube-flannel` | The Flannel pod network. |
 
 In the lab, Kubernetes 1.34 serves 32 cluster-scoped and 33 namespaced resource types.

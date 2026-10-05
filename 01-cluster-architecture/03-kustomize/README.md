@@ -1,6 +1,6 @@
 # Customizing Manifests with Kustomize
 
-Kustomize builds a final set of manifests from plain YAML files plus a `kustomization.yaml` that
+[Kustomize](../../references/kustomize.md) builds a final set of [manifests](../../references/exam-workflow.md#generating-yaml) from plain YAML files plus a `kustomization.yaml` that
 lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is
 built into `kubectl`, so no template language and no extra tool is involved.
 
@@ -10,9 +10,9 @@ Starts from the [`kustomize` lab](../../lab/labs.md#kustomize). Every command ru
 
 * Turn generated manifests into a Kustomize base, using the kustomization the docs give you.
 * Preview what Kustomize produces before anything reaches the cluster.
-* Write an overlay that changes the base's namespace, names, labels and image tag.
+* Write an overlay that changes the base's namespace, names, [labels](../../references/labels.md) and image tag.
 * Change fields in one object with patches copied from the docs.
-* Generate a ConfigMap whose name changes with its contents, and watch the Deployment roll.
+* Generate a [ConfigMap](../../references/config.md) whose name changes with its contents, and watch the [Deployment](../../references/workloads.md) roll.
 * Apply and delete everything a kustomization produces with `-k`.
 
 Every YAML file in this exercise comes from `kubectl create --dry-run` or from the allowed docs.
@@ -27,7 +27,7 @@ paste straight into the terminal:
 A base is a folder of ordinary manifests with a `kustomization.yaml` that lists them:
 [bases and overlays](../../references/kustomize.md#bases-and-overlays).
 
-1. Make the folder and generate a Deployment and a Service into it:
+1. Make the folder and generate a Deployment and a [Service](../../references/services.md) into it:
 
    ```shell
    mkdir -p ~/web/base && cd ~/web
@@ -210,7 +210,7 @@ which changes what the base produces. The base files are never edited:
    ```
 
    `images` names the image as the base does, `nginx`. The `env: prod` label went onto each
-   object's own labels only, not into the selector or the pod template:
+   object's own labels only, not into the selector or the [pod template](../../references/workloads.md#the-pod-template):
    [what an overlay can set](../../references/kustomize.md#what-an-overlay-can-set).
 
 4. Apply the overlay:
@@ -229,7 +229,7 @@ which changes what the base produces. The base files are never edited:
    `namespace:` sets the namespace on every object but does not create it:
    [kustomize failure modes](../../references/kustomize.md#failure-modes).
 
-5. Generate a Namespace manifest into the overlay, then add `- namespace.yaml` under
+5. Generate a [Namespace](../../references/namespaces.md) manifest into the overlay, then add `- namespace.yaml` under
    `resources` in `vim prod/kustomization.yaml`:
 
    ```shell
@@ -490,7 +490,7 @@ Start from a fresh [`kustomize` lab](../../lab/labs.md#kustomize). When time is 
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 25%.** In `~/shop/base`, create a kustomization with a
-   Deployment `shop` running `nginx:1.27`, and a ClusterIP Service `shop` on port 80 for it.
+   Deployment `shop` running `nginx:1.27`, and a [ClusterIP](../../references/services.md#service-types) Service `shop` on port 80 for it.
 2. **Host `controlplane`, weight 30%.** In `~/shop/staging`, create an overlay of that base that
    puts everything in the namespace `staging`, which does not exist yet, prefixes every name
    with `staging-`, runs `nginx:1.28` and 2 replicas. Apply it.
@@ -620,5 +620,5 @@ k apply -k /opt/course/3/overlay
 * [kustomize](../../references/kustomize.md) has the fields an overlay can set, patches,
   generated names and the failure modes in one place.
 * [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
-  covers `secretGenerator`, `generatorOptions` and `replacements`, which this exercise does not
-  use.
+  covers `secretGenerator`, `generatorOptions` and `replacements`, which copies a field from one
+  object into others. This exercise does not use them.

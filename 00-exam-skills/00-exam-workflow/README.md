@@ -11,8 +11,8 @@ Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs o
 
 * Start on `base`, reach a worker with `ssh`, become root, and get back to `base`.
 * Use `k`, its completion, and the short names for resource types.
-* Generate a Pod, Deployment, Service, ConfigMap and Secret with `--dry-run=client -o yaml`.
-* Find a manifest on kubernetes.io, copy it, and paste it into vim with its indentation intact.
+* Generate a [Pod](../../references/pod.md), [Deployment](../../references/workloads.md), [Service](../../references/services.md), [ConfigMap](../../references/config.md) and [Secret](../../references/config.md#secrets) with `--dry-run=client -o yaml`.
+* Find a [manifest](../../references/exam-workflow.md#generating-yaml) on kubernetes.io, copy it, and paste it into vim with its indentation intact.
 * Look up a field with `kubectl explain`.
 * Change live objects without opening their YAML, and replace a pod whose change is rejected.
 * Read one value back to check the result.
@@ -39,10 +39,10 @@ You start on `base`, which has no `kubectl`. Each exam task names the host to `s
    ```
 
    This time `kubectl` exists but fails with `localhost:8080 was refused`, because `node01` has
-   no kubeconfig. A task that says to work on `node01` means files and services on that machine,
+   no [kubeconfig](../../references/kubeconfig.md). A task that says to work on `node01` means files and services on that machine,
    not the cluster.
 
-3. Read the node's container runtime version, then go back to `base`:
+3. Read the node's [container runtime](../../references/workers.md#what-a-worker-runs) version, then go back to `base`:
 
    ```shell
    containerd --version
@@ -135,7 +135,7 @@ Redirect it to a file to edit before applying:
    k apply -f web.yaml -n drill
    ```
 
-   `web.yaml` has the pod labels `app: web` and a container named `nginx`, after the image.
+   `web.yaml` has the pod [labels](../../references/labels.md) `app: web` and a container named `nginx`, after the image.
 
 3. Print the Service that would expose it:
 
@@ -199,7 +199,9 @@ Redirect it to a file to edit before applying:
 ## Copy a manifest from the docs
 
 No `kubectl create` command writes a NetworkPolicy, a PersistentVolume or a
-PersistentVolumeClaim. The docs have one for each, ready to copy:
+PersistentVolumeClaim. A NetworkPolicy is a set of rules for which pods may talk to which, a
+PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's
+request for one. The docs have one for each, ready to copy:
 [snippets from the docs](../../references/exam-workflow.md#snippets-from-the-docs).
 
 1. Search kubernetes.io for `network policy`, open
@@ -497,6 +499,6 @@ k scale deploy api --replicas=3 -n shop
 * [exam-workflow](../../references/exam-workflow.md) has every command above, the vim keys and
   the docs pages worth knowing, in one place.
 * [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is on
-  the allowed docs and lists more imperative commands and `jsonpath` examples.
+  the allowed docs and lists more [imperative](../../references/exam-workflow.md#generating-yaml) commands and `jsonpath` examples.
 * [killer.sh](https://killer.sh) (not available in the exam) is the exam's remote desktop, where
   Ctrl+Shift+C and Ctrl+Shift+V can be practised for real.

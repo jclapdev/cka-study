@@ -38,7 +38,7 @@ describe("parse", () => {
     expect(practice.tasks).toHaveLength(6);
     expect(practice.tasks.reduce((a, t) => a + t.weight, 0)).toBe(100);
     expect(practice.tasks[3].hosts).toEqual(["controlplane", "node01", "node02"]);
-    expect(practice.solutionHtml).toContain("Calico defaults");
+    expect(practice.solutionHtml).toContain("Calico</a> defaults");
     const check = ex.sections.find((s) => s.slug === "check-your-work");
     expect(check?.kind).toBe("plain");
   });
@@ -115,10 +115,13 @@ describe("bundle", () => {
   it("lists the reference pages an exercise links to", () => {
     expect(referenceLinks(readMarkdown(KUBEADM)!)).toEqual([
       "references/workers.md",
+      "references/control-plane.md",
+      "references/certificates.md",
+      "references/exam-workflow.md",
       "references/kubeconfig.md",
       "references/kubeadm.md",
-      "references/control-plane.md",
       "references/pod-network.md",
+      "references/taints.md",
       "references/pod.md",
       "references/labels.md",
       "references/daemonsets.md",

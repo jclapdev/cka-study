@@ -1,8 +1,8 @@
 # Pod
 
-The smallest thing Kubernetes schedules. One or more containers that share a network namespace (same IP, same localhost, same port space) and can share volumes. Containers are never scheduled individually.
+A pod is the smallest thing Kubernetes schedules: one or more containers that share a network namespace (same IP, same localhost, same port space) and can share volumes. Containers are never scheduled individually.
 
-A pod is bound to one node for life. It is never moved. A pod that seems to have moved is a new pod, created by a controller such as a [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) or a [DaemonSet](daemonsets.md) after the old one died.
+A pod is bound to one node for life. It is never moved. A pod that seems to have moved is a new pod, created by a [controller](control-plane.md#components) such as a [Deployment](workloads.md) or a [DaemonSet](daemonsets.md) after the old one died.
 
 ## Phases
 
@@ -13,8 +13,8 @@ A pod is bound to one node for life. It is never moved. A pod that seems to have
 | `Pending` | Accepted, not running yet: unscheduled, or image still pulling |
 | `Running` | Bound to a node, at least one container started |
 | `Succeeded` / `Failed` | All containers terminated, zero / non-zero exit |
-| `ContainerCreating` | Scheduled; runtime and CNI are setting the pod up |
-| `CrashLoopBackOff` | Container keeps exiting; kubelet restarts with growing delay ([container restarts](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-restarts)) |
+| `ContainerCreating` | Scheduled; runtime and [CNI](pod-network.md) are setting the pod up |
+| `CrashLoopBackOff` | Container keeps exiting; [kubelet](control-plane.md#components) restarts with growing delay ([container restarts](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-restarts)) |
 | `ImagePullBackOff` | Image cannot be pulled — wrong name, or no registry access |
 | `Error` | Container exited non-zero and is not being restarted |
 
@@ -27,11 +27,11 @@ kubectl logs <name> -n <ns> --previous    # what the crashed instance said
 kubectl get events -n <ns> --sort-by=.lastTimestamp
 ```
 
-`Pending` with `FailedScheduling` and `0/1 nodes are available` in the events is a scheduling problem: taints, resources or selectors. `CrashLoopBackOff` is the container's own fault and lives in the logs.
+`Pending` with `FailedScheduling` and `0/1 nodes are available` in the events is a scheduling problem: [taints](taints.md), resources or selectors. `CrashLoopBackOff` is the container's own fault and lives in the logs.
 
 ## On a new cluster
 
-After `kubeadm init`, the two CoreDNS pods are `Pending`. The node is `NotReady` until a pod network is installed, so it carries the `node.kubernetes.io/not-ready:NoSchedule` taint, and CoreDNS does not tolerate it. `kubectl describe pod` shows it in the events:
+After `kubeadm init`, the two [CoreDNS](pod-network.md#coredns) pods are `Pending`. The node is `NotReady` until a pod network is installed, so it carries the `node.kubernetes.io/not-ready:NoSchedule` taint, and CoreDNS does not tolerate it. `kubectl describe pod` shows it in the events:
 
 ```
 Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 node(s) had untolerated taint(s).

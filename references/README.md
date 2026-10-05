@@ -21,3 +21,8 @@ One-page summaries of the concepts the exercises use.
 | [helm](helm.md) | charts, repositories and releases, values and `--reuse-values`, revisions and rollback, where releases are stored, `helm template` |
 | [kustomize](kustomize.md) | bases and overlays, the fields an overlay sets, `labels` and selectors, patches, generated ConfigMap names, `-k` vs `-f` |
 | [crds](crds.md) | what a CRD adds, its parts, schema validation, operators and reconciling, CRDs in Helm charts |
+| [services](services.md) | what a Service is, ClusterIP, NodePort and LoadBalancer, how kube-proxy makes a Service IP answer, EndpointSlices |
+| [taints](taints.md) | taints and tolerations, the three effects, the taints Kubernetes adds itself, `kubectl taint` |
+| [certificates](certificates.md) | certificates and the CA, client and serving certificates, the files in `/etc/kubernetes/pki/`, CSRs, expiry |
+| [workloads](workloads.md) | Deployments and ReplicaSets, the pod template, rollouts, StatefulSets, Jobs and CronJobs |
+| [config](config.md) | ConfigMaps, Secrets and their types, using both in a pod, `kube-root-ca.crt` |

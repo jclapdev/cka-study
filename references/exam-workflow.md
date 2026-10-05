@@ -12,7 +12,7 @@ sudo -i         # root, for files under /etc, /opt or /var, or systemctl
 exit            # leave root; exit again to go back to base
 ```
 
-- `kubectl` needs a kubeconfig. On a host without one it fails with `The connection to the server localhost:8080 was refused`. A task on a worker is about that machine's files and services.
+- `kubectl` needs a [kubeconfig](kubeconfig.md). On a host without one it fails with `The connection to the server localhost:8080 was refused`. A task on a worker is about that machine's files and services.
 - Nested ssh, such as `ssh node02` from `node01`, is not supported. Go back to `base` first.
 - Each task is a new session. An alias, an exported variable or a `.vimrc` you set is gone in the next task.
 
@@ -31,11 +31,11 @@ Short names save typing, and `k api-resources` lists them all ([kubectl quick re
 | persistentvolumes, persistentvolumeclaims, storageclasses | `pv`, `pvc`, `sc` |
 | networkpolicies, nodes | `netpol`, `no` |
 
-Secrets have none.
+[Secrets](config.md#secrets) have none.
 
 ## Generating YAML
 
-`--dry-run=client -o yaml` prints the object a command would create, and creates nothing ([creating objects](https://kubernetes.io/docs/reference/kubectl/quick-reference/#creating-objects)). Apply the output directly, or redirect it to a file and edit it first.
+A manifest is a YAML file that describes one or more objects, which `kubectl apply -f` creates or updates. An imperative command is one such as `kubectl create` that makes an object directly from flags. With `--dry-run=client -o yaml`, it prints the manifest for the object it would create and creates nothing ([creating objects](https://kubernetes.io/docs/reference/kubectl/quick-reference/#creating-objects)). Apply the output directly, or redirect it to a file and edit it first.
 
 ```bash
 k run web --image=nginx:1.27 --dry-run=client -o yaml > pod.yaml
@@ -55,12 +55,12 @@ k create ingress web --rule="example.com/=web:80" --dry-run=client -o yaml
 
 What `kubectl create` fills in by itself:
 
-- `k create deployment` labels the pods `app: <name>` and names the container after the image, such as `nginx` for `nginx:1.27`. `k create service clusterip <name>` selects `app: <name>`, so the two match when the names match.
+- `k create deployment` [labels](labels.md) the pods `app: <name>` and names the container after the image, such as `nginx` for `nginx:1.27`. `k create service clusterip <name>` selects `app: <name>`, so the two match when the names match.
 - `k create secret generic` base64-encodes each value. Written by hand under `data`, a plain value is rejected with `illegal base64 data`.
 
 ## Snippets from the docs
 
-No `kubectl create` command writes a NetworkPolicy, a PersistentVolume, a PersistentVolumeClaim or a StorageClass. Copy one from the docs instead. The kubernetes.io search box is allowed, but opening a result outside the allowed sites is not. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
+No `kubectl create` command writes these four kinds, so copy them from the docs instead. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The kubernetes.io search box is allowed, but opening a result outside the allowed sites is not. The Quick Reference box is the part of an exam task that links documentation for the tools that task needs, and those pages are allowed for it too ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)). Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
 
 | Need | Page and section |
 | --- | --- |
@@ -69,8 +69,8 @@ No `kubectl create` command writes a NetworkPolicy, a PersistentVolume, a Persis
 | StorageClass | [Storage Classes: StorageClass objects](https://kubernetes.io/docs/concepts/storage/storage-classes/#storageclass-objects) |
 | Ingress | [Ingress: the Ingress resource](https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource) |
 | kustomization, overlay, generator | [Kustomize: bases and overlays](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#bases-and-overlays) and [configMapGenerator](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#configmapgenerator) |
-| etcd backup and restore commands | [Operating etcd clusters: backing up](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster) |
-| kubeadm upgrade commands | [Upgrading kubeadm clusters](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/#upgrading-control-plane-nodes) |
+| [etcd](control-plane.md#components) backup and restore commands | [Operating etcd clusters: backing up](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster) |
+| [kubeadm](kubeadm.md) upgrade commands | [Upgrading kubeadm clusters](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/#upgrading-control-plane-nodes) |
 
 After pasting, change the names, the namespace and the values the task gives. Leave everything else as the docs wrote it.
 
@@ -109,7 +109,7 @@ k edit deploy web                           # opens the live object in vim
 k replace --force -f /tmp/kubectl-edit-….yaml
 ```
 
-Most of a running pod's spec cannot change ([pod update and replacement](https://kubernetes.io/docs/concepts/workloads/pods/#pod-update-and-replacement)). `k edit` on such a field fails with `pods "<name>" is invalid`, and it saves your edit to a file under `/tmp` and prints its name. `k replace --force -f <that file>` deletes the pod and creates it from your copy. A Deployment's pods are replaced by a rollout instead, so edit the Deployment, not its pods.
+Most of a running pod's spec cannot change ([pod update and replacement](https://kubernetes.io/docs/concepts/workloads/pods/#pod-update-and-replacement)). `k edit` on such a field fails with `pods "<name>" is invalid`, and it saves your edit to a file under `/tmp` and prints its name. `k replace --force -f <that file>` deletes the pod and creates it from your copy. A [Deployment](workloads.md)'s pods are replaced by a [rollout](workloads.md#rollouts) instead, so edit the Deployment, not its pods.
 
 ## Checking your work
 
@@ -122,7 +122,7 @@ k describe deploy web | grep -E '^Replicas|Image'
 k auth can-i list pods --as=system:serviceaccount:dev:bot -n dev
 ```
 
-`jsonpath` examples are in the [quick reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/#formatting-output).
+jsonpath is a way to pick fields out of an object's JSON, such as `{.spec.replicas}`. Examples are in the [quick reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/#formatting-output).
 
 ## Failure modes
 

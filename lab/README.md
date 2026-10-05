@@ -60,7 +60,7 @@ It checks only the cluster's final state, one sub-task at a time, and prints eac
 
 ## Differences from the exam
 
-* Swap, kernel modules and kernel settings such as `net.ipv4.ip_forward` are already handled here. On the exam, check them yourself, because kubeadm's preflight checks report them.
+* Swap, kernel modules and kernel settings such as `net.ipv4.ip_forward` are already handled here. On the exam, check them yourself, because [kubeadm](../references/kubeadm.md)'s preflight checks report them.
 * `free`, `top` and `kubectl describe node` show your computer's memory and CPU, not one machine's.
 
 ## Commands
@@ -78,6 +78,6 @@ Run these inside this project's folder.
 
 **Start lab fails with `Cannot connect to the Docker daemon`.** Docker is not running. Start Docker Desktop, or on Linux run `sudo systemctl start docker`, and press **Start lab** again.
 
-**`kubeadm init` fails in `wait-control-plane`.** The kubelet could not start the control plane. Read why with `sudo journalctl -u kubelet | tail -20` on `controlplane`. Starting the `vms` lab again gives three fresh machines.
+**`kubeadm init` fails in `wait-control-plane`.** The [kubelet](../references/control-plane.md#components) could not start the [control plane](../references/control-plane.md). Read why with `sudo journalctl -u kubelet | tail -20` on `controlplane`. Starting the `vms` lab again gives three fresh machines.
 
 **The machines are slow or stop at random.** Docker has too little memory. In Docker Desktop, open **Settings**, then **Resources**, and give it at least 4 GiB.

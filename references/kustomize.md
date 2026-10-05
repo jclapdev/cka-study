@@ -1,6 +1,6 @@
 # Kustomize
 
-Kustomize builds a set of manifests from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. The lab's `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
+Kustomize builds a set of [manifests](exam-workflow.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. The lab's `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
 
 Kustomize and [Helm](helm.md) both install sets of objects, and they differ in what they keep. Helm renders templates and records a release with revisions it can roll back. Kustomize only produces manifests, and `kubectl apply` sends them, so nothing records what was applied.
 
@@ -28,10 +28,10 @@ These fields change every object, or one named object, without a patch ([setting
 | Field | What it changes |
 | --- | --- |
 | `namespace` | Sets `metadata.namespace` on every namespaced object. It does not create the namespace. |
-| `namePrefix`, `nameSuffix` | Adds to every object's name, and rewrites references to those names, such as a Deployment's reference to a ConfigMap. |
-| `labels` | Adds labels. See [labels](#labels) below. |
+| `namePrefix`, `nameSuffix` | Adds to every object's name, and rewrites references to those names, such as a [Deployment](workloads.md)'s reference to a [ConfigMap](config.md). |
+| `labels` | Adds [labels](labels.md). See [labels](#labels) below. |
 | `images` | Changes the tag, digest or name of every container that uses the named image ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). |
-| `replicas` | Sets the replica count of the named Deployment, ReplicaSet or StatefulSet. The allowed docs do not describe it, so in the exam use the `increase_replicas.yaml` patch from [customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing) instead. |
+| `replicas` | Sets the replica count of the named Deployment, [ReplicaSet](workloads.md#deployments-and-replicasets) or [StatefulSet](workloads.md#other-workload-kinds). The allowed docs do not describe it, so in the exam use the `increase_replicas.yaml` patch from [customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing) instead. |
 
 `images` and `replicas` name their target as the base does: the image `nginx`, the Deployment `web`, not `prod-web`.
 
@@ -41,14 +41,14 @@ Every field above has a copyable example on the allowed Kustomize page except `r
 
 The `labels` field adds labels to each object's own `metadata.labels` only ([Kustomize feature list](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#kustomize-feature-list)). Two flags widen it ([labels](https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/labels/) (not available in the exam)):
 
-- `includeTemplates: true` also adds them to the pod template, so the pods carry them.
+- `includeTemplates: true` also adds them to the [pod template](workloads.md#the-pod-template), so the pods carry them.
 - `includeSelectors: true` adds them to the pod template and to selectors.
 
 In the lab, an overlay with `env: prod` and neither flag gave a Deployment that `kubectl get deploy -l env=prod` finds, and pods that `kubectl get pods -l env=prod` does not. A Deployment's selector cannot be changed after it is created, so turning on `includeSelectors` for a Deployment that already exists fails with `spec.selector: … field is immutable`. `commonLabels`, which older examples use, behaves like `includeSelectors: true` and is deprecated.
 
 ## Patches
 
-A patch is a partial manifest with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container:
+A patch is a partial [manifest](exam-workflow.md#generating-yaml) with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. This kind of patch is a strategic merge patch, which is merged into the object field by field. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container:
 
 ```yaml
 patches:
@@ -57,7 +57,7 @@ patches:
 
 ## Generated names
 
-`configMapGenerator` and `secretGenerator` write a ConfigMap or a Secret from literals or files ([generating resources](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#generating-resources)). A [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) holds key-value settings that a pod can read as environment variables or files.
+`configMapGenerator` and `secretGenerator` write a ConfigMap or a [Secret](config.md#secrets) from literals or files ([generating resources](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#generating-resources)). A [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) holds key-value settings that a pod can read as environment variables or files.
 
 Kustomize adds a hash of the contents to the generated name, such as `web-config-f655md8fbd`, and rewrites every reference to `web-config` in the same build ([generatorOptions](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#generatoroptions)). When the contents change, the name changes, the Deployment's pod template changes with it, and the Deployment replaces its pods. A ConfigMap changed in place does not update the environment variables of running pods ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
 
@@ -77,7 +77,7 @@ Kustomize adds a hash of the contents to the generated name, such as `web-config
 
 ## In this lab
 
-A remote kustomization is fetched and built the same way as a local one. The Gateway API project's CRD folder at `v1.6.2` builds to 12 objects:
+A remote kustomization is fetched and built the same way as a local one. The Gateway API project's [CRD](crds.md) folder at `v1.6.2` builds to 12 objects:
 
 ```
 $ kubectl kustomize "https://github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.6.2" | grep "^kind:" | sort | uniq -c
@@ -104,7 +104,7 @@ kubectl create deployment web --image=nginx:1.27 --dry-run=client -o yaml > base
 | --- | --- |
 | `error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory …` | The folder given to `kustomize` or `-k` has no kustomization file. |
 | `error validating "base/kustomization.yaml": error validating data: [apiVersion not set, kind not set]` | `kubectl apply -f` was run on a kustomization folder. Use `-k`. The other files in the folder were applied before the error. |
-| `Error from server (NotFound): error when creating "overlays/prod": namespaces "prod" not found` | `namespace:` does not create the namespace. Add a Namespace manifest to `resources`. |
+| `Error from server (NotFound): error when creating "overlays/prod": namespaces "prod" not found` | `namespace:` does not create the namespace. Add a [Namespace](namespaces.md) manifest to `resources`. |
 | `kubectl get pods -l <label>` finds nothing after adding `labels` | The label is on the Deployment only. Add `includeTemplates: true`. |
 | `error: no resource matches strategic merge patch "Deployment.v1.apps/prod-web.[noNs]"` | The patch names the object with the overlay's prefix. Use the base's name. |
 | Old `…-config-<hash>` ConfigMaps pile up | Each content change creates a new one, and `apply` never deletes. |

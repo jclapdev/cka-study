@@ -1,8 +1,8 @@
 # Bootstrapping a Cluster with kubeadm
 
-`kubeadm` turns machines that already have a container runtime and a kubelet into a working
-Kubernetes cluster. It generates the certificates, writes the control plane's static pod
-manifests, and prints a command that joins other machines to what it built.
+`kubeadm` turns machines that already have a [container runtime](../../references/workers.md#what-a-worker-runs) and a [kubelet](../../references/control-plane.md#components) into a working
+Kubernetes cluster. It generates the [certificates](../../references/certificates.md), writes the [control plane](../../references/control-plane.md)'s [static pod](../../references/control-plane.md#static-pods)
+[manifests](../../references/exam-workflow.md#generating-yaml), and prints a command that joins other machines to what it built.
 
 Starts from the [`vms` lab](../../lab/labs.md#vms). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
@@ -10,7 +10,7 @@ Starts from the [`vms` lab](../../lab/labs.md#vms). Every command runs on `contr
 
 * See why a kubelet with no cluster cannot start, and why `kubectl` cannot reach anything.
 * Initialise a control plane with `kubeadm init` and read what it wrote.
-* Find out how the apiserver can be a pod before there is an apiserver to create it.
+* Find out how the [apiserver](../../references/control-plane.md#components) can be a pod before there is an apiserver to create it.
 * Install a pod network and watch the node go Ready.
 * Join two workers with a token you generate yourself.
 * Label the workers and confirm the whole control plane is healthy.
@@ -127,7 +127,7 @@ kube-scheduler.yaml
 ```
 
 The kubelet watches that directory and starts whatever it finds there, without asking an
-apiserver or a scheduler. That is how the control plane starts before there is a cluster to
+apiserver or a [scheduler](../../references/control-plane.md#components). That is how the control plane starts before there is a cluster to
 start it. Because these pods come from files, editing one restarts that component within
 seconds, and `kubectl delete pod` on one does nothing lasting, because the kubelet recreates it
 from the file: [static pods](../../references/control-plane.md#static-pods).
@@ -163,7 +163,7 @@ plugin provides and the three address ranges that must not overlap:
 
 ### Why is controlplane NotReady when all four control plane pods are running?
 
-Check the node, the pods, and the CNI configuration directory:
+Check the node, the pods, and the [CNI](../../references/pod-network.md) configuration directory:
 
 ```shell
 kubectl describe node controlplane | grep -A3 'Ready '
@@ -189,11 +189,11 @@ kube-scheduler-controlplane            0/1     Running   0          14s
 ```
 
 `/etc/cni/net.d/` is empty, so the kubelet reports `cni plugin not initialized` and keeps the
-node `NotReady`. A `NotReady` node carries the taint `node.kubernetes.io/not-ready:NoSchedule`,
-which CoreDNS does not tolerate, so both CoreDNS pods stay `Pending`:
+node `NotReady`. A `NotReady` node carries the [taint](../../references/taints.md) `node.kubernetes.io/not-ready:NoSchedule`,
+which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so both CoreDNS pods stay `Pending`:
 [pods on a new cluster](../../references/pod.md#on-a-new-cluster).
 
-1. Install Flannel. It defaults to `10.244.0.0/16`, the CIDR you gave `init`:
+1. Install [Flannel](../../references/pod-network.md#plugins). It defaults to `10.244.0.0/16`, the CIDR you gave `init`:
 
    ```shell
    kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
@@ -368,7 +368,7 @@ cluster already existing.
 
 <details><summary>Why must the CNI's pod CIDR match --pod-network-cidr?</summary>
 
-The controller-manager gives each node a slice of the CIDR given to `init` and
+The [controller-manager](../../references/control-plane.md#components) gives each node a slice of the CIDR given to `init` and
 records it in `spec.podCIDR`. Flannel only accepts slices inside its own
 configured network. When they differ, Flannel crash-loops and pods get no
 addresses, even though the node shows `Ready`.
@@ -383,7 +383,7 @@ of `/etc/kubernetes/`.
 
 <details><summary>What are the two secrets in a kubeadm join line for?</summary>
 
-The CA cert hash proves the apiserver to the joining node. The bootstrap token
+The [CA](../../references/certificates.md) cert hash proves the apiserver to the joining node. The bootstrap token
 proves the node to the apiserver, for just long enough to get a client
 certificate signed. It expires in 24 hours;
 `kubeadm token create --print-join-command` makes a new one.
@@ -450,7 +450,7 @@ k label node node01 node02 node-role.kubernetes.io/worker=
 k get pods -n kube-system
 ```
 
-Flannel defaults to `10.244.0.0/16`, so its manifest needs no editing. Calico defaults to
+Flannel defaults to `10.244.0.0/16`, so its manifest needs no editing. [Calico](../../references/pod-network.md#plugins) defaults to
 `192.168.0.0/16`, so its manifest needs an edit.
 
 </details>

@@ -1,6 +1,6 @@
 ---
 name: build-exercise
-description: Use this skill when writing, extending, fixing or finishing a CKA exercise or reference page in this repo. That includes filling in an empty (greyed-out) topic folder such as 02-helm, adding a Quiz or Practice section to an existing exercise, adding a new lab, writing or extending a concept page in references/, and cleaning up an exercise that has filler prose or concepts with no reference page. Use it even when the request only names the topic ("do the etcd backup one", "write up network policies").
+description: Use this skill when writing, extending, fixing or finishing a CKA exercise or reference page in this repo. That includes filling in an empty (greyed-out) topic folder such as 02-helm, adding a Quiz or Practice section to an existing exercise, adding a new lab, writing or extending a concept page in references/, and cleaning up an exercise that has filler prose, concepts with no reference page, or a technology it names without explaining ("what is Flannel?"). Use it even when the request only names the topic ("do the etcd backup one", "write up network policies").
 ---
 
 # Build an exercise
@@ -25,16 +25,17 @@ In the study app, each topic page has three tabs, all built from Markdown in thi
   3. `kubectl explain <kind>.<field>` for a field no snippet shows.
 
   Hand edits happen in `vim`. A step names the file and shows the lines to add or change, never a `sed`, `printf` or script. Steps link only docs the exam allows: kubernetes.io/docs, kubernetes.io/blog, helm.sh/docs and gateway-api.sigs.k8s.io.
-- [ ] 6. List the concepts the steps rely on. A concept is any term or behaviour a reader needs in order to follow a step, where no earlier topic has taught it. Check each one against `references/`:
+- [ ] 6. List the concepts the steps rely on. A concept is any term or behaviour a reader needs in order to follow a step, where no earlier topic has taught it. That includes every named tool, component, plugin, protocol, file format and acronym, such as Flannel, containerd, conflist or CNI. The reader knows Linux and the shell but nothing about Kubernetes: the `known` rows of [the term list](assets/terms.tsv) are what needs no explaining. Check each concept against `references/`:
   - It has a page: link that page.
   - It is a detail of a concept that already has a page (for example, the roles every subject gets belong to `rbac.md`): add a section to that page.
   - Other topics will use it too (for example, namespaces or API groups): write a new page from [the reference template](assets/reference-template.md).
+- [ ] 6a. Give each concept one home section and add it to [the term list](assets/terms.tsv). The home section has a plain sentence saying what it is, such as "Flannel is a CNI plugin that…", with an acronym spelled out first. The first mention on every page, reference pages included, links the home section. A term from a topic not built yet, such as NetworkPolicy or PersistentVolume, is listed as `inline` and gets a one-sentence definition in the paragraph where each page first uses it, instead of an early page.
 - [ ] 7. A reference page covers what this and earlier exercises use, plus what `EXAM.md` lists for that concept, and nothing else. Every claim links to the kubernetes.io section that supports it. Before you link a section, fetch the page to confirm the anchor exists. Diagrams are mermaid. A link outside the exam's allowed docs goes only in the page's Docs list, marked "(not available in the exam)".
 - [ ] 8. Add each new reference page's row to the table in `references/README.md`.
 - [ ] 9. Write the Practice section the way the exam asks: a host lead-in and weight per task, a solution that starts each task with `ssh <host>` from `base`, and a `setup.sh` that places any files the exam would hand over (for example a kustomization under `/opt/course/<n>/`). The solution uses `k`.
 - [ ] 10. Write `grade.sh` in the topic folder from [the grader template](assets/grade-template.sh). One `task` per Practice task with its weight, and one `check` per sub-task that inspects only the final state. Start the lab and run it: it must score 0%. Run the solution and run it again: it must score 100%. The exercise links [grading](../../lab/README.md#grading) and never says how the grader runs.
 - [ ] 11. Reread every sentence you wrote. Delete narration, and check the wording rules in `CLAUDE.md` (see Gotchas).
-- [ ] 12. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`.
+- [ ] 12. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`. Run `scripts/check-terms.py` with no arguments and fix every line it prints. An `UNKNOWN` word is either a new concept (step 6a) or a known word to add to the term list as `known`.
 - [ ] 13. Set the topic's status in the root `README.md`: **ready** with Practice, **steps only** without.
 - [ ] 14. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Start lab and wait for "The lab is ready", open the terminal and run the first steps from `base`, then check that every step renders and each reference opens from the list.
 

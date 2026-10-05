@@ -1,6 +1,6 @@
 # Installing and Managing Applications with Helm
 
-Helm installs a packaged application, called a chart, into a cluster as a named release, and
+[Helm](../../references/helm.md) installs a packaged application, called a [chart](../../references/helm.md#charts-repositories-and-releases), into a cluster as a named release, and
 keeps a numbered history of that release so it can be upgraded, rolled back and uninstalled as
 one unit.
 
@@ -19,7 +19,7 @@ Starts from the [`helm` lab](../../lab/labs.md#helm). Every command runs on `con
 
 ## Find a chart
 
-A chart is a package of Kubernetes manifests, and a repository is a web server that lists
+A chart is a package of Kubernetes [manifests](../../references/exam-workflow.md#generating-yaml), and a repository is a web server that lists
 charts and their versions: [charts, repositories and releases](../../references/helm.md#charts-repositories-and-releases).
 
 1. Check that Helm reaches the cluster. It reads the same kubeconfig as `kubectl`
@@ -162,7 +162,7 @@ A release is one installed copy of a chart, with its own name, in one namespace:
    secret/sh.helm.release.v1.web.v1   helm.sh/release.v1   1      2s
    ```
 
-   The Deployment and Service are named after the release. The Secret
+   The [Deployment](../../references/workloads.md) and [Service](../../references/services.md) are named after the release. The [Secret](../../references/config.md#secrets)
    `sh.helm.release.v1.web.v1` is Helm's record of revision 1, holding the chart and the values
    used. Helm runs only as a command-line tool, and these Secrets are the only place a release
    exists:
@@ -315,7 +315,7 @@ installing anything: [rendering without installing](../../references/helm.md#ren
    kind: Pod
    ```
 
-   The three Pods come from the chart's `templates/tests/` folder. They run only when someone
+   The three [Pods](../../references/pod.md) come from the chart's `templates/tests/` folder. They run only when someone
    runs `helm test`, and `--skip-tests` leaves them out of the file:
    [rendering without installing](../../references/helm.md#rendering-without-installing).
 
@@ -422,7 +422,7 @@ Start from a fresh [`helm` lab](../../lab/labs.md#helm). When time is up,
 4. **Host `controlplane`, weight 20%.** Write the manifests that chart version `6.15.0` of
    `podinfo/podinfo` would create for a release `preview` in `store` to `~/preview.yaml`,
    without the chart's test pods. Do not install it.
-5. **Host `controlplane`, weight 15%.** A release of chart version `6.14.0` of podinfo is
+5. **Host `controlplane`, weight 15%.** A release of chart version `6.14.0` of [podinfo](../../references/helm.md#in-this-lab) is
    installed somewhere in the cluster. Uninstall it, and leave its namespace in place.
 
 <details><summary>Solution</summary>
@@ -487,5 +487,5 @@ helm uninstall legacy -n legacy
 * [Use OCI-based registries](https://helm.sh/docs/topics/registries/) covers installing charts
   from an `oci://` address instead of a repository.
 * [Custom Resource Definitions](https://helm.sh/docs/topics/charts/#custom-resource-definitions-crds)
-  explains how a chart installs CRDs and why Helm never upgrades or deletes them, which the
-  CRDs and operators exercise builds on.
+  explains how a chart installs [CRDs](../../references/crds.md) and why Helm never upgrades or deletes them, which the
+  CRDs and [operators](../../references/crds.md#operators) exercise builds on.

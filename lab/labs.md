@@ -8,11 +8,11 @@ Three bare machines with the Kubernetes tools installed and no cluster yet.
 
 ### cluster
 
-A working three-node cluster, built with kubeadm, with the Flannel pod network and both workers labelled.
+A working three-node cluster, built with [kubeadm](../references/kubeadm.md), with the [Flannel](../references/pod-network.md#plugins) pod network and both workers labelled.
 
 ### helm
 
-The `cluster` lab with Helm installed on `controlplane`, and one release, `legacy`, that Practice task 5 has to find.
+The `cluster` lab with [Helm](../references/helm.md) installed on `controlplane`, and one release, `legacy`, that Practice task 5 has to find.
 
 ### kustomize
 
