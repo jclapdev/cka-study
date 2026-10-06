@@ -1,5 +1,5 @@
 # The study app and the lab. `docker compose up -d`, then open http://localhost:5173.
-# lab/lab.sh recreates the three nodes from a saved copy by setting COPY.
+# lab/lab.sh recreates the three nodes from a lab's saved copy by setting COPY to the lab's name.
 name: cka
 
 x-node: &node

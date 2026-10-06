@@ -45,7 +45,7 @@ export function overview() {
         bestScore: scores.length ? Math.max(...scores) : null,
         hasPractice: s.hasPractice,
       };
-      return { ...t, title: s.title, progress };
+      return { ...t, title: s.title, lab: s.lab, progress };
     }),
   }));
 }

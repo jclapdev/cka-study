@@ -6,7 +6,7 @@ Kubernetes cluster. It generates the [certificates](../../references/certificate
 [How a cluster works](../../learn/cluster-architecture.md), [how kubeadm builds a cluster](../../learn/kubeadm.md)
 and [how the pod network works](../../learn/pod-network.md) explain the parts.
 
-Starts from the [`vms` lab](../../lab/labs.md#vms). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+Starts from the [`vms` lab](../../lab/labs/vms/README.md). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -402,7 +402,7 @@ reset.
 
 Do it again without the steps above, the way the exam asks. Give yourself **25 minutes**.
 
-Start from a fresh [`vms` lab](../../lab/labs.md#vms). When time is up,
+Start from a fresh [`vms` lab](../../lab/labs/vms/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 19%.** Initialise a control plane with pod network CIDR

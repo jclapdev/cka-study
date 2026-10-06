@@ -34,7 +34,7 @@ export type Section =
 
 /** `lab` is the starting state named by the "Starts from the … lab" line; `labHtml` is that line rendered. */
 export type Exercise = { title: string; introHtml: string; lab: string | null; labHtml: string; sections: Section[] };
-export type Summary = { title: string; stepKeys: string[]; recallKeys: string[]; hasPractice: boolean };
+export type Summary = { title: string; stepKeys: string[]; recallKeys: string[]; hasPractice: boolean; lab: string | null };
 
 type Raw = { slug: string; title: string; kind: Section["kind"]; nodes: RootContent[] };
 
@@ -98,7 +98,7 @@ function recallKeys(md: string, nodes: RootContent[]) {
 }
 
 export function summarize(md: string): Summary {
-  const { title, sections } = splitSections(md);
+  const { title, intro, sections } = splitSections(md);
   const stepKeys: string[] = [];
   const keys: string[] = [];
   for (const s of sections) {
@@ -109,12 +109,21 @@ export function summarize(md: string): Summary {
     }
     if (s.kind === "recall") keys.push(...recallKeys(md, s.nodes).map((r) => r.key));
   }
-  return { title, stepKeys, recallKeys: keys, hasPractice: sections.some((s) => s.kind === "practice") };
+  return { title, stepKeys, recallKeys: keys, hasPractice: sections.some((s) => s.kind === "practice"), lab: labOf(intro).lab };
+}
+
+/** The "Starts from the [`<lab>` lab](…/lab/labs/<lab>/README.md)" paragraph and the lab it names. */
+function labOf(intro: RootContent[]) {
+  const labLine = intro.find((n) => n.type === "paragraph" && /^Starts from/.test(toString(n)));
+  let lab: string | null = null;
+  if (labLine) visit(labLine, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/labs\/([\w-]+)\/README\.md/)?.[1] ?? null));
+  return { labLine, lab: lab as string | null };
 }
 
 // ---------- rendering ----------
 
 const TOPIC_README = /^(\d\d-[^/]+)\/(\d\d-[^/]+)\/README\.md$/;
+const LAB_README = /^lab\/labs\/([\w-]+)\/README\.md$/;
 
 /**
  * Points links at app routes: topic READMEs to /t/, other Markdown to /doc/, the web to a new tab.
@@ -137,7 +146,10 @@ function rewriteLinks({ file, inTopic }: { file: string; inTopic: boolean }) {
       const suffix = hash ? `#${hash}` : "";
       const topic = rel.match(TOPIC_README);
       const ref = rel.match(/^(references|learn)\/([\w-]+)\.md$/);
-      if (inTopic && rel === "lab/labs.md") el.properties.href = "?tab=lab";
+      const lab = rel.match(LAB_README);
+      if (inTopic && lab && TOPIC_README.test(file)) el.properties.href = "?tab=lab";
+      else if (lab) el.properties.href = `/labs#${lab[1]}`;
+      else if (rel === "lab/labs/README.md") el.properties.href = `/labs${suffix}`;
       else if (inTopic && ref && ref[2] !== "README") el.properties.href = `?tab=${ref[1]}&ref=${ref[2]}${suffix}`;
       else if (topic) el.properties.href = `/t/${topic[1]}/${topic[2]}${suffix}`;
       else if (rel.endsWith(".md")) el.properties.href = `/doc/${rel}${suffix}`;
@@ -189,10 +201,8 @@ function renderer(file: string, inTopic = TOPIC_README.test(file)) {
 export async function parseExercise(md: string, file: string): Promise<Exercise> {
   const { title, intro: introNodes, sections } = splitSections(md);
   const render = renderer(file);
-  const labLine = introNodes.find((n) => n.type === "paragraph" && /^Starts from/.test(toString(n)));
+  const { labLine, lab } = labOf(introNodes);
   const intro = introNodes.filter((n) => n !== labLine);
-  let lab: string | null = null;
-  if (labLine) visit(labLine, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/labs\.md#([\w-]+)/)?.[1] ?? null));
   const out: Section[] = [];
 
   for (const s of sections) {
@@ -265,11 +275,14 @@ async function task(item: ListItem, n: number, render: (c: RootContent[]) => Pro
   return { n, hosts, weight, html: await render(children) };
 }
 
-/** The `### <name>` section of the lab guide, without its heading, or "" when there is none. */
-export function labSection(labMd: string, name: string, level = "###") {
-  const m = labMd.match(new RegExp(`^${level} ${name}\\n([\\s\\S]*?)(?=^#{1,${level.length}} |(?![\\s\\S]))`, "m"));
+/** The `## <name>` section of a page, without its heading, or "" when there is none. */
+export function mdSection(md: string, name: string) {
+  const m = md.match(new RegExp(`^## ${name}\\n([\\s\\S]*?)(?=^#{1,2} |(?![\\s\\S]))`, "m"));
   return m ? m[1].trim() : "";
 }
+
+/** A page without its `# title` line, for showing under a heading of its own. */
+export const untitled = (md: string) => md.replace(/^# .*\n+/, "");
 
 /** Repo-relative paths of the pages in `folder` (`references` or `learn`) a README links to, in first-mention order. */
 export function pageLinks(md: string, folder: string) {

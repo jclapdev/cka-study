@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { listDomains, listPages, readMarkdown, topicReadme } from "../app/content/repo";
-import { labSection, pageCovers, pageLinks, parseExercise, renderDoc, summarize } from "../app/content/parse";
+import { listDomains, listLabs, listPages, readMarkdown, topicReadme } from "../app/content/repo";
+import { parseLabState } from "../app/lab/state.server";
+import { mdSection, pageCovers, pageLinks, parseExercise, renderDoc, summarize, untitled } from "../app/content/parse";
 
 const KUBEADM = "01-cluster-architecture/00-kubeadm-install/README.md";
 const RBAC = "01-cluster-architecture/01-rbac/README.md";
@@ -85,32 +86,71 @@ describe("steps", () => {
 
 describe("lab", () => {
   it("reads each exercise's lab and keeps lab sections out", async () => {
-    for (const [file, lab] of [[KUBEADM, "vms"], [RBAC, "cluster"]] as const) {
+    for (const [file, lab] of [[KUBEADM, "vms"], [RBAC, "cluster"], [HELM, "helm"]] as const) {
       const ex = await parseExercise(readMarkdown(file)!, file);
       expect(ex.lab).toBe(lab);
+      expect(summarize(readMarkdown(file)!).lab).toBe(lab);
       expect(ex.labHtml).toContain('href="?tab=lab"');
       expect(ex.introHtml).not.toContain("Starts from");
       expect(ex.sections.map((x) => x.title)).not.toEqual(expect.arrayContaining(["Prerequisites", "Lab setup", "Clean up"]));
     }
   });
 
-  it("gives the lab page an anchor for each starting state", async () => {
-    const doc = await renderDoc(readMarkdown("lab/labs.md")!, "lab/labs.md");
-    expect(doc.html).toContain('id="vms"');
-    expect(doc.html).toContain('id="cluster"');
+  it("names a lab folder in every written exercise", () => {
+    const names = listLabs().map((l) => l.name);
+    for (const t of listDomains().flatMap((d) => d.topics).filter((t) => t.written)) {
+      const lab = summarize(readMarkdown(`${t.id}/README.md`)!).lab;
+      if (lab) expect(names).toContain(lab);
+    }
+  });
+
+  it("lists each lab after the lab it builds on", () => {
+    const labs = listLabs();
+    expect(labs.map((l) => [l.name, l.from])).toEqual([
+      ["vms", null],
+      ["cluster", "vms"],
+      ["crds", "cluster"],
+      ["helm", "cluster"],
+      ["kustomize", "cluster"],
+    ]);
+  });
+
+  it("links other labs to the Labs page, even on a topic page", async () => {
+    const helm = listLabs().find((l) => l.name === "helm")!;
+    const doc = await renderDoc(untitled(helm.md), "lab/labs/helm/README.md", true);
+    expect(doc.html).toContain('href="/labs#cluster"');
+    expect(doc.html).not.toContain("<h1");
+  });
+});
+
+describe("lab state", () => {
+  const idle = { starting: null, failed: null };
+  const up = "/controlplane cka-controlplane:helm true 2026-10-05T20:00:00Z\n/base cka-base true 2026-10-05T20:00:00Z\n";
+
+  it("reads the running lab from the controlplane image", () => {
+    expect(parseLabState("clean\ncluster\nhelm\n", up, idle)).toEqual({
+      status: "running",
+      lab: "helm",
+      startedAt: "2026-10-05T20:00:00Z",
+      saved: ["cluster", "helm"],
+    });
+  });
+
+  it("tells stopped, starting, failed and never-started apart", () => {
+    const down = up.replace(/true/g, "false");
+    expect(parseLabState("cluster\n", down, idle).status).toBe("stopped");
+    expect(parseLabState("clean\n", "", idle)).toMatchObject({ status: "none", saved: [] });
+    expect(parseLabState("cluster\n", up, { starting: "kustomize", failed: null })).toMatchObject({ status: "starting", lab: "kustomize" });
+    expect(parseLabState("cluster\n", up, { starting: null, failed: "crds" })).toMatchObject({ status: "failed", lab: "crds" });
   });
 });
 
 describe("bundle", () => {
-  it("pulls each exercise's lab section out of the lab guide", () => {
-    const guide = readMarkdown("lab/labs.md")!;
-    expect(labSection(guide, "vms")).toContain("no cluster yet");
-    expect(labSection(guide, "vms")).not.toContain("working three-node cluster");
-    expect(labSection(guide, "cluster")).toContain("working three-node cluster");
-    expect(labSection(guide, "nope")).toBe("");
-    const machines = labSection(readMarkdown("lab/README.md")!, "Machines", "##");
+  it("pulls the Machines section out of the Labs page", () => {
+    const machines = mdSection(readMarkdown("lab/labs/README.md")!, "Machines");
     expect(machines).toContain("controlplane");
-    expect(machines).not.toContain("## Grading");
+    expect(mdSection(readMarkdown("lab/README.md")!, "Machines")).toBe("");
+    expect(mdSection(readMarkdown("lab/README.md")!, "nope")).toBe("");
   });
 
   it("lists the reference pages an exercise links to", () => {

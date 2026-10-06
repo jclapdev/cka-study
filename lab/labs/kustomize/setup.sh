@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Places the files Practice it task 3 hands over, as the exam does under /opt/course.
-# Run by lab/lab.sh start, after it restores the cluster lab.
+# Runs once on the cluster lab; lab/lab.sh saves the result as this lab.
 set -euo pipefail
 docker exec -i -u ubuntu -w /home/ubuntu controlplane bash -eo pipefail -c '
   sudo rm -rf /opt/course/3 && sudo mkdir -p /opt/course/3/base /opt/course/3/overlay

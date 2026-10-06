@@ -5,7 +5,7 @@ A [CustomResourceDefinition](../../references/crds.md) ([CRD](../../references/c
 operator usually means installing its CRDs and its controller together, often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases).
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
-Starts from the [`crds` lab](../../lab/labs.md#crds). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
+Starts from the [`crds` lab](../../lab/labs/crds/README.md). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -460,7 +460,7 @@ result, change the custom resource.
 
 Do it again without the steps above, the way the exam asks. Give yourself **18 minutes**.
 
-Start from a fresh [`crds` lab](../../lab/labs.md#crds). When time is up,
+Start from a fresh [`crds` lab](../../lab/labs/crds/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Install cert-manager with Helm from the chart

@@ -4,7 +4,7 @@ import { promisify } from "node:util";
 import { useCallback, useState } from "react";
 import { data, Link, useSearchParams } from "react-router";
 import type { Route } from "./+types/topic";
-import { labSection, pageCovers, pageLinks, parseExercise, renderDoc } from "~/content/parse";
+import { mdSection, pageCovers, pageLinks, parseExercise, renderDoc, untitled } from "~/content/parse";
 import { hasGrader, listPages, readMarkdown, REPO, topicReadme } from "~/content/repo";
 import { addAttempt, setMark, setNote, topicState } from "~/db/progress";
 import { Markdown } from "~/components/Markdown";
@@ -24,9 +24,10 @@ async function load(params: Route.LoaderArgs["params"]) {
 export async function loader({ params }: Route.LoaderArgs) {
   const { id, exercise } = await load(params);
   const md = readMarkdown(topicReadme(params.domain, params.topic)!)!;
-  const lab = exercise.lab ? labSection(readMarkdown("lab/labs.md")!, exercise.lab) : "";
-  const labHtml = lab ? (await renderDoc(lab, "lab/labs.md")).html : "";
-  const machinesHtml = (await renderDoc(labSection(readMarkdown("lab/README.md")!, "Machines", "##"), "lab/README.md")).html;
+  const labFile = `lab/labs/${exercise.lab}/README.md`;
+  const lab = exercise.lab ? readMarkdown(labFile) : null;
+  const labHtml = lab ? (await renderDoc(untitled(lab), labFile, true)).html : "";
+  const machinesHtml = (await renderDoc(mdSection(readMarkdown("lab/labs/README.md")!, "Machines"), "lab/labs/README.md", true)).html;
   const [learn, references] = await Promise.all([pages(md, "learn"), pages(md, "references")]);
   return { id, exercise, state: topicState(id), labHtml, machinesHtml, learn, references, grader: hasGrader(params.domain, params.topic) };
 }
@@ -88,7 +89,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.key === params.get("tab")) ?? TABS[2]).key;
   const [running, setRunning] = useState(false);
-  const [term, setTerm] = useState(false);
+  const [term, setTerm] = useState(() => params.get("terminal") === "1");
   const [missedOnly, setMissedOnly] = useState(false);
   const onRunning = useCallback((r: boolean) => setRunning(r), []);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
@@ -141,9 +142,11 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
 
       {/* Hidden rather than removed on other tabs, so a lab being prepared keeps showing its output. */}
       <section id="panel-lab" role="tabpanel" aria-labelledby="tab-lab" className="mb-14" hidden={tab !== "lab" || running}>
-        {exercise.lab && <PrepareLab state={exercise.lab} onOpenTerminal={() => setTerm(true)} />}
         {labHtml ? (
-          <Markdown html={labHtml} />
+          <>
+            <PrepareLab lab={exercise.lab!} terminal={term ? null : () => setTerm(true)} />
+            <Markdown html={labHtml} className="mt-8" />
+          </>
         ) : (
           <p className="text-muted">This topic has no lab.</p>
         )}

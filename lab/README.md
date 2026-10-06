@@ -17,40 +17,17 @@ Every exercise runs on four practice machines that the app starts for you, never
    docker compose up -d
    ```
 
-3. Open <http://localhost:5173>, open any topic, and press **Start lab** on its **Lab** tab.
+3. Open <http://localhost:5173> and press **Start lab** on the dashboard.
 
-The first **Start lab** builds the machines and a working cluster. It takes about 6 minutes. Every later **Start lab** takes under a minute.
+The first lab you start builds the machines, which takes about 6 minutes. [Labs](labs/README.md) lists every lab, its machines, and how long a start takes.
 
 ## Using the app
 
-Each topic has three tabs. **Lab** starts the machines the topic needs, **Exercise** holds the steps, quiz and practice exam, and **References** holds the concept pages the exercise links to.
+Each topic has four tabs. **Learn** explains how the technology works, **Lab** starts the lab the topic needs, **Exercise** holds the steps, quiz and practice exam, and **References** holds the pages to look things up in.
 
 **Open terminal** opens a shell on `base` beside the page. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the exam terminal.
 
-Starting a lab resets all four machines, so nothing needs cleaning up after an exercise. To clear your progress and scores, delete `app/data/progress.db`.
-
-## Machines
-
-| Machine | Role | Address |
-| --- | --- | --- |
-| `base` | Where you start, as in the exam. It has no Kubernetes tools; you `ssh` from it to the others. | `192.168.104.2` |
-| `controlplane` | Control plane. Almost all work happens here. | `192.168.104.10` |
-| `node01` | Worker | `192.168.104.11` |
-| `node02` | Worker | `192.168.104.12` |
-
-The cluster runs Kubernetes 1.34, one version behind the exam's 1.35, so the cluster-upgrade exercise can upgrade it to exactly the exam's version. Every machine has passwordless `sudo`.
-
-Reach the machine a step or task names with `ssh`:
-
-```shell
-ssh controlplane   # or node01, node02
-sudo -i            # root, when the task needs it
-exit               # back to base (twice after sudo -i)
-```
-
-Go back to `base` before moving to another machine. ssh from one of `controlplane`, `node01` and `node02` to another is refused, as in the exam.
-
-`kubectl` works only on `controlplane`. On a worker it fails with `localhost:8080 was refused`. `k` is an alias for `kubectl` with bash completion, as in the exam.
+To clear your progress and scores, delete `app/data/progress.db`.
 
 ## Grading
 
@@ -72,12 +49,13 @@ Run these inside this project's folder.
 | `docker compose up -d` | Starts the app. |
 | `docker compose --profile lab down` | Stops the app and the machines. |
 | `docker exec -it -u ubuntu base bash` | Opens a shell on `base`, the same as **Open terminal**. Use another machine's name to open a shell on it directly. |
-| `docker compose exec app lab/lab.sh setup` | Rebuilds the machines from scratch. |
+| `docker compose exec app lab/lab.sh rebuild <lab>` | Sets up a lab from scratch on top of the lab it builds on, such as `rebuild helm`. `rebuild vms` rebuilds the machines too. |
+| `docker image rm cka-controlplane:<lab> cka-node01:<lab> cka-node02:<lab>` | Frees the disk a lab's saved copy uses. Its next start sets it up again. |
 
 ## Troubleshooting
 
 **Start lab fails with `Cannot connect to the Docker daemon`.** Docker is not running. Start Docker Desktop, or on Linux run `sudo systemctl start docker`, and press **Start lab** again.
 
-**`kubeadm init` fails in `wait-control-plane`.** The [kubelet](../references/control-plane.md#components) could not start the [control plane](../references/control-plane.md). Read why with `sudo journalctl -u kubelet | tail -20` on `controlplane`. Starting the `vms` lab again gives three fresh machines.
+**`kubeadm init` fails in `wait-control-plane`.** The [kubelet](../references/control-plane.md#components) could not start the [control plane](../references/control-plane.md). Read why with `sudo journalctl -u kubelet | tail -20` on `controlplane`. `lab/lab.sh rebuild cluster` (see [Commands](#commands)) sets the cluster up again.
 
 **The machines are slow or stop at random.** Docker has too little memory. In Docker Desktop, open **Settings**, then **Resources**, and give it at least 4 GiB.

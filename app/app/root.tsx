@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { isRouteErrorResponse, Link, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, useLocation, useRouteError } from "react-router";
+import { isRouteErrorResponse, Link, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, useLocation, useRevalidator, useRouteError } from "react-router";
 import type { Route } from "./+types/root";
 import { overview } from "./db/progress";
+import { labState, type LabState } from "./lab/state.server";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -16,7 +17,7 @@ export const links: Route.LinksFunction = () => [
 export const meta: Route.MetaFunction = () => [{ title: "CKA Prep" }];
 
 export async function loader() {
-  return { domains: overview() };
+  return { domains: overview(), lab: await labState() };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,14 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => setOpen(false), [pathname]);
+  // A lab started from another page or tab keeps every page's lab status current until it is ready.
+  const revalidator = useRevalidator();
+  const starting = loaderData.lab.status === "starting";
+  useEffect(() => {
+    if (!starting) return;
+    const t = setInterval(() => revalidator.state === "idle" && revalidator.revalidate(), 3000);
+    return () => clearInterval(t);
+  }, [starting, revalidator]);
   return (
     <div className="lg:grid lg:grid-cols-[17rem_1fr]">
       <nav className="border-b border-line bg-surface lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
@@ -73,10 +82,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </button>
         </div>
         <ul id="topics" className={`space-y-5 px-3 pb-6 lg:block ${open ? "block" : "hidden"}`}>
-          <li>
+          <li className="space-y-1">
             <NavLink to="/" end className={navItem}>
               Dashboard
             </NavLink>
+            <LabIndicator s={loaderData.lab} />
           </li>
             {loaderData.domains.map((d) => (
               <li key={d.name}>
@@ -119,6 +129,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <ul>
               {[
                 ["/doc/lab/README.md", "Getting started"],
+                ["/labs", "Labs"],
                 ["/doc/EXAM.md", "Exam guide"],
                 ["/doc/references/README.md", "References"],
               ].map(([to, label]) => (
@@ -141,6 +152,26 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Outlet />
       </main>
     </div>
+  );
+}
+
+const LAB_TEXT: Record<LabState["status"], [string, (lab: string | null) => string]> = {
+  running: ["bg-done", (l) => `${l} lab running`],
+  starting: ["bg-accent animate-pulse", (l) => `Starting the ${l} lab`],
+  failed: ["bg-missed", (l) => `The ${l} lab failed to start`],
+  stopped: ["bg-line", () => "No lab running"],
+  none: ["bg-line", () => "No lab running"],
+  unavailable: ["bg-missed", () => "Docker is not running"],
+};
+
+/** One line under Dashboard saying what the machines are doing, linking the Labs page. */
+function LabIndicator({ s }: { s: LabState }) {
+  const [dot, text] = LAB_TEXT[s.status];
+  return (
+    <NavLink to="/labs" className={({ isActive }) => `flex items-center gap-2 rounded px-2 py-1 text-sm text-muted hover:bg-paper ${isActive ? "bg-paper" : ""}`}>
+      <span aria-hidden className={`size-2 shrink-0 rounded-full ${dot}`} />
+      {text(s.lab)}
+    </NavLink>
   );
 }
 

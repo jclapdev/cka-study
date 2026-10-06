@@ -1,24 +1,33 @@
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import path from "node:path";
+import { promisify } from "node:util";
 import { data } from "react-router";
 import type { Route } from "./+types/lab";
-import { labSection } from "~/content/parse";
-import { readMarkdown, REPO } from "~/content/repo";
+import { listLabs, REPO } from "~/content/repo";
+import { job } from "~/lab/state.server";
 
-// One lab at a time: two restores at once would clone over each other.
-let busy = false;
+const LAB_SH = path.join(REPO, "lab/lab.sh");
 
-/** POST /lab/:state runs `lab/lab.sh start <state>` and streams its output. */
+/**
+ * POST /lab/<lab> runs `lab/lab.sh start <lab>` and streams its output.
+ * POST /lab/stop stops the machines. No lab folder may be named `stop`.
+ */
 export async function action({ params, request }: Route.ActionArgs) {
   // It wipes the machines, so only the app's own pages may ask.
   if (request.headers.get("origin") !== new URL(request.url).origin) throw data("Forbidden", { status: 403 });
-  const state = params.state;
-  if (!/^[a-z]+$/.test(state) || !labSection(readMarkdown("lab/labs.md") ?? "", state))
-    throw data(`No lab named ${state}`, { status: 400 });
-  if (busy) throw data("A lab is already being prepared.", { status: 409 });
-  busy = true;
+  if (job.starting) throw data("A lab is already starting.", { status: 409 });
+  const lab = params.state;
 
-  const child = spawn(path.join(REPO, "lab/lab.sh"), ["start", state], { cwd: REPO });
+  if (lab === "stop") {
+    job.failed = null;
+    await promisify(execFile)(LAB_SH, ["stop"], { cwd: REPO });
+    return null;
+  }
+  if (!listLabs().some((l) => l.name === lab)) throw data(`No lab named ${lab}`, { status: 400 });
+  job.starting = lab;
+  job.failed = null;
+
+  const child = spawn(LAB_SH, ["start", lab], { cwd: REPO });
   // If the page goes away, the script still finishes: stopping a restore halfway leaves
   // broken machines. Its output just stops being sent, since writing to a closed stream
   // throws and would stop the dev server.
@@ -31,7 +40,8 @@ export async function action({ params, request }: Route.ActionArgs) {
       child.on("error", (e) => send(`${e.message}\n`));
       // The last line tells the page whether it worked.
       child.on("close", (code) => {
-        busy = false;
+        job.starting = null;
+        if (code !== 0) job.failed = lab;
         send(`\n[exit ${code}]\n`);
         if (open) ctrl.close();
         open = false;

@@ -6,7 +6,7 @@ generate YAML instead of typing it, copy snippets from the docs, and change and 
 objects. The [exam page](../../EXAM.md) covers the format and grading, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command does.
 
-Starts from the [`cluster` lab](../../lab/labs.md#cluster). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+Starts from the [`cluster` lab](../../lab/labs/cluster/README.md). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -402,7 +402,7 @@ No. Each task is a new `ssh` session. Only `k` and its completion are always the
 
 Do it again without the steps above, the way the exam asks. Give yourself **12 minutes**.
 
-Start from a fresh [`cluster` lab](../../lab/labs.md#cluster). When time is up,
+Start from a fresh [`cluster` lab](../../lab/labs/cluster/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `shop`, and in it a Deployment `api`

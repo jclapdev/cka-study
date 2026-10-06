@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
 TERMS = Path(__file__).resolve().parents[1] / "assets" / "terms.tsv"
-DEFAULT = ["README.md", "EXAM.md", "lab/README.md", "lab/labs.md", "references/[!R]*.md", "[0-9][0-9]-*/[0-9][0-9]-*/README.md"]
+DEFAULT = ["README.md", "EXAM.md", "lab/README.md", "lab/labs/*.md", "lab/labs/*/README.md", "references/[!R]*.md", "[0-9][0-9]-*/[0-9][0-9]-*/README.md"]
 
 
 def load_terms():

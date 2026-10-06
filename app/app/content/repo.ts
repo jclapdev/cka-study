@@ -62,6 +62,26 @@ export function readMarkdown(rel: string): string | null {
   }
 }
 
+export type Lab = { name: string; from: string | null; md: string };
+
+/** Every lab folder in lab/labs, each lab after the one it builds on. lab/lab.sh reads the same "Builds on" line. */
+export function listLabs(): Lab[] {
+  const dir = path.join(REPO, "lab/labs");
+  if (!fs.existsSync(dir)) return [];
+  const labs = fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && fs.existsSync(path.join(dir, d.name, "README.md")))
+    .map((d): Lab => {
+      const md = fs.readFileSync(path.join(dir, d.name, "README.md"), "utf8");
+      return { name: d.name, from: md.match(/^Builds on the \[`([a-z0-9-]+)` lab\]/m)?.[1] ?? null, md };
+    });
+  const depth = (l: Lab, seen = 0): number => {
+    const parent = labs.find((p) => p.name === l.from);
+    return parent && seen < labs.length ? 1 + depth(parent, seen + 1) : 0;
+  };
+  return labs.sort((a, b) => depth(a) - depth(b) || a.name.localeCompare(b.name));
+}
+
 /** Repo-relative paths of every page in a folder of pages (`references` or `learn`), without the index. */
 export function listPages(folder: string): string[] {
   const dir = path.join(REPO, folder);
