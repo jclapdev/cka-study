@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { isRouteErrorResponse, Link, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, useLocation, useRevalidator, useRouteError } from "react-router";
 import type { Route } from "./+types/root";
+import { lessonHref } from "./content/links";
 import { overview } from "./db/progress";
 import { labState, type LabState } from "./lab/state.server";
 import "./app.css";
@@ -115,6 +116,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                   {d.topics.map((t) => (
                     <li key={t.id}>
                       {t.progress ? (
+                        <>
                         <NavLink
                           to={`/t/${t.id}`}
                           className={({ isActive }) =>
@@ -131,6 +133,27 @@ export default function App({ loaderData }: Route.ComponentProps) {
                           </span>
                           <Meter done={t.progress.stepsDone} total={t.progress.steps} />
                         </NavLink>
+                        {"lessons" in t && pathname.startsWith(`/t/${t.id}`) && (
+                          <ul aria-label="Lessons" className="mb-2 ml-3 mt-1 border-l border-line pl-2">
+                            {t.lessons.map((l) => (
+                              <li key={l.slug}>
+                                <NavLink
+                                  to={lessonHref(t.id, l.slug)}
+                                  end
+                                  className={({ isActive }) =>
+                                    `flex items-baseline justify-between gap-2 rounded px-2 py-1 text-sm hover:bg-paper ${isActive ? "bg-paper font-semibold" : "text-muted"}`
+                                  }
+                                >
+                                  {l.title}
+                                  {l.steps > 0 && l.done === l.steps && (
+                                    <span className="text-done" title="All steps done">✓</span>
+                                  )}
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        </>
                       ) : (
                         <span className="block px-2 py-1 text-[0.95rem] text-muted" title="Coming soon">
                           {pretty(t.topic)}

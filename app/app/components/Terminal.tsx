@@ -1,6 +1,5 @@
 import "@xterm/xterm/css/xterm.css";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
 
 /** A shell on base, the machine the exam starts you on. Copy and paste use the exam terminal's keys, Ctrl+Shift+C and Ctrl+Shift+V. */
 export function Terminal({ onHide }: { onHide: () => void }) {
@@ -71,7 +70,7 @@ export function Terminal({ onHide }: { onHide: () => void }) {
         <span className="font-semibold">Terminal</span>
         {failed && (
           <span className="text-[#8b97a8]">
-            Disconnected. <Link to="?tab=lab" className="underline">Restart the lab</Link>.
+            Disconnected. <a href="#lab" className="underline">Restart the lab</a>.
           </span>
         )}
         <button onClick={() => setSession((s) => s + 1)} className="ml-auto rounded border border-white/20 px-2 py-1 hover:border-white/60">

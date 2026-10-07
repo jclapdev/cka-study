@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import { summarize } from "~/content/parse";
-import { listDomains, readMarkdown, topicReadme } from "~/content/repo";
+import { learnTitle, listDomains, readMarkdown, topicReadme } from "~/content/repo";
 import { db } from "./client";
 import { attempt, mark, note } from "./schema";
 
@@ -32,7 +32,7 @@ export function overview() {
     topics: d.topics.map((t) => {
       const file = topicReadme(t.domain, t.topic);
       if (!file) return { ...t, progress: null };
-      const s = summarize(readMarkdown(file)!);
+      const s = summarize(readMarkdown(file)!, learnTitle);
       const mine = marks.filter((m) => m.topic === t.id);
       const done = new Set(mine.filter((m) => m.kind === "step").map((m) => m.key));
       const missed = new Set(mine.filter((m) => m.kind === "recall" && m.value === "missed").map((m) => m.key));
@@ -45,7 +45,13 @@ export function overview() {
         bestScore: scores.length ? Math.max(...scores) : null,
         hasPractice: s.hasPractice,
       };
-      return { ...t, title: s.title, lab: s.lab, progress };
+      const lessons = s.lessons.map((l) => ({
+        slug: l.slug,
+        title: l.title,
+        steps: l.stepKeys.length,
+        done: l.stepKeys.filter((k) => done.has(k)).length,
+      }));
+      return { ...t, title: s.title, lab: s.lab, lessons, progress };
     }),
   }));
 }

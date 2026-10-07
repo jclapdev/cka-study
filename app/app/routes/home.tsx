@@ -15,7 +15,7 @@ export default function Home() {
   const written = domains.flatMap((d) => d.topics).filter((t) => t.progress);
   const next = written.find((t) => t.progress!.stepsDone < t.progress!.steps) ?? written[0];
   const finished = written.filter((t) => t.progress!.steps && t.progress!.stepsDone === t.progress!.steps).length;
-  // The terminal opens on the Lab tab of the next topic that uses the running lab.
+  // The terminal opens beside the next topic that uses the running lab.
   const nextLab = next && "lab" in next ? next.lab : null;
   const labTopic = lab.lab === nextLab ? next : written.find((t) => "lab" in t && t.lab === lab.lab);
 
@@ -50,7 +50,7 @@ export default function Home() {
       <section className="mt-8">
         <h2 className="mb-3 text-xl font-bold">Lab</h2>
         {nextLab ? (
-          <PrepareLab lab={nextLab} terminal={labTopic ? `/t/${labTopic.id}?tab=lab&terminal=1` : null} />
+          <PrepareLab lab={nextLab} terminal={labTopic ? `/t/${labTopic.id}?terminal=1` : null} />
         ) : (
           <p className="text-muted">This topic has no lab.</p>
         )}

@@ -82,13 +82,5 @@ export function listLabs(): Lab[] {
   return labs.sort((a, b) => depth(a) - depth(b) || a.name.localeCompare(b.name));
 }
 
-/** Repo-relative paths of every page in a folder of pages (`references` or `learn`), without the index. */
-export function listPages(folder: string): string[] {
-  const dir = path.join(REPO, folder);
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".md") && f !== "README.md")
-    .sort()
-    .map((f) => `${folder}/${f}`);
-}
+/** A Learn page's `# title`, or its name when the page is missing. */
+export const learnTitle = (name: string) => readMarkdown(`learn/${name}.md`)?.match(/^# (.+)$/m)?.[1] ?? name;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { listDomains, listLabs, listPages, readMarkdown, topicReadme } from "../app/content/repo";
+import { learnTitle, listDomains, listLabs, readMarkdown, topicReadme } from "../app/content/repo";
 import { parseLabState } from "../app/lab/state.server";
-import { mdSection, pageCovers, pageLinks, parseExercise, renderDoc, summarize, untitled } from "../app/content/parse";
+import { mdSection, pageLinks, parseExercise, renderDoc, summarize, untitled } from "../app/content/parse";
 
 const KUBEADM = "01-cluster-architecture/00-kubeadm-install/README.md";
 const RBAC = "01-cluster-architecture/01-rbac/README.md";
@@ -65,8 +65,9 @@ describe("parse", () => {
   it("rewrites links into app routes", async () => {
     const ex = await parseExercise(readMarkdown(RBAC)!, RBAC);
     const html = JSON.stringify(ex);
-    expect(html).toContain('href=\\"?tab=lab\\"');
-    expect(html).toContain('href=\\"?tab=references&#x26;ref=rbac\\"');
+    expect(html).toContain('href=\\"#lab\\"');
+    expect(html).toContain('href=\\"/doc/references/rbac.md\\"');
+    expect(html).toContain('href=\\"/t/01-cluster-architecture/01-rbac/access-control\\"');
     expect(html).toContain('target=\\"_blank\\"');
   });
 
@@ -90,7 +91,7 @@ describe("lab", () => {
       const ex = await parseExercise(readMarkdown(file)!, file);
       expect(ex.lab).toBe(lab);
       expect(summarize(readMarkdown(file)!).lab).toBe(lab);
-      expect(ex.labHtml).toContain('href="?tab=lab"');
+      expect(ex.labHtml).toContain('href="#lab"');
       expect(ex.introHtml).not.toContain("Starts from");
       expect(ex.sections.map((x) => x.title)).not.toEqual(expect.arrayContaining(["Prerequisites", "Lab setup", "Clean up"]));
     }
@@ -117,7 +118,7 @@ describe("lab", () => {
 
   it("links other labs to the Labs page, even on a topic page", async () => {
     const helm = listLabs().find((l) => l.name === "helm")!;
-    const doc = await renderDoc(untitled(helm.md), "lab/labs/helm/README.md", true);
+    const doc = await renderDoc(untitled(helm.md), "lab/labs/helm/README.md", { id: "01-cluster-architecture/02-helm", learn: ["helm"] });
     expect(doc.html).toContain('href="/labs#cluster"');
     expect(doc.html).not.toContain("<h1");
   });
@@ -152,61 +153,34 @@ describe("bundle", () => {
     expect(mdSection(readMarkdown("lab/README.md")!, "Machines")).toBe("");
     expect(mdSection(readMarkdown("lab/README.md")!, "nope")).toBe("");
   });
+});
 
-  it("lists the reference pages an exercise links to", () => {
-    expect(pageLinks(readMarkdown(KUBEADM)!, "references")).toEqual([
-      "references/workers.md",
-      "references/control-plane.md",
-      "references/certificates.md",
-      "references/exam-workflow.md",
-      "references/kubeconfig.md",
-      "references/kubeadm.md",
-      "references/pod-network.md",
-      "references/taints.md",
-      "references/pod.md",
-      "references/labels.md",
-      "references/daemonsets.md",
-      "references/namespaces.md",
+describe("lessons", () => {
+  it("splits a topic into Introduction, its Learn pages, one lesson per section, Quiz and Practice", () => {
+    const s = summarize(readMarkdown(HELM)!, learnTitle);
+    expect(s.lessons.map((l) => l.title)).toEqual([
+      "Introduction",
+      "How Helm works",
+      "Find a chart",
+      "Read the values",
+      "Install a release",
+      "Upgrade a release",
+      "Roll back",
+      "Render without installing",
+      "Uninstall",
+      "Quiz",
+      "Practice",
     ]);
-    expect(pageLinks(readMarkdown(RBAC)!, "references")).toContain("references/rbac.md");
-  });
-});
-
-describe("references tab", () => {
-  it("lists a reference's sections and keeps links between references in the tab", async () => {
-    const file = "references/kubeconfig.md";
-    const doc = await renderDoc(readMarkdown(file)!, file, true);
-    expect(doc.headings.map((h) => h.text)).toEqual(["Resolution order", "On a kubeadm cluster", "Commands", "Failure modes", "Docs"]);
-    expect(doc.html).toContain(`id="${doc.headings[0].id}"`);
-    expect(doc.html).toContain('href="?tab=references&#x26;ref=control-plane"');
-    expect((await renderDoc(readMarkdown(file)!, file)).html).toContain('href="/doc/references/control-plane.md"');
-  });
-
-  it("reads the Covers line for each reference", () => {
-    const covers = pageCovers(readMarkdown("references/README.md")!);
-    expect(Object.keys(covers).sort()).toEqual(listPages("references").map((f) => f.replace(/^references\/|\.md$/g, "")).sort());
-    expect(covers.pod).toBe("pods, phases, reading Pending vs CrashLoopBackOff");
-  });
-});
-
-describe("learn tab", () => {
-  it("lists the Learn pages an exercise links to, and none for a topic without them", () => {
-    expect(pageLinks(readMarkdown(HELM)!, "learn")).toContain("learn/helm.md");
+    expect(s.lessons[0].sections).toEqual(["objectives"]);
+    expect(s.lessons.at(-1)!.sections).toEqual(["practice", "check-your-work", "next"]);
+    expect(s.lessons.flatMap((l) => l.stepKeys)).toEqual(s.stepKeys);
     expect(pageLinks("[pods](../../references/pod.md)", "learn")).toEqual([]);
   });
 
-  it("opens a Learn link from an exercise in the Learn tab", async () => {
-    const ex = await parseExercise(readMarkdown(HELM)!, HELM);
-    expect(JSON.stringify(ex)).toContain('href=\\"?tab=learn&#x26;ref=helm\\"');
-  });
-
-  it("opens a reference link from a Learn page in the References tab", async () => {
+  it("opens a reference from a Learn page as a page of its own", async () => {
     const file = "learn/helm.md";
-    expect((await renderDoc(readMarkdown(file)!, file, true)).html).toContain('href="?tab=references&#x26;ref=helm');
-  });
-
-  it("reads the Covers line for each Learn page", () => {
-    const covers = pageCovers(readMarkdown("learn/README.md")!);
-    expect(Object.keys(covers).sort()).toEqual(listPages("learn").map((f) => f.replace(/^learn\/|\.md$/g, "")).sort());
+    const html = (await renderDoc(readMarkdown(file)!, file, { id: "01-cluster-architecture/02-helm", learn: ["helm"] })).html;
+    expect(html).toContain('href="/doc/references/helm.md');
   });
 });
+

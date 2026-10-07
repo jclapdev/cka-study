@@ -12,6 +12,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
+import { INTRO } from "./links";
 
 export type Step = { key: string; label: number; html: string };
 export type Block = { html: string } | { steps: Step[] };
@@ -32,9 +33,25 @@ export type Section =
     }
   | { kind: "plain"; slug: string; title: string; html: string };
 
-/** `lab` is the starting state named by the "Starts from the … lab" line; `labHtml` is that line rendered. */
-export type Exercise = { title: string; introHtml: string; lab: string | null; labHtml: string; sections: Section[] };
-export type Summary = { title: string; stepKeys: string[]; recallKeys: string[]; hasPractice: boolean; lab: string | null };
+/**
+ * One page of a topic in the sidebar. Introduction holds the topic's intro and the sections before the
+ * first steps; each Learn page the topic links to follows; then one lesson per section, with a plain
+ * section such as Check your work kept on the lesson before it.
+ */
+export type Lesson = {
+  slug: string;
+  title: string;
+  kind: "intro" | "learn" | "steps" | "recall" | "practice";
+  sections: string[];
+  stepKeys: string[];
+};
+
+/** `lab` is the lab named by the "Starts from the … lab" line; `labHtml` is that line rendered. */
+export type Exercise = { title: string; introHtml: string; lab: string | null; labHtml: string; sections: Section[]; lessons: Lesson[] };
+export type Summary = { title: string; stepKeys: string[]; recallKeys: string[]; hasPractice: boolean; lab: string | null; lessons: Lesson[] };
+
+/** Reads a Learn page's title from its name; the parser itself never touches the disk. */
+export type LearnTitle = (name: string) => string;
 
 type Raw = { slug: string; title: string; kind: Section["kind"]; nodes: RootContent[] };
 
@@ -97,19 +114,37 @@ function recallKeys(md: string, nodes: RootContent[]) {
   return detailsBlocks(md, nodes).found.map((d) => ({ ...d, key: slugger.slug(d.summary) }));
 }
 
-export function summarize(md: string): Summary {
-  const { title, intro, sections } = splitSections(md);
-  const stepKeys: string[] = [];
-  const keys: string[] = [];
-  for (const s of sections) {
-    if (s.kind === "steps") {
-      let n = 0;
-      for (const node of s.nodes)
-        if (node.type === "list") for (const _ of orderedItems(node)) stepKeys.push(`${s.slug}#${++n}`);
-    }
-    if (s.kind === "recall") keys.push(...recallKeys(md, s.nodes).map((r) => r.key));
+function lessonsOf(md: string, sections: Raw[], learnTitle: LearnTitle): Lesson[] {
+  const out: Lesson[] = [{ slug: INTRO, title: "Introduction", kind: "intro", sections: [], stepKeys: [] }];
+  for (const f of pageLinks(md, "learn")) {
+    const name = f.slice("learn/".length, -3);
+    out.push({ slug: name, title: learnTitle(name), kind: "learn", sections: [], stepKeys: [] });
   }
-  return { title, stepKeys, recallKeys: keys, hasPractice: sections.some((s) => s.kind === "practice"), lab: labOf(intro).lab };
+  let taught = false;
+  for (const s of sections) {
+    const stepKeys =
+      s.kind === "steps" ? s.nodes.flatMap((n) => (n.type === "list" ? orderedItems(n) : [])).map((_, i) => `${s.slug}#${i + 1}`) : [];
+    if (s.kind === "plain" || (s.kind === "steps" && !stepKeys.length)) {
+      (taught ? out.at(-1)! : out[0]).sections.push(s.slug);
+      continue;
+    }
+    taught = true;
+    out.push({ slug: s.slug, title: s.title, kind: s.kind, sections: [s.slug], stepKeys });
+  }
+  return out;
+}
+
+export function summarize(md: string, learnTitle: LearnTitle = (n) => n): Summary {
+  const { title, intro, sections } = splitSections(md);
+  const lessons = lessonsOf(md, sections, learnTitle);
+  return {
+    title,
+    stepKeys: lessons.flatMap((l) => l.stepKeys),
+    recallKeys: sections.flatMap((s) => (s.kind === "recall" ? recallKeys(md, s.nodes).map((r) => r.key) : [])),
+    hasPractice: sections.some((s) => s.kind === "practice"),
+    lab: labOf(intro).lab,
+    lessons,
+  };
 }
 
 /** The "Starts from the [`<lab>` lab](…/lab/labs/<lab>/README.md)" paragraph and the lab it names. */
@@ -125,11 +160,14 @@ function labOf(intro: RootContent[]) {
 const TOPIC_README = /^(\d\d-[^/]+)\/(\d\d-[^/]+)\/README\.md$/;
 const LAB_README = /^lab\/labs\/([\w-]+)\/README\.md$/;
 
+/** A page shown inside a topic: the topic's id and the Learn pages that are its lessons. */
+export type InTopic = { id: string; learn: string[] };
+
 /**
  * Points links at app routes: topic READMEs to /t/, other Markdown to /doc/, the web to a new tab.
- * `inTopic` is true for anything shown on a topic page, where the lab guide and references open in its tabs.
+ * Inside a topic, its lab opens the lab panel beside the lesson and its Learn pages open as lessons.
  */
-function rewriteLinks({ file, inTopic }: { file: string; inTopic: boolean }) {
+function rewriteLinks({ file, topic }: { file: string; topic?: InTopic }) {
   return (tree: HastRoot) => {
     visit(tree, "element", (el: Element) => {
       if (el.tagName === "blockquote") return callout(el);
@@ -144,14 +182,14 @@ function rewriteLinks({ file, inTopic }: { file: string; inTopic: boolean }) {
       const [p, hash] = href.split("#");
       const rel = path.posix.normalize(path.posix.join(path.posix.dirname(file), p));
       const suffix = hash ? `#${hash}` : "";
-      const topic = rel.match(TOPIC_README);
-      const ref = rel.match(/^(references|learn)\/([\w-]+)\.md$/);
+      const readme = rel.match(TOPIC_README);
+      const learn = rel.match(/^learn\/([\w-]+)\.md$/)?.[1];
       const lab = rel.match(LAB_README);
-      if (inTopic && lab && TOPIC_README.test(file)) el.properties.href = "?tab=lab";
+      if (topic && lab && TOPIC_README.test(file)) el.properties.href = "#lab";
       else if (lab) el.properties.href = `/labs#${lab[1]}`;
       else if (rel === "lab/labs/README.md") el.properties.href = `/labs${suffix}`;
-      else if (inTopic && ref && ref[2] !== "README") el.properties.href = `?tab=${ref[1]}&ref=${ref[2]}${suffix}`;
-      else if (topic) el.properties.href = `/t/${topic[1]}/${topic[2]}${suffix}`;
+      else if (topic && learn && topic.learn.includes(learn)) el.properties.href = `/t/${topic.id}/${learn}${suffix}`;
+      else if (readme) el.properties.href = `/t/${readme[1]}/${readme[2]}${suffix}`;
       else if (rel.endsWith(".md")) el.properties.href = `/doc/${rel}${suffix}`;
     });
   };
@@ -180,12 +218,12 @@ function mermaidToHtml(nodes: RootContent[]): RootContent[] {
   );
 }
 
-function renderer(file: string, inTopic = TOPIC_README.test(file)) {
+function renderer(file: string, topic?: InTopic) {
   const processor = unified()
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeSlug)
-    .use(rewriteLinks, { file, inTopic })
+    .use(rewriteLinks, { file, topic })
     .use(rehypeShiki, { themes: { light: "github-light", dark: "github-dark-default" }, defaultColor: false })
     .use(rehypeStringify);
   const nodes = async (children: RootContent[]) => {
@@ -197,10 +235,16 @@ function renderer(file: string, inTopic = TOPIC_README.test(file)) {
   return { nodes, markdown };
 }
 
+/** The topic a README belongs to, for rendering its pages as lessons. */
+export function inTopic(md: string, file: string): InTopic | undefined {
+  const m = file.match(TOPIC_README);
+  return m ? { id: `${m[1]}/${m[2]}`, learn: pageLinks(md, "learn").map((f) => f.slice("learn/".length, -3)) } : undefined;
+}
+
 /** Parses a README into an Exercise. `file` is its repo-relative path, used to resolve links. */
-export async function parseExercise(md: string, file: string): Promise<Exercise> {
+export async function parseExercise(md: string, file: string, learnTitle: LearnTitle = (n) => n): Promise<Exercise> {
   const { title, intro: introNodes, sections } = splitSections(md);
-  const render = renderer(file);
+  const render = renderer(file, inTopic(md, file));
   const { labLine, lab } = labOf(introNodes);
   const intro = introNodes.filter((n) => n !== labLine);
   const out: Section[] = [];
@@ -252,7 +296,14 @@ export async function parseExercise(md: string, file: string): Promise<Exercise>
       out.push({ kind: "plain", ...base, html: await render.nodes(s.nodes) });
     }
   }
-  return { title, introHtml: await render.nodes(intro), lab, labHtml: labLine ? await render.nodes([labLine]) : "", sections: out };
+  return {
+    title,
+    introHtml: await render.nodes(intro),
+    lab,
+    labHtml: labLine ? await render.nodes([labLine]) : "",
+    sections: out,
+    lessons: lessonsOf(md, sections, learnTitle),
+  };
 }
 
 /** Reads "**Host `x`, weight 19%.**" off the front of a task and renders the rest. */
@@ -290,21 +341,14 @@ export function pageLinks(md: string, folder: string) {
 }
 
 /**
- * Renders a non-exercise Markdown file (a reference, the lab guide) as one block of HTML,
- * with its `##` headings for an "On this page" list. `inTopic` is true when it is shown on a topic page.
+ * Renders a non-exercise Markdown file (a Learn page, a reference, the lab guide) as one block of HTML,
+ * with its `##` headings. `topic` is set when it is shown inside a topic.
  */
-export async function renderDoc(md: string, file: string, inTopic = false) {
+export async function renderDoc(md: string, file: string, topic?: InTopic) {
   const { title, sections } = splitSections(md);
   return {
     title,
     headings: sections.map((s) => ({ id: s.slug, text: s.title })),
-    html: await renderer(file, inTopic).markdown(md),
+    html: await renderer(file, topic).markdown(md),
   };
-}
-
-/** The one-line "Covers" text for each page, read from the table in references/README.md or learn/README.md. */
-export function pageCovers(indexMd: string): Record<string, string> {
-  return Object.fromEntries(
-    [...indexMd.matchAll(/^\| \[[^\]]+\]\(([\w-]+)\.md\) \| (.+?) \|$/gm)].map((m) => [m[1], m[2].replace(/`/g, "")]),
-  );
 }

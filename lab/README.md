@@ -23,7 +23,7 @@ The first lab you start builds the machines, which takes about 6 minutes. [Labs]
 
 ## Using the app
 
-Each topic has four tabs. **Learn** explains how the technology works, **Lab** starts the lab the topic needs, **Exercise** holds the steps, quiz and practice exam, and **References** holds the pages to look things up in.
+Each topic is a short course of lessons, listed under it in the sidebar: an introduction, how the technology works, one lesson per task with steps to tick off, a quiz, and a practice exam. The lab the topic needs sits beside each lesson, with **Start lab** to start it.
 
 **Open terminal** opens a shell on `base` beside the page. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the exam terminal.
 
