@@ -67,7 +67,7 @@ export async function action({ params, request }: Route.ActionArgs) {
       break;
     case "attempt": {
       const practice = exercise.sections.find((s) => s.kind === "practice");
-      if (practice?.kind !== "practice") throw data("No Practice section", { status: 400 });
+      if (practice?.kind !== "practice") throw data(null, { status: 400 });
       const passed = (JSON.parse(str("passed")) as unknown[]).map(Number).filter((n) => practice.tasks.some((t) => t.n === n));
       addAttempt({
         topic: id,
@@ -80,12 +80,12 @@ export async function action({ params, request }: Route.ActionArgs) {
       break;
     }
     case "grade": {
-      if (!hasGrader(params.domain, params.topic)) throw data("No grade.sh", { status: 400 });
+      if (!hasGrader(params.domain, params.topic)) throw data(null, { status: 400 });
       const run = await promisify(execFile)(path.join(REPO, id, "grade.sh"), { timeout: 120_000 }).catch((e) => e);
       return { grade: `${run.stdout ?? ""}${run.stderr ?? ""}`.trim() || String(run.message) };
     }
     default:
-      throw data("Unknown intent", { status: 400 });
+      throw data(null, { status: 400 });
   }
   return null;
 }

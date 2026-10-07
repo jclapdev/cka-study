@@ -14,7 +14,7 @@ Fix these in order before building more topics. Compared with KodeKloud's CKA co
 - [x] 5. Cut "exam" (121 uses). Rename "Exam skills / Exam workflow" to "kubectl Essentials / Working with kubectl", `references/exam-workflow.md` to `references/kubectl.md`, "Exam readiness" to "Domains" and "Exam guide" to "About the CKA".
 - [x] 6. Link a term only the first time it appears on a page, and never as a trailing ": [link]". Helm has 33 links and 8 trailing ones.
 - [x] 7. Rewrite lesson text written from the author's side, such as "The lab installed one release, `legacy`, for the Practice section to find."
-- [ ] 8. Remove developer text from the app: "No grade.sh", "No Practice section", "Unknown intent".
+- [x] 8. Remove developer text from the app: "No grade.sh", "No Practice section", "Unknown intent".
 - [ ] 9. Shorten topic titles: "Installing and Managing Applications with Helm" becomes "Helm".
 
 ## App
