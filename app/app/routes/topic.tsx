@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { data, Link } from "react-router";
 import type { Route } from "./+types/topic";
 import { INTRO, lessonHref } from "~/content/links";
@@ -90,6 +90,33 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   const onRunning = useCallback((r: boolean) => setRunning(r), []);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
   const lab = useLab(exercise.lab);
+  const [focus, setFocus] = useState<Focus>("both");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("panes");
+      if (saved === "lesson" || saved === "lab") setFocus(saved);
+    } catch {}
+  }, []);
+  const saveFocus = (f: Focus) => {
+    setFocus(f);
+    try { localStorage.setItem("panes", f); } catch {}
+  };
+  // The lab pane hides while the terminal has a window of its own, and comes back when it closes.
+  const popup = useRef<{ win: Window; timer: number } | null>(null);
+  useEffect(() => () => clearInterval(popup.current?.timer), []);
+  const popOut = () => {
+    const win = window.open("/terminal", "cka-terminal", "popup,width=960,height=640");
+    if (!win) return;
+    clearInterval(popup.current?.timer);
+    const timer = window.setInterval(() => {
+      if (!win.closed) return;
+      clearInterval(timer);
+      popup.current = null;
+      setFocus("both");
+    }, 1000);
+    popup.current = { win, timer };
+    setFocus("lesson");
+  };
 
   const body = (
     <article key={`${id}/${lesson.slug}`} className="min-w-0">
@@ -197,17 +224,50 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   if (!exercise.lab) return page;
 
   // The lesson on the left and the lab on the right, each filling the screen beside the topic list
-  // (17rem, from root.tsx) and scrolling on its own. Below lg the lab takes the bottom half. The
-  // lesson pane keeps main's padding, which the practice exam's sticky clock bar relies on.
+  // (17rem, from root.tsx, unless hidden) and scrolling on its own. Below lg the lab takes the bottom
+  // half. The lesson pane keeps main's padding, which the practice exam's sticky clock bar relies on.
+  // A hidden pane stays mounted, so the terminal keeps its session.
+  const tracks = { both: "minmax(0,1fr) minmax(0,1fr)", lesson: "minmax(0,1fr) 0", lab: "0 minmax(0,1fr)" }[focus];
+  const gone = "invisible overflow-hidden p-0!";
   return (
-    <div className="fixed inset-0 z-20 grid grid-rows-2 bg-paper lg:left-[17rem] lg:grid-cols-2 lg:grid-rows-1">
-      <div className="min-h-0 overflow-y-auto px-4 py-8 sm:px-10">{page}</div>
-      <div className="min-h-0 border-t border-line lg:border-l lg:border-t-0">
-        <LabPane lab={lab} />
+    <div
+      style={{ "--tracks": tracks } as React.CSSProperties}
+      className="fixed inset-0 z-20 grid grid-rows-(--tracks) bg-paper lg:left-[17rem] lg:grid-cols-(--tracks) lg:grid-rows-1 lg:group-data-[sidebar=hidden]/app:left-0"
+    >
+      <div className={`min-h-0 overflow-y-auto px-4 py-8 sm:px-10 ${focus === "lab" ? gone : ""}`}>{page}</div>
+      <div className={`relative min-h-0 border-t border-line lg:border-l lg:border-t-0 ${focus === "lesson" ? "border-0" : ""}`}>
+        <div className={`h-full ${focus === "lesson" ? gone : ""}`}>
+          <LabPane lab={lab} onPopOut={popOut} />
+        </div>
+        <div
+          className={`absolute left-1/2 top-0 z-30 flex -translate-x-1/2 overflow-hidden rounded-full border border-line bg-surface shadow lg:left-0 lg:top-1/2 lg:-translate-y-1/2 lg:flex-col ${
+            { both: "-translate-y-1/2 lg:-translate-x-1/2", lesson: "-translate-y-full lg:-translate-x-full", lab: "translate-y-0 lg:translate-x-0" }[focus]
+          }`}
+        >
+          {focus !== "lab" && (
+            <PaneButton label={focus === "lesson" ? "Show lab" : "Hide lesson"} onClick={() => saveFocus(focus === "lesson" ? "both" : "lab")} dir="back" />
+          )}
+          {focus !== "lesson" && (
+            <PaneButton label={focus === "lab" ? "Show lesson" : "Hide lab"} onClick={() => saveFocus(focus === "lab" ? "both" : "lesson")} dir="forward" />
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+/** Moves the divider between the lesson and the lab: back is left (up below lg), forward is right (down). */
+function PaneButton({ label, onClick, dir }: { label: string; onClick: () => void; dir: "back" | "forward" }) {
+  return (
+    <button onClick={onClick} aria-label={label} title={label} className="p-1 text-muted hover:bg-paper hover:text-ink">
+      <svg aria-hidden viewBox="0 0 20 20" className={`size-4 ${dir === "back" ? "-rotate-90 lg:rotate-180" : "rotate-90 lg:rotate-0"}`} fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M8 5l5 5-5 5" />
+      </svg>
+    </button>
+  );
+}
+
+type Focus = "both" | "lesson" | "lab";
 
 function Section({ s, hideTitle, children }: { s: { slug: string; title: string }; hideTitle?: boolean; children: React.ReactNode }) {
   return (

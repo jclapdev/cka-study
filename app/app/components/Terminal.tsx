@@ -2,7 +2,7 @@ import "@xterm/xterm/css/xterm.css";
 import { useEffect, useRef, useState } from "react";
 
 /** A shell on base, the machine the exam starts you on. Copy and paste use the exam terminal's keys, Ctrl+Shift+C and Ctrl+Shift+V. */
-export function Terminal({ onReset }: { onReset: () => void }) {
+export function Terminal({ onReset, onPopOut }: { onReset: () => void; onPopOut?: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -26,7 +26,9 @@ export function Terminal({ onReset }: { onReset: () => void }) {
 
       const ws = new WebSocket(`ws://${location.host}/terminal`);
       const send = (m: object) => ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(m));
+      // A hidden lab pane is a sliver; fitting to it would squeeze the shell to two columns.
       const resize = () => {
+        if (!ref.current?.checkVisibility({ visibilityProperty: true })) return;
         fit.fit();
         send({ r: [term.cols, term.rows] });
       };
@@ -72,6 +74,11 @@ export function Terminal({ onReset }: { onReset: () => void }) {
         <button onClick={() => setSession((s) => s + 1)} className="ml-auto rounded border border-white/20 px-2 py-1 hover:border-white/60">
           New session
         </button>
+        {onPopOut && (
+          <button onClick={onPopOut} className="rounded border border-white/20 px-2 py-1 hover:border-white/60">
+            Pop out
+          </button>
+        )}
         <button onClick={onReset} className="rounded border border-white/20 px-2 py-1 hover:border-white/60">
           Reset
         </button>

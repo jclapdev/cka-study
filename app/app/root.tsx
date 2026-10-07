@@ -67,10 +67,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
     const t = setInterval(() => revalidator.state === "idle" && revalidator.revalidate(), 3000);
     return () => clearInterval(t);
   }, [starting, revalidator]);
+  // The terminal popped out into its own window.
+  if (pathname === "/terminal") return <Outlet />;
   return (
-    <div className={hidden ? "" : "lg:grid lg:grid-cols-[17rem_1fr]"}>
+    <div data-sidebar={hidden ? "hidden" : undefined} className={`group/app ${hidden ? "" : "lg:grid lg:grid-cols-[17rem_1fr]"}`}>
       {hidden && (
-        <button onClick={toggleSidebar} aria-label="Show sidebar" title="Show sidebar" className="fixed left-3 top-3 z-20 hidden rounded border border-line bg-surface p-1.5 hover:bg-paper lg:block">
+        <button onClick={toggleSidebar} aria-label="Show sidebar" title="Show sidebar" className="fixed left-3 top-3 z-30 hidden rounded border border-line bg-surface p-1.5 hover:bg-paper lg:block">
           <SidebarIcon />
         </button>
       )}
