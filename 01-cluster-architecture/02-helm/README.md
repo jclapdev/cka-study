@@ -19,8 +19,8 @@ Starts from the [`helm` lab](../../lab/labs/helm/README.md). Every command runs 
 
 ## Find a chart
 
-A chart is a package of Kubernetes [manifests](../../references/kubectl.md#generating-yaml), and a repository is a web server that lists
-charts and their versions: [charts, repositories and releases](../../references/helm.md#charts-repositories-and-releases).
+A [chart](../../references/helm.md#charts-repositories-and-releases) is a package of Kubernetes [manifests](../../references/kubectl.md#generating-yaml), and a repository is a web server that lists
+charts and their versions.
 
 1. Check that Helm reaches the cluster. It reads the same kubeconfig as `kubectl`
    ([kubeconfig](../../references/kubeconfig.md)):
@@ -47,7 +47,7 @@ charts and their versions: [charts, repositories and releases](../../references/
    ```
 
    `podinfo` is now a name on this machine only. Charts in the repository are referred to as
-   `podinfo/<chart>`: [charts, repositories and releases](../../references/helm.md#charts-repositories-and-releases).
+   `podinfo/<chart>`.
 
 3. Search the repository, then list every version of the chart:
 
@@ -68,13 +68,12 @@ charts and their versions: [charts, repositories and releases](../../references/
    ```
 
    `CHART VERSION` is the version of the package, and it is what `--version` selects.
-   `APP VERSION` is the version of the software inside it:
-   [charts, repositories and releases](../../references/helm.md#charts-repositories-and-releases).
+   `APP VERSION` is the version of the software inside it.
 
 ## Read the values
 
-A chart's templates read settings from its values, and a default for each value ships in the
-chart: [values](../../references/helm.md#values).
+A chart's templates read settings from its [values](../../references/helm.md#values), and a default for each value ships in the
+chart.
 
 1. Print the defaults:
 
@@ -112,8 +111,7 @@ chart: [values](../../references/helm.md#values).
 
 ## Install a release
 
-A release is one installed copy of a chart, with its own name, in one namespace:
-[charts, repositories and releases](../../references/helm.md#charts-repositories-and-releases).
+A [release](../../references/helm.md#charts-repositories-and-releases) is one installed copy of a chart, with its own name, in one namespace.
 
 1. Install version 6.14.1 as the release `web` in a new namespace `apps`, with 2 replicas:
 
@@ -140,8 +138,8 @@ A release is one installed copy of a chart, with its own name, in one namespace:
    NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
    ```
 
-   A release lives in a namespace, and `helm` without `-n` looks only in the kubeconfig's
-   current namespace, `default` here, so the second list is empty: [namespaces](../../references/namespaces.md).
+   A release lives in a [namespace](../../references/namespaces.md), and `helm` without `-n` looks only in the kubeconfig's
+   current namespace, `default` here, so the second list is empty.
 
 3. See what the chart created:
 
@@ -165,8 +163,7 @@ A release is one installed copy of a chart, with its own name, in one namespace:
    The [Deployment](../../references/workloads.md) and [Service](../../references/services.md) are named after the release. The [Secret](../../references/config.md#secrets)
    `sh.helm.release.v1.web.v1` is Helm's record of revision 1, holding the chart and the values
    used. Helm runs only as a command-line tool, and these Secrets are the only place a release
-   exists:
-   [revisions and where releases are stored](../../references/helm.md#revisions-and-where-releases-are-stored).
+   [is stored](../../references/helm.md#revisions-and-where-releases-are-stored).
 
 4. Read back the values the release was installed with:
 
@@ -185,8 +182,8 @@ A release is one installed copy of a chart, with its own name, in one namespace:
 
 ## Upgrade a release
 
-`helm upgrade` installs a new chart version, new values, or both, as the next revision of the
-same release: [revisions and where releases are stored](../../references/helm.md#revisions-and-where-releases-are-stored).
+`helm upgrade` installs a new chart version, new values, or both, as the next [revision](../../references/helm.md#revisions-and-where-releases-are-stored) of the
+same release.
 
 1. Put the new value in a file. Its keys have the same nesting as `helm show values` prints, so
    `vim web-values.yaml` and write:
@@ -221,7 +218,7 @@ same release: [revisions and where releases are stored](../../references/helm.md
 
    `replicaCount: 2` is gone and the Deployment is back to the chart's default of 1. An
    upgrade given `-f` or `--set` starts again from the chart's defaults and applies only the
-   values on that command line: [values](../../references/helm.md#values).
+   [values](../../references/helm.md#values) on that command line.
 
 3. Upgrade again with `--reuse-values`, which keeps the release's current values and merges
    the new ones on top:
@@ -278,8 +275,8 @@ same release: [revisions and where releases are stored](../../references/helm.md
    4       	Sun Sep 27 18:31:19 2026	deployed  	podinfo-6.14.1	6.14.1     	Rollback to 1
    ```
 
-   A rollback does not remove revisions 2 and 3. It writes revision 4 with the chart and
-   values of revision 1: [revisions and where releases are stored](../../references/helm.md#revisions-and-where-releases-are-stored).
+   A rollback does not remove [revisions](../../references/helm.md#revisions-and-where-releases-are-stored) 2 and 3. It writes revision 4 with the chart and
+   values of revision 1.
 
 3. Confirm the cluster matches revision 1:
 
@@ -295,8 +292,8 @@ same release: [revisions and where releases are stored](../../references/helm.md
 
 ## Render without installing
 
-`helm template` renders a chart's manifests on the local machine and prints them, without
-installing anything: [rendering without installing](../../references/helm.md#rendering-without-installing).
+[`helm template`](../../references/helm.md#rendering-without-installing) renders a chart's manifests on the local machine and prints them, without
+installing anything.
 
 1. Render version 6.15.0 to a file and list the kinds in it:
 
@@ -316,8 +313,7 @@ installing anything: [rendering without installing](../../references/helm.md#ren
    ```
 
    The three [Pods](../../references/pod.md) come from the chart's `templates/tests/` folder. They run only when someone
-   runs `helm test`, and `--skip-tests` leaves them out of the file:
-   [rendering without installing](../../references/helm.md#rendering-without-installing).
+   runs `helm test`, and `--skip-tests` leaves them out of the file.
 
 2. Render again without them:
 
@@ -357,8 +353,7 @@ installing anything: [rendering without installing](../../references/helm.md#ren
    ```
 
    Every object the release created is deleted, along with the Secrets for all four
-   revisions. The namespace stays, because `--create-namespace` made it outside the release:
-   [revisions and where releases are stored](../../references/helm.md#revisions-and-where-releases-are-stored).
+   [revisions](../../references/helm.md#revisions-and-where-releases-are-stored). The namespace stays, because `--create-namespace` made it outside the release.
 
 ## Quiz
 
@@ -452,7 +447,7 @@ helm uninstall legacy -n legacy
 
 ## Check your work
 
-[Grade the run](../../lab/README.md#grading), or check by hand on `controlplane`:
+Grade the run, or check by hand on `controlplane`:
 
 1. `shop` is back on chart version 6.14.1 with 3 replicas, and `legacy` is gone:
 

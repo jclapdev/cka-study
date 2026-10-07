@@ -40,7 +40,7 @@ In the lab, an overlay with `env: prod` and neither flag gave a Deployment that 
 
 ## Patches
 
-A patch is a partial [manifest](kubectl.md#generating-yaml) with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. This kind of patch is a strategic merge patch, which is merged into the object field by field. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container:
+A patch is a partial manifest with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. This kind of patch is a strategic merge patch, which is merged into the object field by field. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container:
 
 ```yaml
 patches:

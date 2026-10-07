@@ -16,7 +16,7 @@ A CIDR is a range of IP addresses written as a first address and a prefix length
 
 No interface holds a Service IP. [kube-proxy](control-plane.md#components) writes iptables or [IPVS](services.md#how-a-service-ip-answers) rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
 
-All three must be disjoint. The [controller-manager](control-plane.md#components) splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. In the lab:
+All three must be disjoint. The controller-manager splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. In the lab:
 
 ```
 NAME           CIDR
@@ -36,7 +36,7 @@ Read it with `kubectl logs -n kube-flannel -l app=flannel`.
 
 ## Until a CNI exists
 
-- Node condition `Ready` is `False`, reason `KubeletNotReady`, message `container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized` (wording after the first clause varies by [kubelet](control-plane.md#components) version)
+- Node condition `Ready` is `False`, reason `KubeletNotReady`, message `container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized` (wording after the first clause varies by kubelet version)
 - CoreDNS pods stay `Pending`, because a `NotReady` node carries the [taint](taints.md) `node.kubernetes.io/not-ready:NoSchedule`, which CoreDNS does not tolerate
 - `/etc/cni/net.d/` is empty (root-only directory: `sudo ls /etc/cni/net.d/`)
 
@@ -54,7 +54,7 @@ kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/
 
 Calico is another widely used CNI plugin. It enforces NetworkPolicy and defaults to `192.168.0.0/16`, so its [manifest](kubectl.md#generating-yaml) needs editing unless `init` used that range. With Flannel, a NetworkPolicy is accepted and has no effect.
 
-The plugin's pods run as a [DaemonSet](daemonsets.md) that tolerates `NoSchedule` [taints](taints.md), so they start on `controlplane` while it is still `NotReady`. Flannel puts its DaemonSet in a [namespace](namespaces.md) of its own, `kube-flannel`, so `kubectl get pods -n kube-system` does not show it. Use `-A`.
+The plugin's pods run as a [DaemonSet](daemonsets.md) that tolerates `NoSchedule` taints, so they start on `controlplane` while it is still `NotReady`. Flannel puts its DaemonSet in a [namespace](namespaces.md) of its own, `kube-flannel`, so `kubectl get pods -n kube-system` does not show it. Use `-A`.
 
 ## Pods on the host network
 

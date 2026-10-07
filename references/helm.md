@@ -45,7 +45,7 @@ A chart's test pods, in `templates/tests/`, are part of the output unless `--ski
 
 ## Custom resource definitions
 
-A chart installs the [CustomResourceDefinitions](crds.md) ([CRDs](crds.md)) in its `crds/` folder before anything else, and only on install ([custom resource definitions](https://helm.sh/docs/topics/charts/#custom-resource-definitions-crds)). Helm never upgrades or deletes a CRD, and skips one that already exists ([limitations on CRDs](https://helm.sh/docs/topics/charts/#limitations-on-crds)). `--skip-crds` installs the chart without them.
+A chart installs the [CustomResourceDefinitions](crds.md) (CRDs) in its `crds/` folder before anything else, and only on install ([custom resource definitions](https://helm.sh/docs/topics/charts/#custom-resource-definitions-crds)). Helm never upgrades or deletes a CRD, and skips one that already exists ([limitations on CRDs](https://helm.sh/docs/topics/charts/#limitations-on-crds)). `--skip-crds` installs the chart without them.
 
 ## In this lab
 

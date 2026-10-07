@@ -83,7 +83,7 @@ kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
 kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
 ```
 
-`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation) another subject ([authentication](authentication.md)), and works on any command, so a denied request can be seen in
+`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation) another subject (authentication), and works on any command, so a denied request can be seen in
 full rather than as a bare `no`:
 
 ```

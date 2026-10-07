@@ -19,8 +19,8 @@ TLS (Transport Layer Security) is the protocol that sets up an encrypted, authen
 | --- | --- |
 | `ca.crt`, `ca.key` | The cluster CA. `ca.crt` is also copied into every [kubeconfig](kubeconfig.md) and every pod, so clients can check the apiserver. |
 | `apiserver.crt` | The apiserver's serving certificate. |
-| `apiserver-kubelet-client.crt` | The apiserver's client certificate for calling [kubelets](control-plane.md#components). |
-| `etcd/ca.crt` and the rest of `etcd/` | A separate CA for [etcd](control-plane.md#components), and etcd's own certificates. |
+| `apiserver-kubelet-client.crt` | The apiserver's client certificate for calling kubelets. |
+| `etcd/ca.crt` and the rest of `etcd/` | A separate CA for etcd, and etcd's own certificates. |
 | `front-proxy-ca.crt` | A CA for API extensions, not used by anything in this course. |
 | `sa.key`, `sa.pub` | A key pair, not a certificate, that signs [ServiceAccount](service-accounts.md) tokens. |
 
@@ -28,7 +28,7 @@ The kubeconfigs in `/etc/kubernetes/` (`admin.conf`, `controller-manager.conf`, 
 
 ## Certificate signing requests
 
-A CSR (certificate signing request) is a request for a CA to sign a new certificate. In Kubernetes it is also an object, `CertificateSigningRequest`, that someone approves before the [controller-manager](control-plane.md#components) signs it ([certificate signing requests](https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/)). A worker gets its kubelet's client certificate this way when it [joins](workers.md#joining), and that request is approved automatically. `kubectl get csr` lists the requests. The cluster deletes approved requests after an hour, so the lab shows `No resources found`.
+A CSR (certificate signing request) is a request for a CA to sign a new certificate. In Kubernetes it is also an object, `CertificateSigningRequest`, that someone approves before the controller-manager signs it ([certificate signing requests](https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/)). A worker gets its kubelet's client certificate this way when it [joins](workers.md#joining), and that request is approved automatically. `kubectl get csr` lists the requests. The cluster deletes approved requests after an hour, so the lab shows `No resources found`.
 
 ## In this lab
 

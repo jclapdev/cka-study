@@ -9,27 +9,27 @@ kubeadm turns machines that already run a [container runtime](workers.md#what-a-
 | Phase | What it does |
 | --- | --- |
 | `[preflight]` | Checks the machine and pulls the control plane images. A failed check stops `init` before it changes anything. |
-| `[certs]` | Creates a cluster [CA](certificates.md) and every [certificate](certificates.md) the components need, under `/etc/kubernetes/pki/`. |
+| `[certs]` | Creates a cluster [CA](certificates.md) and every certificate the components need, under `/etc/kubernetes/pki/`. |
 | `[kubeconfig]` | Writes `admin.conf`, `super-admin.conf`, `kubelet.conf`, `controller-manager.conf` and `scheduler.conf` to `/etc/kubernetes/`. |
 | `[etcd]`, `[control-plane]` | Writes the four [static pod](control-plane.md#static-pods) [manifests](kubectl.md#generating-yaml) to `/etc/kubernetes/manifests/`. |
 | `[kubelet-start]`, `[wait-control-plane]` | Starts the kubelet, which starts the static pods, and waits for them to be healthy. |
 | `[mark-control-plane]` | Labels and [taints](taints.md) the node as a control plane node. |
 | `[bootstrap-token]` | Creates the token that `kubeadm join` uses, valid for 24 hours. |
-| `[addons]` | Installs [CoreDNS](pod-network.md#coredns) and [kube-proxy](control-plane.md#components). |
+| `[addons]` | Installs [CoreDNS](pod-network.md#coredns) and kube-proxy. |
 
 The files it leaves on the control plane node:
 
 | Path | Contents |
 | --- | --- |
-| `/etc/kubernetes/manifests/` | The static pod manifests ([control-plane](control-plane.md)). |
+| `/etc/kubernetes/manifests/` | The static pod manifests (control-plane). |
 | `/etc/kubernetes/*.conf` | The kubeconfigs, root-owned with mode `600` ([kubeconfig](kubeconfig.md)). |
 | `/etc/kubernetes/pki/` | The CA and all component certificates ([which certificate is which](https://kubernetes.io/docs/setup/best-practices/certificates/#all-certificates)). |
-| `/var/lib/etcd/` | The [etcd](control-plane.md#components) data directory. |
+| `/var/lib/etcd/` | The etcd data directory. |
 | `/var/lib/kubelet/config.yaml` | The kubelet's configuration. |
 
 ## The advertise address
 
-`--apiserver-advertise-address` is the address the [apiserver](control-plane.md#components) tells the rest of the cluster to reach it on. `init` writes it into the apiserver's certificate, into every kubeconfig, and into the join command. In the lab:
+`--apiserver-advertise-address` is the address the apiserver tells the rest of the cluster to reach it on. `init` writes it into the apiserver's certificate, into every kubeconfig, and into the join command. In the lab:
 
 ```
 [certs] apiserver serving cert is signed for DNS names [controlplane kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.104.10]

@@ -18,7 +18,7 @@ kubectl api-resources --namespaced=false
 kubectl api-resources --namespaced=true
 ```
 
-This matters for [RBAC](rbac.md). A RoleBinding grants access inside its own namespace, so it can never reach a cluster-scoped resource. Access to nodes or PersistentVolumes, which are pieces of storage that belong to the whole cluster, needs a [ClusterRoleBinding](rbac.md#the-model).
+This matters for [RBAC](rbac.md). A RoleBinding grants access inside its own namespace, so it can never reach a cluster-scoped resource. Access to nodes or PersistentVolumes, which are pieces of storage that belong to the whole cluster, needs a ClusterRoleBinding.
 
 ## In this lab
 
@@ -29,7 +29,7 @@ A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namesp
 | `default` | Anything created without `-n`. |
 | `kube-system` | The [control plane](control-plane.md) pods, [CoreDNS](pod-network.md#coredns) and [kube-proxy](control-plane.md#components). |
 | `kube-public` | The `cluster-info` [ConfigMap](config.md). kubeadm binds a Role that lets `system:anonymous` read it, so a joining node can read it before it has credentials. |
-| `kube-node-lease` | One Lease per node. A Lease is a small object with a timestamp, and the [kubelet](control-plane.md#components) renews its node's every few seconds as a heartbeat. |
+| `kube-node-lease` | One Lease per node. A Lease is a small object with a timestamp, and the kubelet renews its node's every few seconds as a heartbeat. |
 | `kube-flannel` | The Flannel pod network. |
 
 In the lab, Kubernetes 1.34 serves 32 cluster-scoped and 33 namespaced resource types.

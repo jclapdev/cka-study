@@ -61,7 +61,7 @@ kubectl config current-context
 | `error loading config file "/home/<user>/.kube/config": open /home/<user>/.kube/config: permission denied` | The copied file is still root-owned. Run the `chown`. |
 | `You must be logged in to the server (Unauthorized)` | credentials present but wrong or expired |
 | `x509: certificate signed by unknown authority` | cluster CA does not match the apiserver's |
-| `Forbidden` | identity is fine; [RBAC](rbac.md) says no |
+| `Forbidden` | identity is fine; RBAC says no |
 
 ## Docs
 

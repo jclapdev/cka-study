@@ -12,15 +12,14 @@ Starts from the [`vms` lab](../../lab/labs/vms/README.md). Every command runs on
 
 * See why a kubelet with no cluster cannot start, and why `kubectl` cannot reach anything.
 * Initialise a control plane with `kubeadm init` and read what it wrote.
-* Find out how the [apiserver](../../references/control-plane.md#components) can be a pod before there is an apiserver to create it.
+* Find out how the apiserver can be a pod before there is an apiserver to create it.
 * Install a pod network and watch the node go Ready.
 * Join two workers with a token you generate yourself.
 * Label the workers and confirm the whole control plane is healthy.
 
 ## Check what is already running
 
-The machines have the Kubernetes tools installed but no cluster:
-[the kubelet before init or join](../../references/workers.md#the-kubelet-before-init-or-join).
+The machines have the Kubernetes tools installed but [no cluster](../../references/workers.md#the-kubelet-before-init-or-join).
 
 1. Check the state of the kubelet:
 
@@ -36,7 +35,7 @@ The machines have the Kubernetes tools installed but no cluster:
 
    The kubelet is installed and enabled, but it has no configuration file yet, so it exits at
    once and systemd restarts it every 10 seconds. `sudo journalctl -u kubelet` shows the
-   missing file: [the kubelet before init or join](../../references/workers.md#the-kubelet-before-init-or-join).
+   missing file.
 
 2. Try to talk to a cluster that does not exist yet:
 
@@ -57,7 +56,7 @@ The machines have the Kubernetes tools installed but no cluster:
 
 `kubeadm init` writes the control plane's address into the apiserver's certificate and into
 every kubeconfig it generates, and the workers are later told to trust that exact address. A
-wrong one is not fixable without `kubeadm reset`: [the advertise address](../../references/kubeadm.md#the-advertise-address).
+wrong [address](../../references/kubeadm.md#the-advertise-address) is not fixable without `kubeadm reset`.
 
 1. Get `controlplane`'s address and keep it in a variable:
 
@@ -101,8 +100,8 @@ wrong one is not fixable without `kubeadm reset`: [the advertise address](../../
    ```
 
    Each progress line starts with the phase that printed it, such as `[preflight]`, `[certs]`,
-   `[kubeconfig]` or `[addons]`. What each phase does and the files it leaves:
-   [what kubeadm init does](../../references/kubeadm.md#what-kubeadm-init-does).
+   `[kubeconfig]` or `[addons]`. [What kubeadm init does](../../references/kubeadm.md#what-kubeadm-init-does)
+   lists each phase and the files it leaves.
 
 > [!note]
 > If `kubeadm init` stops with `[ERROR Port-6443]: Port 6443 is in use` or `[ERROR
@@ -132,14 +131,14 @@ The kubelet watches that directory and starts whatever it finds there, without a
 apiserver or a [scheduler](../../references/control-plane.md#components). That is how the control plane starts before there is a cluster to
 start it. Because these pods come from files, editing one restarts that component within
 seconds, and `kubectl delete pod` on one does nothing lasting, because the kubelet recreates it
-from the file: [static pods](../../references/control-plane.md#static-pods).
+from the file ([static pods](../../references/control-plane.md#static-pods)).
 
 ## Point kubectl at the cluster
 
 `kubeadm init` wrote an admin kubeconfig to `/etc/kubernetes/admin.conf`, owned by root with
 mode `600`, and kubectl looks in `~/.kube/config`. Without the `chown`, the copy stays
-root-owned and kubectl fails with `permission denied`:
-[on a kubeadm cluster](../../references/kubeconfig.md#on-a-kubeadm-cluster).
+root-owned and kubectl fails with `permission denied`. [On a kubeadm cluster](../../references/kubeconfig.md#on-a-kubeadm-cluster)
+lists every kubeconfig `init` writes.
 
 Copy the admin kubeconfig into your home directory:
 
@@ -159,9 +158,8 @@ The node is `NotReady` until a pod network is installed.
 
 ## Install a pod network
 
-Kubernetes needs a network plugin to give pods addresses, and kubeadm installs none. What the
-plugin provides and the three address ranges that must not overlap:
-[three CIDRs, not one](../../references/pod-network.md#three-cidrs-not-one).
+Kubernetes needs a network plugin to give pods addresses, and kubeadm installs none. The
+plugin uses one of [three address ranges](../../references/pod-network.md#three-cidrs-not-one) that must not overlap.
 
 ### Why is controlplane NotReady when all four control plane pods are running?
 
@@ -192,8 +190,7 @@ kube-scheduler-controlplane            0/1     Running   0          14s
 
 `/etc/cni/net.d/` is empty, so the kubelet reports `cni plugin not initialized` and keeps the
 node `NotReady`. A `NotReady` node carries the [taint](../../references/taints.md) `node.kubernetes.io/not-ready:NoSchedule`,
-which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so both CoreDNS pods stay `Pending`:
-[pods on a new cluster](../../references/pod.md#on-a-new-cluster).
+which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so both CoreDNS pods stay [`Pending`](../../references/pod.md#on-a-new-cluster).
 
 1. Install [Flannel](../../references/pod-network.md#plugins). It defaults to `10.244.0.0/16`, the CIDR you gave `init`:
 
@@ -237,12 +234,12 @@ which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so b
 > CIDR given to `init` does not match Flannel's `10.244.0.0/16`, or `init` was given none, the
 > node is still `Ready`, but the Flannel pod is in `CrashLoopBackOff` and CoreDNS stays in
 > `ContainerCreating`. `kubectl logs -n kube-flannel -l app=flannel` names the mismatch:
-> [three CIDRs, not one](../../references/pod-network.md#three-cidrs-not-one).
+> three CIDRs, not one.
 
 ## Join the workers
 
-The join line printed by `init` contains a token that expires after 24 hours. `kubeadm token
-create --print-join-command` prints a new one: [joining](../../references/workers.md#joining).
+The [join line](../../references/workers.md#joining) printed by `init` contains a token that expires after 24 hours. `kubeadm token
+create --print-join-command` prints a new one.
 
 1. On `controlplane`, list the existing token and print a fresh join command:
 
@@ -260,8 +257,8 @@ create --print-join-command` prints a new one: [joining](../../references/worker
    ```
 
    The hash lets the joining node check that it reached the right apiserver. The token lets
-   the apiserver accept the node for long enough to sign a client certificate for it. The
-   sequence: [joining a node](../../learn/kubeadm.md#joining-a-node).
+   the apiserver accept the node for long enough to sign a client certificate for it.
+   [Joining a node](../../learn/kubeadm.md#joining-a-node) walks through the sequence.
 
 2. Copy the command you just printed, then run it on `node01`. Your token and hash differ from
    the ones above, so paste yours. Go back to `base` first:
@@ -307,9 +304,8 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
    node02         Ready    <none>          35s   v1.34.10
    ```
 
-   The ROLES column is built from labels named `node-role.kubernetes.io/<role>`. kubeadm sets
-   that label on `controlplane` and none on the workers:
-   [roles](../../references/workers.md#roles).
+   The ROLES column is built from [labels named `node-role.kubernetes.io/<role>`](../../references/workers.md#roles). kubeadm sets
+   that label on `controlplane` and none on the workers.
 
 2. Add the worker label to both:
 
@@ -353,11 +349,10 @@ Static pods are named `<component>-<node>`, such as `etcd-controlplane`. `kube-p
 it. `PodInitializing` means that pod's init containers are still running.
 
 The two CoreDNS pods have `10.244.x` addresses from the pod CIDR. Every other pod has its node's
-own address, because the control plane pods and both DaemonSets use the host network:
-[pods on the host network](../../references/pod-network.md#pods-on-the-host-network).
+own address, because the control plane pods and both DaemonSets use the [host network](../../references/pod-network.md#pods-on-the-host-network).
 
-When the cluster is healthy, no pod is `CrashLoopBackOff`, `Error` or `Pending`. What each of
-those means: [phases](../../references/pod.md#phases).
+When the cluster is healthy, no pod is `CrashLoopBackOff`, `Error` or `Pending`. [Phases](../../references/pod.md#phases)
+says what each of those means.
 
 ## Quiz
 

@@ -14,7 +14,7 @@ A pod is bound to one node for life. It is never moved. A pod that seems to have
 | `Running` | Bound to a node, at least one container started |
 | `Succeeded` / `Failed` | All containers terminated, zero / non-zero exit |
 | `ContainerCreating` | Scheduled; runtime and [CNI](pod-network.md) are setting the pod up |
-| `CrashLoopBackOff` | Container keeps exiting; [kubelet](control-plane.md#components) restarts with growing delay ([container restarts](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-restarts)) |
+| `CrashLoopBackOff` | Container keeps exiting; kubelet restarts with growing delay ([container restarts](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-restarts)) |
 | `ImagePullBackOff` | Image cannot be pulled — wrong name, or no registry access |
 | `Error` | Container exited non-zero and is not being restarted |
 
@@ -37,7 +37,7 @@ After `kubeadm init`, the two [CoreDNS](pod-network.md#coredns) pods are `Pendin
 Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 node(s) had untolerated taint(s).
 ```
 
-Once the node is `Ready`, CoreDNS is scheduled and waits in `ContainerCreating` until the [pod network](pod-network.md) gives it an address. Both CoreDNS pods `Running` shows that pods are getting addresses. The node being `Ready` does not.
+Once the node is `Ready`, CoreDNS is scheduled and waits in `ContainerCreating` until the pod network gives it an address. Both CoreDNS pods `Running` shows that pods are getting addresses. The node being `Ready` does not.
 
 Control plane components are pods too, but [static ones](control-plane.md).
 

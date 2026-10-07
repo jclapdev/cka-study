@@ -1,6 +1,6 @@
 # Workers
 
-A node is one machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the [kubelet](control-plane.md#components), [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). The only difference is that it has no control plane [static pods](control-plane.md#static-pods).
+A node is one machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet, [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). The only difference is that it has no control plane [static pods](control-plane.md#static-pods).
 
 This lab has two: `node01` and `node02`.
 
@@ -8,7 +8,7 @@ This lab has two: `node01` and `node02`.
 
 - **kubelet**, a systemd service. It is the only agent that starts containers. It registers the node, watches the apiserver for pods assigned to it, and reports their status.
 - **The container runtime** is the program that pulls images and starts and stops containers. containerd is the runtime here. The CRI (container runtime interface) is the API the kubelet uses to give a runtime instructions, and containerd serves it at `/run/containerd/containerd.sock`. crictl is a command-line client for the CRI ([`crictl`](https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/)), so `sudo crictl ps` lists the node's containers. `docker` is not the tool here.
-- **[kube-proxy](control-plane.md#components)** and the pod network agent, both as [DaemonSet](daemonsets.md) pods.
+- **kube-proxy** and the pod network agent, both as [DaemonSet](daemonsets.md) pods.
 
 A worker has no admin [kubeconfig](kubeconfig.md), only `/etc/kubernetes/kubelet.conf` for the kubelet's own identity. `kubectl` on a worker fails with `The connection to the server localhost:8080 was refused`. Run `kubectl` on the control plane node.
 
@@ -32,7 +32,7 @@ Active: activating (auto-restart) (Result: exit-code)
 
 `kubeadm join <apiserver>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>`
 
-At the start neither side trusts the other, so the join line carries one secret in each direction. The [CA](certificates.md) hash lets the node check that it reached the right apiserver. The token lets the apiserver accept the node for long enough to sign a client [certificate](certificates.md) for it ([TLS bootstrapping](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/)). After the join, the node authenticates with that certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem`. [Joining a node](../learn/kubeadm.md#joining-a-node) shows the sequence.
+At the start neither side trusts the other, so the join line carries one secret in each direction. The [CA](certificates.md) hash lets the node check that it reached the right apiserver. The token lets the apiserver accept the node for long enough to sign a client certificate for it ([TLS bootstrapping](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/)). After the join, the node authenticates with that certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem`. [Joining a node](../learn/kubeadm.md#joining-a-node) shows the sequence.
 
 Tokens expire 24 hours after they are created ([bootstrap tokens](https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/)), so the join line printed by `kubeadm init` stops working after a day. Print a new one on the control plane node:
 
@@ -40,7 +40,7 @@ Tokens expire 24 hours after they are created ([bootstrap tokens](https://kubern
 sudo kubeadm token create --print-join-command
 ```
 
-`join` fails when the worker cannot reach the apiserver's advertise address on 6443, or when the node has state left from an earlier join (`sudo kubeadm reset -f` clears it). See [kubeadm](kubeadm.md).
+`join` fails when the worker cannot reach the apiserver's advertise address on 6443, or when the node has state left from an earlier join (`sudo kubeadm reset -f` clears it). See kubeadm.
 
 ## Node conditions
 
@@ -52,7 +52,7 @@ sudo kubeadm token create --print-join-command
 | `Ready=Unknown` | The kubelet stopped reporting, because the node or the kubelet is down. |
 | `MemoryPressure`, `DiskPressure`, `PIDPressure` | The node is running out of that resource, and the kubelet starts [evicting pods](https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/). |
 
-When a node goes `NotReady` or unreachable, its pods are evicted after 300 seconds, because every pod tolerates the not-ready and unreachable [taints](taints.md) for that long by default ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)). The evicted pods are recreated on other nodes by their [controllers](control-plane.md#components).
+When a node goes `NotReady` or unreachable, its pods are evicted after 300 seconds, because every pod tolerates the not-ready and unreachable [taints](taints.md) for that long by default ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)). The evicted pods are recreated on other nodes by their controllers.
 
 ## Roles
 

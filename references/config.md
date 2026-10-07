@@ -43,7 +43,7 @@ The container printed `MODE=prod PASSWORD=s3cret`. Environment variables are rea
 
 ## In this lab
 
-Every namespace has a ConfigMap `kube-root-ca.crt` that holds the cluster [CA](certificates.md)'s certificate, `ca.crt`, so pods can check the [apiserver](control-plane.md#components)'s certificate. The [control plane](control-plane.md) creates it in each new namespace:
+Every namespace has a ConfigMap `kube-root-ca.crt` that holds the cluster CA's certificate, `ca.crt`, so pods can check the [apiserver](control-plane.md#components)'s certificate. The [control plane](control-plane.md) creates it in each new namespace:
 
 ```
 NAME                         DATA   AGE

@@ -24,7 +24,7 @@ An EndpointSlice is an object listing the pod IPs behind a Service, which the [c
 
 ## In this lab
 
-A new cluster has two Services. `kubernetes` is the [apiserver](control-plane.md#components), and `kube-dns` is [CoreDNS](pod-network.md#coredns):
+A new cluster has two Services. `kubernetes` is the apiserver, and `kube-dns` is [CoreDNS](pod-network.md#coredns):
 
 ```
 NAMESPACE     NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)                  AGE

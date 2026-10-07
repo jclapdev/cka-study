@@ -20,13 +20,11 @@ Every YAML file in this exercise comes from `kubectl create --dry-run` or from t
 The Kustomize snippets are all on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
-paste straight into the terminal:
-[snippets from the docs](../../references/kubectl.md#snippets-from-the-docs).
+[paste straight into the terminal](../../references/kubectl.md#snippets-from-the-docs).
 
 ## Write a base
 
-A base is a folder of ordinary manifests with a `kustomization.yaml` that lists them:
-[bases and overlays](../../references/kustomize.md#bases-and-overlays).
+A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordinary manifests with a `kustomization.yaml` that lists them.
 
 1. Make the folder and generate a Deployment and a [Service](../../references/services.md) into it:
 
@@ -36,8 +34,8 @@ A base is a folder of ordinary manifests with a `kustomization.yaml` that lists 
    k create service clusterip web --tcp=80:80 --dry-run=client -o yaml > base/service.yaml
    ```
 
-   The Deployment labels its pods `app: web`, which is the selector `k create service` writes
-   for a Service named `web`: [generating YAML](../../references/kubectl.md#generating-yaml).
+   The Deployment labels its pods `app: web`, which is the selector [`k create service`](../../references/kubectl.md#generating-yaml) writes
+   for a Service named `web`.
 
 2. Ask Kustomize to build the folder:
 
@@ -75,8 +73,7 @@ A base is a folder of ordinary manifests with a `kustomization.yaml` that lists 
    k kustomize base
    ```
 
-   `k kustomize` prints both objects and sends nothing to the cluster:
-   [kustomize commands](../../references/kustomize.md#commands).
+   [`k kustomize`](../../references/kustomize.md#commands) prints both objects and sends nothing to the cluster.
 
 5. Apply the folder the way a plain folder of manifests is applied:
 
@@ -93,8 +90,7 @@ A base is a folder of ordinary manifests with a `kustomization.yaml` that lists 
    ```
 
    `-f` reads every file in the folder as a manifest, including `kustomization.yaml`, and
-   ignores what it says. `-k` is the flag that runs Kustomize:
-   [-f and -k](../../references/kustomize.md#-f-and--k).
+   ignores what it says. [`-k`](../../references/kustomize.md#-f-and--k) is the flag that runs Kustomize.
 
 6. Remove the two objects `-f` created:
 
@@ -104,9 +100,8 @@ A base is a folder of ordinary manifests with a `kustomization.yaml` that lists 
 
 ## Write an overlay
 
-An overlay is a kustomization whose resources include another kustomization, the base, and
-which changes what the base produces. The base files are never edited:
-[bases and overlays](../../references/kustomize.md#bases-and-overlays).
+An [overlay](../../references/kustomize.md#bases-and-overlays) is a kustomization whose resources include another kustomization, the base, and
+which changes what the base produces. The base files are never edited.
 
 1. In the same Bases and Overlays section, copy the `prod` overlay block, paste it, and build
    it:
@@ -152,8 +147,8 @@ which changes what the base produces. The base files are never edited:
    ```
 
    The docs' `labels` example also has `includeSelectors: true`. Leave it out: it would also
-   change the Deployment's selector, which cannot change once the Deployment exists:
-   [labels](../../references/kustomize.md#labels).
+   change the Deployment's selector, which cannot change once the Deployment exists
+   ([labels](../../references/kustomize.md#labels)).
 
 3. Build the overlay:
 
@@ -211,8 +206,8 @@ which changes what the base produces. The base files are never edited:
    ```
 
    `images` names the image as the base does, `nginx`. The `env: prod` label went onto each
-   object's own labels only, not into the selector or the [pod template](../../references/workloads.md#the-pod-template):
-   [what an overlay can set](../../references/kustomize.md#what-an-overlay-can-set).
+   object's own labels only, not into the selector or the [pod template](../../references/workloads.md#the-pod-template).
+   [What an overlay can set](../../references/kustomize.md#what-an-overlay-can-set) lists the other fields.
 
 4. Apply the overlay:
 
@@ -227,8 +222,7 @@ which changes what the base produces. The base files are never edited:
    Error from server (NotFound): error when creating "prod": namespaces "prod" not found
    ```
 
-   `namespace:` sets the namespace on every object but does not create it:
-   [kustomize failure modes](../../references/kustomize.md#failure-modes).
+   `namespace:` sets the namespace on every object but [does not create it](../../references/kustomize.md#failure-modes).
 
 5. Generate a [Namespace](../../references/namespaces.md) manifest into the overlay, then add `- namespace.yaml` under
    `resources` in `vim prod/kustomization.yaml`:
@@ -239,8 +233,8 @@ which changes what the base produces. The base files are never edited:
 
 ## Patch fields
 
-A patch is a partial manifest. It names the object it changes by kind and name, and holds only
-the fields to add or replace: [patches](../../references/kustomize.md#patches).
+A [patch](../../references/kustomize.md#patches) is a partial manifest. It names the object it changes by kind and name, and holds only
+the fields to add or replace.
 
 1. The [Customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)
    section has two patch blocks, `increase_replicas.yaml` and `set_memory.yaml`. In `~/web/prod`,
@@ -331,8 +325,7 @@ the fields to add or replace: [patches](../../references/kustomize.md#patches).
 ## Generate a ConfigMap
 
 A ConfigMap holds key-value settings that a pod can read as environment variables.
-`configMapGenerator` writes one and adds a hash of its contents to the name:
-[generated names](../../references/kustomize.md#generated-names).
+`configMapGenerator` writes one and adds a [hash of its contents](../../references/kustomize.md#generated-names) to the name.
 
 1. The second example in the
    [configMapGenerator](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#configmapgenerator)
@@ -400,8 +393,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    ```
 
    New contents give a new name, and the new name changes the pod template, so the Deployment
-   rolls out new pods. A ConfigMap edited in place would not update the running pods:
-   [generated names](../../references/kustomize.md#generated-names).
+   rolls out new pods. A ConfigMap edited in place would not update the running pods.
 
 6. Apply the change:
 
@@ -435,7 +427,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
 
    `delete -k` deletes only what the kustomization renders now, which includes
    `prod-web-config-hc7d4825hb` but not the older ConfigMap. That one goes because its
-   namespace is deleted: [namespaces](../../references/namespaces.md).
+   [namespace](../../references/namespaces.md) is deleted.
 
 ## Quiz
 
@@ -602,7 +594,7 @@ k apply -k /opt/course/3/overlay
 
 ## Check your work
 
-[Grade the run](../../lab/README.md#grading), or check by hand on `controlplane`:
+Grade the run, or check by hand on `controlplane`:
 
 1. The `staging` Deployment runs 2 replicas of `nginx:1.28` and reads the generated ConfigMap:
 

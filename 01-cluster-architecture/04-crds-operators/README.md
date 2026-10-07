@@ -1,7 +1,7 @@
 # Extending the API with CRDs and Operators
 
-A [CustomResourceDefinition](../../references/crds.md) ([CRD](../../references/crds.md)) adds a new resource type to the [apiserver](../../references/control-plane.md#components), and an [operator](../../references/crds.md#operators) is a
-[controller](../../references/control-plane.md#components) that watches objects of that type and does the work they describe. Installing an
+A [CustomResourceDefinition](../../references/crds.md) (CRD) adds a new resource type to the [apiserver](../../references/control-plane.md#components), and an [operator](../../references/crds.md#operators) is a
+controller that watches objects of that type and does the work they describe. Installing an
 operator usually means installing its CRDs and its controller together, often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases).
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
@@ -12,14 +12,13 @@ Starts from the [`crds` lab](../../lab/labs/crds/README.md). Every command runs 
 * Find the CRDs a cluster has, and the resource types they add.
 * Create a CRD from the docs' example, and objects of the new type.
 * See the schema reject a wrong value and an unknown field.
-* Install an operator, [cert-manager](../../references/crds.md#operators), with Helm, and list the CRDs it brought.
+* Install an operator, cert-manager, with Helm, and list the CRDs it brought.
 * Build a custom resource with `k explain`, and watch the operator act on it.
 * Save a CRD list and a field's documentation to files.
 
 ## Look for custom resources
 
-A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions`:
-[what a CRD adds](../../references/crds.md#what-a-crd-adds).
+A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cluster-scoped type `customresourcedefinitions`.
 
 1. List the CRDs, and the type that holds them:
 
@@ -65,7 +64,7 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
    ```
 
    The CRD's name is `<plural>.<group>`. The new type is namespaced because the CRD says
-   `scope: Namespaced`: [the parts of a CRD](../../references/crds.md#the-parts-of-a-crd).
+   [`scope: Namespaced`](../../references/crds.md#the-parts-of-a-crd).
 
 3. Read the new type's fields:
 
@@ -97,8 +96,7 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
    ```
 
    `k explain` reads the CRD's schema. Run straight after `k apply`, it can fail with
-   `couldn't find resource`, until the CRD is `Established`:
-   [CRD failure modes](../../references/crds.md#failure-modes).
+   `couldn't find resource`, until the CRD is [`Established`](../../references/crds.md#failure-modes).
 
 ## Create custom objects
 
@@ -132,8 +130,7 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
    The CronTab "bad" is invalid: spec.replicas: Invalid value: "string": spec.replicas in body must be of type integer: "string"
    ```
 
-   The apiserver checks every object against the CRD's `openAPIV3Schema`:
-   [schemas and validation](../../references/crds.md#schemas-and-validation).
+   The apiserver checks every object against the CRD's [`openAPIV3Schema`](../../references/crds.md#schemas-and-validation).
 
 3. Try a field the schema does not have. In `bad.yaml`, change the name to `extra` and the
    `spec` to:
@@ -173,9 +170,8 @@ A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions
 
 ## Install an operator
 
-An operator is a controller for custom resources. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates](../../references/certificates.md): you
-create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets):
-[operators](../../references/crds.md#operators).
+An [operator](../../references/crds.md#operators) is a controller for custom resources. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates](../../references/certificates.md): you
+create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets).
 
 1. Install cert-manager's Helm chart, with its CRDs. A task gives the chart and version, or
    links the operator's install page in its [Quick Reference](../../references/kubectl.md#snippets-from-the-docs) box:
@@ -198,7 +194,7 @@ create a `Certificate` object, and its controller writes the key and certificate
    ```
 
    `crds.enabled=true` makes the chart install the CRDs as normal objects. Without it, this
-   chart installs no CRDs: [CRDs from Helm charts](../../references/crds.md#crds-from-helm-charts).
+   chart installs [no CRDs](../../references/crds.md#crds-from-helm-charts).
 
 2. Wait for the controller, then list what the chart added:
 
@@ -239,14 +235,13 @@ create a `Certificate` object, and its controller writes the key and certificate
    issuers               iss          cert-manager.io/v1   true         Issuer
    ```
 
-   An [Issuer](../../references/crds.md#operators) is namespaced and a [ClusterIssuer](../../references/crds.md#operators) is not, the same split as a [Role](../../references/rbac.md#the-model) and a
-   [ClusterRole](../../references/rbac.md#the-model): [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
+   An Issuer is namespaced and a ClusterIssuer is not, the same [split](../../references/namespaces.md#namespaced-and-cluster-scoped-resources) as a [Role](../../references/rbac.md#the-model) and a
+   ClusterRole.
 
 ## Configure the operator
 
 No `kubectl create` command and no kubernetes.io page writes a cert-manager object. `k explain`
-reads the fields from the CRD's schema, and marks the required ones:
-[kubectl explain](../../references/kubectl.md#kubectl-explain).
+reads the fields from the CRD's schema, and marks the [required ones](../../references/kubectl.md#kubectl-explain).
 
 1. Find what an Issuer can be, and what a [Certificate](../../references/crds.md#operators) needs:
 
@@ -331,7 +326,7 @@ reads the fields from the CRD's schema, and marks the required ones:
    ```
 
    You created one object. The controller created the CertificateRequest and the Secret, as
-   its [ServiceAccount](../../references/service-accounts.md): [operators](../../references/crds.md#operators).
+   its [ServiceAccount](../../references/service-accounts.md).
 
 4. Read the certificate the Secret holds:
 
@@ -578,7 +573,7 @@ k apply -f nightly.yaml
 
 ## Check your work
 
-[Grade the run](../../lab/README.md#grading), or check by hand on `controlplane`:
+Grade the run, or check by hand on `controlplane`:
 
 1. The Certificate is Ready:
 

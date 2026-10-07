@@ -20,7 +20,7 @@ A taint has a key, an optional value and an effect, written `key=value:Effect`, 
 | `node.kubernetes.io/not-ready:NoSchedule` and `:NoExecute` | the node's `Ready` condition is `False`, such as before a pod network exists ([node conditions](workers.md#node-conditions)) |
 | `node.kubernetes.io/unreachable:NoExecute` | the node stops reporting to the [apiserver](control-plane.md#components) |
 
-The node [controller](control-plane.md#components) adds and removes these from the node's conditions ([taint nodes by condition](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-nodes-by-condition)). Every pod gets tolerations for `not-ready` and `unreachable` with `tolerationSeconds: 300`, so its pods are evicted from a lost node after 5 minutes ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)).
+The node controller adds and removes these from the node's conditions ([taint nodes by condition](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-nodes-by-condition)). Every pod gets tolerations for `not-ready` and `unreachable` with `tolerationSeconds: 300`, so its pods are evicted from a lost node after 5 minutes ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)).
 
 ## In this lab
 
@@ -63,7 +63,7 @@ kubectl explain pod.spec.tolerations
 | Symptom | Cause |
 | --- | --- |
 | A pod stays `Pending` with `0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 node(s) didn't match Pod's node affinity/selector.` | The only node the pod may use is tainted, and the pod has no toleration for it. Here the pod's node selector picked `controlplane`. |
-| [Pods](pod.md) leave a node by themselves | The node has a `NoExecute` taint, often `unreachable` because it stopped reporting. |
+| Pods leave a node by themselves | The node has a `NoExecute` taint, often `unreachable` because it stopped reporting. |
 
 ## Docs
 

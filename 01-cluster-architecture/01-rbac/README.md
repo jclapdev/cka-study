@@ -10,15 +10,15 @@ Starts from the [`cluster` lab](../../lab/labs/cluster/README.md). Every command
 
 * Find out why your own `kubectl` is allowed to do anything.
 * Create a [ServiceAccount](../../references/service-accounts.md) that holds no permissions at all.
-* Grant it one verb on one resource, with a [Role](../../references/rbac.md#the-model) and a [RoleBinding](../../references/rbac.md#the-model).
+* Grant it one verb on one resource, with a [Role](../../references/rbac.md#the-model) and a RoleBinding.
 * Watch the same request fail in a second namespace, and read the message that says why.
-* Reuse a single [ClusterRole](../../references/rbac.md#the-model) definition across two namespaces.
+* Reuse a single ClusterRole definition across two namespaces.
 * Reach a cluster-scoped resource, which a RoleBinding cannot do.
 
 ## Create two namespaces
 
-A namespace is a named group of objects, and the boundary a Role and a RoleBinding apply
-within: [namespaces](../../references/namespaces.md).
+A [namespace](../../references/namespaces.md) is a named group of objects, and the boundary a Role and a RoleBinding apply
+within.
 
 1. Create two:
 
@@ -45,8 +45,8 @@ within: [namespaces](../../references/namespaces.md).
 
    You are not a Kubernetes object. `kubernetes-admin` is a name asserted by the client
    [certificate](../../references/certificates.md) in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
-   same certificate. Neither exists as a resource you could delete. How a certificate becomes
-   a user and groups: [client certificates](../../references/authentication.md#client-certificates).
+   same certificate. Neither exists as a resource you could delete. [Client certificates](../../references/authentication.md#client-certificates)
+   explains how a certificate becomes a user and groups.
 
 2. Find the binding that gives that group its power:
 
@@ -68,8 +68,7 @@ within: [namespaces](../../references/namespaces.md).
 ## Create an identity
 
 A ServiceAccount is the one subject kind that exists as an object. Users and groups come from
-credentials, so a cluster cannot create them. It can create a ServiceAccount:
-[the ServiceAccount model](../../references/service-accounts.md#the-model).
+credentials, so a cluster cannot create them. It can create a [ServiceAccount](../../references/service-accounts.md#the-model).
 
 1. Create the account in `dev`:
 
@@ -98,9 +97,8 @@ credentials, so a cluster cannot create them. It can create a ServiceAccount:
 
 ## Write a Role
 
-A Role is a list of rules, each naming verbs and the resources those verbs apply to. It lives
-in one namespace and can only ever name resources in that namespace:
-[the model](../../references/rbac.md#the-model).
+A [Role](../../references/rbac.md#the-model) is a list of rules, each naming verbs and the resources those verbs apply to. It lives
+in one namespace and can only ever name resources in that namespace.
 
 1. Create the Role. `kubectl create role` writes the object without you writing YAML:
 
@@ -138,8 +136,7 @@ in one namespace and can only ever name resources in that namespace:
 
 ## Bind the Role
 
-A RoleBinding is the grant. It names one role and the subjects that get it:
-[the model](../../references/rbac.md#the-model).
+A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one role and the subjects that get it.
 
 1. Create the binding and ask again:
 
@@ -192,7 +189,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
    resources, and the RoleBinding only grants inside `dev`. The subject being a `dev`
    ServiceAccount is not what limits it. The binding's namespace is. Granting the same access
    in `prod` needs a second RoleBinding there, or a [ClusterRoleBinding](../../references/rbac.md#the-model) if it should apply
-   everywhere: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
+   [everywhere](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 2. A bare `no` hides which part of the rule failed. Impersonate a real request instead:
 
@@ -207,8 +204,7 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
    ```
 
    The message names every field a rule has to match: subject, verb, resource, API group and
-   namespace. `""` is the core API group, not a missing value:
-   [where the group matters](../../references/api-groups.md#where-the-group-matters).
+   namespace. `""` is the core [API group](../../references/api-groups.md#where-the-group-matters), not a missing value.
 
 > [!note]
 > The Forbidden message names the group the request needed. If it says `in API group "apps"`
@@ -218,8 +214,8 @@ A RoleBinding is the grant. It names one role and the subjects that get it:
 ## Reuse one definition in two namespaces
 
 A ClusterRole is a definition with no namespace, and a RoleBinding is allowed to point at one.
-So a ClusterRole can be written once and bound in as many namespaces as needed, instead of a
-Role in each: [the model](../../references/rbac.md#the-model).
+So a [ClusterRole](../../references/rbac.md#the-model) can be written once and bound in as many namespaces as needed, instead of a
+Role in each.
 
 1. Write the definition once and bind it twice:
 
@@ -249,8 +245,8 @@ built-in `view`, `edit` and `admin` roles are meant to be used this way.
 
 ## Reach a cluster-scoped resource
 
-[Nodes](../../references/workers.md) are not in a namespace. They are cluster-scoped, like namespaces themselves and
-PersistentVolumes, which are pieces of storage that belong to the whole cluster: [namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
+[Nodes](../../references/workers.md) are not in a namespace. They are [cluster-scoped](../../references/namespaces.md#namespaced-and-cluster-scoped-resources), like namespaces themselves and
+PersistentVolumes, which are pieces of storage that belong to the whole cluster.
 
 1. Try to grant access to them the way that has worked so far:
 
@@ -329,8 +325,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster:
    subject gets it. The three `self…reviews` rows come from `system:basic-user`, which lets a
    subject ask what it is and what it may do. The `/api`, `/apis` and `/openapi` rows come
    from `system:discovery`, and the `/healthz`, `/livez`, `/readyz` and `/version` rows from
-   `system:public-info-viewer`. These paths are non-resource URLs:
-   [RBAC in this lab](../../references/rbac.md#in-this-lab).
+   `system:public-info-viewer`. These paths are [non-resource URLs](../../references/rbac.md#in-this-lab).
 
 4. See how much of this the cluster already came with:
 

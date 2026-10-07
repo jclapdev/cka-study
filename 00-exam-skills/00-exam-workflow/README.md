@@ -20,8 +20,7 @@ Starts from the [`cluster` lab](../../lab/labs/cluster/README.md). Every command
 
 ## Reach the right host
 
-You start on `base`, which has no `kubectl`. Each task names the host to `ssh` into:
-[hosts and ssh](../../references/kubectl.md#hosts-and-ssh).
+You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` into](../../references/kubectl.md#hosts-and-ssh).
 
 1. Try `kubectl` on `base`:
 
@@ -62,8 +61,7 @@ You start on `base`, which has no `kubectl`. Each task names the host to `ssh` i
 
 ## Type less with `k`
 
-`k` is `kubectl` with bash completion, on every host a task names:
-[the k alias and short names](../../references/kubectl.md#the-k-alias-and-short-names).
+[`k`](../../references/kubectl.md#the-k-alias-and-short-names) is `kubectl` with bash completion, on every host a task names.
 
 1. List the nodes with `k` and the short name `no`:
 
@@ -99,9 +97,8 @@ You start on `base`, which has no `kubectl`. Each task names the host to `ssh` i
 
 ## Generate YAML instead of typing it
 
-`--dry-run=client -o yaml` prints the object a command would create, without creating it.
-Redirect it to a file to edit before applying:
-[generating YAML](../../references/kubectl.md#generating-yaml).
+[`--dry-run=client -o yaml`](../../references/kubectl.md#generating-yaml) prints the object a command would create, without creating it.
+Redirect it to a file to edit before applying.
 
 1. Print a Pod:
 
@@ -202,8 +199,7 @@ Redirect it to a file to edit before applying:
 No `kubectl create` command writes a NetworkPolicy, a PersistentVolume or a
 PersistentVolumeClaim. A NetworkPolicy is a set of rules for which pods may talk to which, a
 PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's
-request for one. The docs have one for each, ready to copy:
-[snippets from the docs](../../references/kubectl.md#snippets-from-the-docs).
+request for one. The docs have [one for each](../../references/kubectl.md#snippets-from-the-docs), ready to copy.
 
 1. Search kubernetes.io for `network policy`, open
    [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/#default-deny-all-ingress-traffic),
@@ -231,7 +227,7 @@ request for one. The docs have one for each, ready to copy:
    ```
 
    Without `:set paste`, vim can indent each pasted line one step further than the one above
-   it, and the YAML no longer parses: [vim for YAML](../../references/kubectl.md#vim-for-yaml).
+   it, and the YAML no longer parses. [vim for YAML](../../references/kubectl.md#vim-for-yaml) has the other keys.
 
 3. Apply it to `drill`:
 
@@ -239,14 +235,13 @@ request for one. The docs have one for each, ready to copy:
    k apply -f deny.yaml -n drill
    ```
 
-   The lab's pod network, Flannel, does not enforce NetworkPolicies, so the policy exists but
-   blocks nothing here: [plugins](../../references/pod-network.md#plugins). The grader checks
+   The lab's pod network, [Flannel](../../references/pod-network.md#plugins), does not enforce NetworkPolicies, so the policy exists but
+   blocks nothing here. The grader checks
    the object.
 
 ## Look up a field
 
-`kubectl explain` prints the fields of any type, from the cluster's own schema:
-[kubectl explain](../../references/kubectl.md#kubectl-explain).
+[`kubectl explain`](../../references/kubectl.md#kubectl-explain) prints the fields of any type, from the cluster's own schema.
 
 1. Show one field and what it holds:
 
@@ -305,8 +300,7 @@ request for one. The docs have one for each, ready to copy:
 
 ## Change live objects
 
-Common changes have their own commands, which are faster than editing YAML:
-[changing live objects](../../references/kubectl.md#changing-live-objects).
+Common changes have [their own commands](../../references/kubectl.md#changing-live-objects), which are faster than editing YAML.
 
 1. Change the image, the replica count and a label:
 
@@ -344,8 +338,7 @@ Common changes have their own commands, which are faster than editing YAML:
 
 ## Check the result
 
-The grader reads the cluster, so read back the exact value a task asked for:
-[checking your work](../../references/kubectl.md#checking-your-work).
+The grader reads the cluster, so [read back](../../references/kubectl.md#checking-your-work) the exact value a task asked for.
 
 1. Print two fields with `jsonpath`, and the same from `describe`:
 
@@ -472,7 +465,7 @@ k scale deploy api --replicas=3 -n shop
 
 ## Check your work
 
-[Grade the run](../../lab/README.md#grading), or check by hand on `controlplane`:
+Grade the run, or check by hand on `controlplane`:
 
 1. The Deployment's image and ready replicas:
 
