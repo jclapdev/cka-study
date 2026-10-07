@@ -39,6 +39,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// The last domain in the README table, shown as a section of its own below the exam domains.
+const MOCK_EXAMS = "Mock Exams";
+
 const CHEAT_SHEET = "https://kubernetes.io/docs/reference/kubectl/quick-reference/";
 
 const navItem = ({ isActive }: { isActive: boolean }) =>
@@ -96,7 +99,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <LabIndicator s={loaderData.lab} />
           </li>
             {loaderData.domains.map((d) => (
-              <li key={d.name}>
+              <li key={d.name} className={d.name === MOCK_EXAMS ? "border-t border-line pt-4" : undefined}>
                 <p className="flex justify-between px-2 pb-1 text-sm font-semibold text-muted">
                   <span>{d.name}</span>
                   {d.weight !== null && <span>{d.weight}%</span>}

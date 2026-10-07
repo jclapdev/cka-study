@@ -7,7 +7,7 @@ Fix these in order before building more topics. Compared with KodeKloud's CKA co
 - [x] 1. Split each topic into short lessons in the sidebar (Find a chart, Install a release, …), followed by Quiz and Practice. Helm is 491 lines on one page; KodeKloud splits Helm into 7 lessons.
 - [x] 2. Replace the four tabs (Learn, Lab, Exercise, References) with one path: the Learn text opens the topic, the steps follow, the lab sits beside it, and references are plain links.
 - [x] 3. Take domain and topic names from the README table instead of folder names, using short names such as "Helm", "etcd Backup and Restore" and "Network Troubleshooting".
-- [ ] 4. Make "Mock Exams" its own section at the bottom of the sidebar.
+- [x] 4. Make "Mock Exams" its own section at the bottom of the sidebar.
 
 ## Wording
 
