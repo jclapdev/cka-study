@@ -318,9 +318,8 @@ the fields to add or replace.
    deployment.apps/prod-web   3/3     3            3           1s
    ```
 
-   The pods are missing, because the label was not added to the pod template. `-l app=web`
-   finds them: [labels](../../references/kustomize.md#labels) and
-   [selectors](../../references/labels.md#keys-and-values).
+   The pods are missing, because the [label](../../references/kustomize.md#labels) was not added to the pod template. `-l app=web`
+   finds them, because that [selector](../../references/labels.md#keys-and-values) matches the pod template's labels.
 
 ## Generate a ConfigMap
 
@@ -610,7 +609,7 @@ Grade the run, or check by hand on `controlplane`:
 
 ## Further reading
 
-* [kustomize](../../references/kustomize.md) has the fields an overlay can set, patches,
+* The [Kustomize](../../references/kustomize.md) reference has the fields an overlay can set, patches,
   generated names and the failure modes in one place.
 * [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
   covers `secretGenerator`, `generatorOptions` and `replacements`, which copies a field from one

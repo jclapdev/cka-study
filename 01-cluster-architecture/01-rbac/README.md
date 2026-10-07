@@ -61,9 +61,9 @@ within.
    kubeadm:cluster-admins   ClusterRole/cluster-admin   7d12h           kubeadm:cluster-admins
    ```
 
-   The group is bound to `cluster-admin`, which permits everything. That binding is the only
-   reason your commands work, and it is an ordinary object of the same kind you are about to
-   create: [the model](../../references/rbac.md#the-model) and [subjects](../../references/rbac.md#subjects).
+   The [group](../../references/rbac.md#subjects) is bound to `cluster-admin`, which permits everything. That binding is the only
+   reason your commands work, and it is an ordinary [object](../../references/rbac.md#the-model) of the same kind you are about to
+   create.
 
 ## Create an identity
 
@@ -458,7 +458,7 @@ k auth can-i list pods -n default --as=anyone --as-group=auditors
 
 ## Further reading
 
-* [rbac](../../references/rbac.md) has the object model, the subject kinds, the roles every
+* The [RBAC](../../references/rbac.md) reference has the object model, the subject kinds, the roles every
   subject gets, and the failure modes in one place.
 * [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
   is the reference for every field of a Role, a ClusterRole and both bindings.

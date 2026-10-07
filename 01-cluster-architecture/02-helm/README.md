@@ -475,7 +475,7 @@ Grade the run, or check by hand on `controlplane`:
 
 ## Further reading
 
-* [helm](../../references/helm.md) has the model, where releases are stored, and the error
+* The [Helm](../../references/helm.md) reference has the model, where releases are stored, and the error
   messages in one place.
 * [Using Helm](https://helm.sh/docs/intro/using_helm/) covers `--set` syntax for lists and
   nested keys, and the other install sources: a local folder, a `.tgz` and a URL.

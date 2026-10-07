@@ -41,7 +41,7 @@ The CA hash lets the node check that it reached the right cluster. The bootstrap
 
 kubeadm installs no pod network, so a new cluster's nodes stay `NotReady` until you install one ([how the pod network works](pod-network.md)). It also installs no storage, ingress or dashboard, which leaves those choices to whoever runs the cluster.
 
-The phases, files, commands and errors are on the reference pages: [kubeadm](../references/kubeadm.md) and [workers](../references/workers.md#joining).
+The [kubeadm](../references/kubeadm.md) reference has the phases, files, commands and errors, and the [workers](../references/workers.md#joining) reference has the join.
 
 ## Further reading
 

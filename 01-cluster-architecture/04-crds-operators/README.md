@@ -165,8 +165,8 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    Error from server (NotFound): Unable to list "stable.example.com/v1, Resource=crontabs": the server could not find the requested resource (get crontabs.stable.example.com)
    ```
 
-   Deleting a CRD deletes every object of its type, in every namespace:
-   [delete a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#delete-a-customresourcedefinition).
+   [Deleting a CRD](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#delete-a-customresourcedefinition)
+   deletes every object of its type, in every namespace.
 
 ## Install an operator
 
@@ -598,7 +598,7 @@ Grade the run, or check by hand on `controlplane`:
 
 ## Further reading
 
-* [crds](../../references/crds.md) has the parts of a CRD, validation, operators and the failure
+* The [CRDs and operators](../../references/crds.md) reference has the parts of a CRD, validation, operators and the failure
   modes in one place.
 * [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
   explains when to add a custom resource, and the other way to extend the API, aggregation, which

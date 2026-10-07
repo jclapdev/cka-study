@@ -489,7 +489,7 @@ Grade the run, or check by hand on `controlplane`:
 
 ## Further reading
 
-* [kubectl](../../references/kubectl.md) has every command in this topic, the vim keys and
+* The [kubectl](../../references/kubectl.md) reference has every command in this topic, the vim keys and
   the docs pages worth knowing, in one place.
 * [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is on
   the allowed docs and lists more [imperative](../../references/kubectl.md#generating-yaml) commands and `jsonpath` examples.

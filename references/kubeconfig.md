@@ -13,7 +13,7 @@ Nothing in the file is a permission. It is identity only; what that identity may
 
 ## Resolution order
 
-The full rules: [merging kubeconfig files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#merging-kubeconfig-files).
+[Merging kubeconfig files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#merging-kubeconfig-files) has the full rules.
 
 1. `--kubeconfig <file>`
 2. `$KUBECONFIG` — colon-separated list, merged left to right
@@ -43,7 +43,7 @@ Without the `chown`, the copy is still root-owned and kubectl cannot read it. `e
 
 ## Commands
 
-Every subcommand: [`kubectl config`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/).
+[`kubectl config`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/) lists every subcommand.
 
 ```bash
 kubectl config view                                  # merged, credentials redacted

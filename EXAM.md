@@ -25,9 +25,9 @@ The remote desktop is XFCE with a terminal and Firefox, and nothing else is on s
 - **Docs search.** The search box on kubernetes.io is allowed, but opening a result outside the allowed sites is not. The [Kustomize](references/kustomize.md) field reference at `kubectl.docs.kubernetes.io` is not on the allowed list.
 - **Partial credit.** A task is split into sub-tasks, and each one that is right in the final state scores. Harder sub-tasks can count for more. A task finished halfway still earns part of its weight.
 
-YAML comes from three places, fastest first. Nobody types a whole [manifest](references/kubectl.md#generating-yaml).
+YAML comes from three places, fastest first. Nobody types a whole manifest.
 
-1. An imperative command that writes it: `k create deployment web --image=nginx --dry-run=client -o yaml > web.yaml`. `k create`, `k run` and `k expose` cover [Deployments](references/workloads.md), [Pods](references/pod.md), [Services](references/services.md), [ConfigMaps](references/config.md), [Secrets](references/config.md#secrets), [Namespaces](references/namespaces.md), [ServiceAccounts](references/service-accounts.md), [Roles](references/rbac.md#the-model), bindings, [Jobs](references/workloads.md#other-workload-kinds) and [CronJobs](references/workloads.md#other-workload-kinds).
+1. An imperative command that writes it: `k create deployment web --image=nginx --dry-run=client -o yaml > web.yaml`. `k create`, `k run` and `k expose` cover [Deployments](references/workloads.md), [Pods](references/pod.md), Services, [ConfigMaps](references/config.md), [Secrets](references/config.md#secrets), [Namespaces](references/namespaces.md), [ServiceAccounts](references/service-accounts.md), [Roles](references/rbac.md#the-model), bindings, [Jobs](references/workloads.md#other-workload-kinds) and CronJobs.
 2. A snippet from a kubernetes.io page, found with the search box. Many pages have an example file with a copy button, or a ready-to-paste `cat <<EOF` block. Paste it, then change the names and values.
 3. `k explain <kind>.<field>`, when you know a field exists but not where it goes. `--recursive` prints the whole tree.
 
@@ -60,7 +60,7 @@ Sources: [Linux Foundation tips for the CKA](https://docs.linuxfoundation.org/tc
 
 - Understand connectivity between Pods.
 - Define and enforce Network Policies.
-- Use [ClusterIP](references/services.md#service-types), [NodePort](references/services.md#service-types) and [LoadBalancer](references/services.md#service-types) service types and endpoints.
+- Use [ClusterIP](references/services.md#service-types), NodePort and LoadBalancer service types and endpoints.
 - Use the Gateway API to manage Ingress traffic.
 - Know how to use Ingress [controllers](references/control-plane.md#components) and Ingress resources.
 - Understand and use [CoreDNS](references/pod-network.md#coredns).

@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Reports links that break the linking rules in the Markdown files given.
 
-- REPEAT: a link to a target (page and #section) that the page already linked earlier.
+- REPEAT: a link to a page or #section in this repo that the page already linked earlier.
   Link a term only the first time it appears. In a topic README each lesson is a page.
 - TRAILING: a link tacked on after a colon at the end of a sentence, as in
   "... in one namespace: [releases](helm.md#releases)." Put the link on the term instead.
 
-Links in code blocks, web links and links in a "## Docs" or "## Further reading"
-list are not checked.
+Links in code blocks and in a "## Docs" or "## Further reading" list are not checked.
 Usage: check-links-once.py FILE.md [FILE.md ...]   Exits 1 if anything is reported.
 """
 import re
@@ -37,10 +36,10 @@ for path in sys.argv[1:]:
             continue
         for m in LINK.finditer(line):
             text, target = m.groups()
-            if re.match(r"(https?:|#)", target):
-                continue
             key = re.sub(r"^(\.\./)+", "", target)
-            if key in seen:
+            if re.match(r"(https?:|#)", target):
+                pass
+            elif key in seen:
                 print(f"{path}:{n}: REPEAT [{text}] already linked on line {seen[key]}")
                 failed = True
             else:
@@ -49,7 +48,7 @@ for path in sys.argv[1:]:
             before = unquote(line[: m.start()])
             if not before and n > 1:
                 before = unquote(lines[n - 2])
-            after = line[m.end():].lstrip()
+            after = re.sub(r"^\s*and \[[^\]]+\]\([^)]+\)", "", line[m.end():]).lstrip()
             if before.endswith(":") and (after[:1] in (".", "") or after.startswith(").")):
                 print(f"{path}:{n}: TRAILING [{text}] after a colon")
                 failed = True

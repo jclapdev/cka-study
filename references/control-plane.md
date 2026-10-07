@@ -27,7 +27,7 @@ the difference, such as creating a pod when a [Deployment](workloads.md) has too
 A static pod is a pod defined by a file in `/etc/kubernetes/manifests/` rather than
 by an API object. The kubelet watches that directory directly, so static pods start with no
 apiserver and no scheduler involved ([how the control plane starts itself](../learn/cluster-architecture.md#how-the-control-plane-starts-itself)).
-Official task page: [create static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/).
+[Create static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/) has the steps.
 
 Because the kubelet reads the files directly:
 
