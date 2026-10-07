@@ -324,7 +324,7 @@ List everything the cluster is running:
 kubectl get pods -A -o wide
 ```
 
-The output is similar to this, with the columns this section does not discuss removed:
+The output is similar to this, with some columns removed:
 
 ```
 NAMESPACE      NAME                                   STATUS            IP              NODE

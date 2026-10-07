@@ -36,8 +36,8 @@ charts and their versions.
    legacy	legacy   	1       	2026-09-27 20:01:31.39597267 -0400 EDT	deployed	podinfo-6.14.0	6.14.0
    ```
 
-   `-A` means all namespaces, as it does for `kubectl`. The lab installed one release,
-   `legacy`, for the Practice section to find.
+   `-A` means all namespaces, as it does for `kubectl`. One release, `legacy`, is already
+   installed.
 
 2. Add a repository under a local name and download its index:
 
@@ -482,5 +482,5 @@ Grade the run, or check by hand on `controlplane`:
 * [Use OCI-based registries](https://helm.sh/docs/topics/registries/) covers installing charts
   from an `oci://` address instead of a repository.
 * [Custom Resource Definitions](https://helm.sh/docs/topics/charts/#custom-resource-definitions-crds)
-  explains how a chart installs [CRDs](../../references/crds.md) and why Helm never upgrades or deletes them, which the
-  CRDs and [operators](../../references/crds.md#operators) exercise builds on.
+  explains how a chart installs [CRDs](../../references/crds.md) and why Helm never upgrades or deletes them.
+  [CRDs and Operators](../04-crds-operators/README.md) builds on it.

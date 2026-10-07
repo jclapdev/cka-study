@@ -53,7 +53,7 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
    The first `exit` leaves root, and the second leaves `node01`. `ssh node02` from `node01`
    is nested ssh, which the CKA does not support and the lab refuses.
 
-4. Go to `controlplane`, where the rest of this exercise runs:
+4. Go to `controlplane`, where the rest of the steps run:
 
    ```shell
    ssh controlplane
@@ -236,8 +236,7 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
    ```
 
    The lab's pod network, [Flannel](../../references/pod-network.md#plugins), does not enforce NetworkPolicies, so the policy exists but
-   blocks nothing here. The grader checks
-   the object.
+   blocks nothing here. A task that asks for a NetworkPolicy is graded on the object.
 
 ## Look up a field
 
@@ -338,7 +337,7 @@ Common changes have [their own commands](../../references/kubectl.md#changing-li
 
 ## Check the result
 
-The grader reads the cluster, so [read back](../../references/kubectl.md#checking-your-work) the exact value a task asked for.
+Only the cluster's final state is graded, so [read back](../../references/kubectl.md#checking-your-work) the exact value a task asked for.
 
 1. Print two fields with `jsonpath`, and the same from `describe`:
 
@@ -490,7 +489,7 @@ Grade the run, or check by hand on `controlplane`:
 
 ## Next
 
-* [kubectl](../../references/kubectl.md) has every command above, the vim keys and
+* [kubectl](../../references/kubectl.md) has every command in this topic, the vim keys and
   the docs pages worth knowing, in one place.
 * [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is on
   the allowed docs and lists more [imperative](../../references/kubectl.md#generating-yaml) commands and `jsonpath` examples.

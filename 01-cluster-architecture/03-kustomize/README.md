@@ -16,7 +16,7 @@ Starts from the [`kustomize` lab](../../lab/labs/kustomize/README.md). Every com
 * Generate a [ConfigMap](../../references/config.md) whose name changes with its contents, and watch the [Deployment](../../references/workloads.md) roll.
 * Apply and delete everything a kustomization produces with `-k`.
 
-Every YAML file in this exercise comes from `kubectl create --dry-run` or from the allowed docs.
+Every YAML file in the steps comes from `kubectl create --dry-run` or from the allowed docs.
 The Kustomize snippets are all on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
@@ -614,4 +614,4 @@ Grade the run, or check by hand on `controlplane`:
   generated names and the failure modes in one place.
 * [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
   covers `secretGenerator`, `generatorOptions` and `replacements`, which copies a field from one
-  object into others. This exercise does not use them.
+  object into others.
