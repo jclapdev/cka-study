@@ -1,6 +1,6 @@
 # Kustomize
 
-Kustomize builds a set of [manifests](exam-workflow.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. The lab's `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
+Kustomize builds a set of [manifests](kubectl.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. The lab's `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
 
 [How Kustomize works](../learn/kustomize.md) explains bases and overlays and compares Kustomize with [Helm](helm.md).
 
@@ -23,11 +23,11 @@ These fields change every object, or one named object, without a patch ([setting
 | `namePrefix`, `nameSuffix` | Adds to every object's name, and rewrites references to those names, such as a [Deployment](workloads.md)'s reference to a [ConfigMap](config.md). |
 | `labels` | Adds [labels](labels.md). See [labels](#labels) below. |
 | `images` | Changes the tag, digest or name of every container that uses the named image ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). |
-| `replicas` | Sets the replica count of the named Deployment, [ReplicaSet](workloads.md#deployments-and-replicasets) or [StatefulSet](workloads.md#other-workload-kinds). The allowed docs do not describe it, so in the exam use the `increase_replicas.yaml` patch from [customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing) instead. |
+| `replicas` | Sets the replica count of the named Deployment, [ReplicaSet](workloads.md#deployments-and-replicasets) or [StatefulSet](workloads.md#other-workload-kinds). The allowed docs do not describe it, so use the `increase_replicas.yaml` patch from [customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing) instead. |
 
 `images` and `replicas` name their target as the base does: the image `nginx`, the Deployment `web`, not `prod-web`.
 
-Every field above has a copyable example on the allowed Kustomize page except `replicas`. Search kubernetes.io for `kustomize` to reach it in the exam.
+Every field above has a copyable example on the allowed Kustomize page except `replicas`. Search kubernetes.io for `kustomize` to reach it.
 
 ## Labels
 
@@ -40,7 +40,7 @@ In the lab, an overlay with `env: prod` and neither flag gave a Deployment that 
 
 ## Patches
 
-A patch is a partial [manifest](exam-workflow.md#generating-yaml) with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. This kind of patch is a strategic merge patch, which is merged into the object field by field. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container:
+A patch is a partial [manifest](kubectl.md#generating-yaml) with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. This kind of patch is a strategic merge patch, which is merged into the object field by field. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container:
 
 ```yaml
 patches:

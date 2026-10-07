@@ -31,7 +31,7 @@ Official task page: [create static pods](https://kubernetes.io/docs/tasks/config
 
 Because the kubelet reads the files directly:
 
-- Editing a [manifest](exam-workflow.md#generating-yaml) file restarts that component within seconds. This is how a
+- Editing a [manifest](kubectl.md#generating-yaml) file restarts that component within seconds. This is how a
   control plane component is reconfigured.
 - Deleting a static pod with `kubectl delete pod` does nothing lasting. In the lab,
   `kube-scheduler-controlplane` is back `Running` 5 seconds after it is deleted,

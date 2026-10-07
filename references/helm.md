@@ -1,6 +1,6 @@
 # Helm
 
-Helm is a package manager for Kubernetes. It installs a [chart](#charts-repositories-and-releases), which is a package of templated [manifests](exam-workflow.md#generating-yaml), into a cluster as a release, and keeps a numbered revision for every change to it. [How Helm works](../learn/helm.md) explains the model. The lab runs Helm 4.3.0.
+Helm is a package manager for Kubernetes. It installs a [chart](#charts-repositories-and-releases), which is a package of templated [manifests](kubectl.md#generating-yaml), into a cluster as a release, and keeps a numbered revision for every change to it. [How Helm works](../learn/helm.md) explains the model. The lab runs Helm 4.3.0.
 
 ## Charts, repositories and releases
 

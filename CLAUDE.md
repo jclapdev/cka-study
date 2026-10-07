@@ -1,6 +1,6 @@
 # CKA practice labs
 
-The reader is studying for the CKA. [README.md](README.md) is the entry point and lists every topic with its status. [lab/README.md](lab/README.md) is the Getting started page: setup, grading and troubleshooting. [lab/labs/](lab/labs/README.md) holds one folder per lab an exercise starts from, and its README lists the machines. [EXAM.md](EXAM.md) covers the exam. `app/` is the study app that shows each topic as lessons in the sidebar: Introduction, its Learn pages, one lesson per steps section, Quiz and Practice, with the lab beside each lesson. Learn pages in `learn/` explain how a technology works and why. Reference pages in `references/` hold the facts, commands and errors to look up.
+The reader is studying for the CKA. [README.md](README.md) is the entry point and lists every topic with its status. [lab/README.md](lab/README.md) is the Getting started page: setup, grading and troubleshooting. [lab/labs/](lab/labs/README.md) holds one folder per lab an exercise starts from, and its README lists the machines. [EXAM.md](EXAM.md) is the About the CKA page: the format, the domains and their competencies. `app/` is the study app that shows each topic as lessons in the sidebar: Introduction, its Learn pages, one lesson per steps section, Quiz and Practice, with the lab beside each lesson. Learn pages in `learn/` explain how a technology works and why. Reference pages in `references/` hold the facts, commands and errors to look up.
 
 ## Skills
 

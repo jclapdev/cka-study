@@ -75,9 +75,9 @@ pod template	references/workloads.md#the-pod-template
 rollout	references/workloads.md#rollouts
 ConfigMap	references/config.md
 Secret	references/config.md#secrets
-manifest	references/exam-workflow.md#generating-yaml
-imperative	references/exam-workflow.md#generating-yaml
-jsonpath	references/exam-workflow.md#checking-your-work
+manifest	references/kubectl.md#generating-yaml
+imperative	references/kubectl.md#generating-yaml
+jsonpath	references/kubectl.md#checking-your-work
 # Topics not built yet: each page defines the term where it first appears.
 NetworkPolicy	inline
 PersistentVolume	inline
@@ -137,7 +137,7 @@ Using	known
 Setting	known
 Customizing	known
 Lease	inline
-Quick Reference	references/exam-workflow.md#snippets-from-the-docs
+Quick Reference	references/kubectl.md#snippets-from-the-docs
 HTTPS	known
 Transport Layer Security	known
 EndpointSlice	references/services.md#how-a-service-ip-answers

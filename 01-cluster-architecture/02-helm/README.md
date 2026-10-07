@@ -19,7 +19,7 @@ Starts from the [`helm` lab](../../lab/labs/helm/README.md). Every command runs 
 
 ## Find a chart
 
-A chart is a package of Kubernetes [manifests](../../references/exam-workflow.md#generating-yaml), and a repository is a web server that lists
+A chart is a package of Kubernetes [manifests](../../references/kubectl.md#generating-yaml), and a repository is a web server that lists
 charts and their versions: [charts, repositories and releases](../../references/helm.md#charts-repositories-and-releases).
 
 1. Check that Helm reaches the cluster. It reads the same kubeconfig as `kubectl`
@@ -406,7 +406,7 @@ No. The namespace is not part of the release, so it stays.
 
 ## Practice
 
-Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
+Do it again without the steps. Give yourself **15 minutes**.
 
 Start from a fresh [`helm` lab](../../lab/labs/helm/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).

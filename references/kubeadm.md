@@ -11,7 +11,7 @@ kubeadm turns machines that already run a [container runtime](workers.md#what-a-
 | `[preflight]` | Checks the machine and pulls the control plane images. A failed check stops `init` before it changes anything. |
 | `[certs]` | Creates a cluster [CA](certificates.md) and every [certificate](certificates.md) the components need, under `/etc/kubernetes/pki/`. |
 | `[kubeconfig]` | Writes `admin.conf`, `super-admin.conf`, `kubelet.conf`, `controller-manager.conf` and `scheduler.conf` to `/etc/kubernetes/`. |
-| `[etcd]`, `[control-plane]` | Writes the four [static pod](control-plane.md#static-pods) [manifests](exam-workflow.md#generating-yaml) to `/etc/kubernetes/manifests/`. |
+| `[etcd]`, `[control-plane]` | Writes the four [static pod](control-plane.md#static-pods) [manifests](kubectl.md#generating-yaml) to `/etc/kubernetes/manifests/`. |
 | `[kubelet-start]`, `[wait-control-plane]` | Starts the kubelet, which starts the static pods, and waits for them to be healthy. |
 | `[mark-control-plane]` | Labels and [taints](taints.md) the node as a control plane node. |
 | `[bootstrap-token]` | Creates the token that `kubeadm join` uses, valid for 24 hours. |

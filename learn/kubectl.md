@@ -36,13 +36,13 @@ Every type lives at a path under an API group and version, such as `/apis/apps/v
 
 | Way | Example | When it fits |
 | --- | --- | --- |
-| Imperative commands | `kubectl create deployment web --image=nginx` | One-off changes, and the exam's fastest path. |
+| Imperative commands | `kubectl create deployment web --image=nginx` | One-off changes, and the fastest path in a timed task. |
 | Imperative object configuration | `kubectl create -f web.yaml`, `kubectl replace -f web.yaml` | Working from a file you keep. |
 | Declarative object configuration | `kubectl apply -f web.yaml` | Files that you edit and apply again and again. |
 
 The commands combine. `kubectl create … --dry-run=client -o yaml` builds an object on your machine without sending it and prints it as YAML, so you get a correct file to edit before you apply it.
 
-The habits, shortcuts and checks for the exam are on the [exam workflow reference page](../references/exam-workflow.md), and the kubeconfig details on the [kubeconfig reference page](../references/kubeconfig.md).
+The shortcuts and checks are on the [kubectl reference page](../references/kubectl.md), and the kubeconfig details on the [kubeconfig reference page](../references/kubeconfig.md).
 
 ## Further reading
 

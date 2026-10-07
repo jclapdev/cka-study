@@ -1,6 +1,6 @@
 # Customizing Manifests with Kustomize
 
-[Kustomize](../../references/kustomize.md) builds a final set of [manifests](../../references/exam-workflow.md#generating-yaml) from plain YAML files plus a `kustomization.yaml` that
+[Kustomize](../../references/kustomize.md) builds a final set of [manifests](../../references/kubectl.md#generating-yaml) from plain YAML files plus a `kustomization.yaml` that
 lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is
 built into `kubectl`, so no template language and no extra tool is involved.
 [How Kustomize works](../../learn/kustomize.md) explains bases, overlays and generated names.
@@ -21,7 +21,7 @@ The Kustomize snippets are all on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
 paste straight into the terminal:
-[snippets from the docs](../../references/exam-workflow.md#snippets-from-the-docs).
+[snippets from the docs](../../references/kubectl.md#snippets-from-the-docs).
 
 ## Write a base
 
@@ -37,7 +37,7 @@ A base is a folder of ordinary manifests with a `kustomization.yaml` that lists 
    ```
 
    The Deployment labels its pods `app: web`, which is the selector `k create service` writes
-   for a Service named `web`: [generating YAML](../../references/exam-workflow.md#generating-yaml).
+   for a Service named `web`: [generating YAML](../../references/kubectl.md#generating-yaml).
 
 2. Ask Kustomize to build the folder:
 
@@ -485,7 +485,7 @@ template. `includeSelectors: true` adds it to the pod template and the selectors
 
 ## Practice
 
-Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
+Do it again without the steps. Give yourself **15 minutes**.
 
 Start from a fresh [`kustomize` lab](../../lab/labs/kustomize/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).

@@ -76,7 +76,7 @@ kubectl get clusterrolebinding kubeadm:cluster-admins -o wide
 ## Reading and testing permissions
 
 `kubectl auth can-i` answers `yes` or `no` without needing the subject's
-credentials, which is why it is the fastest tool under exam time:
+credentials, which is why it is the fastest tool under time pressure:
 
 ```bash
 kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
@@ -109,6 +109,6 @@ core API group ([api-groups](api-groups.md)).
 
 ## Docs
 
-- [Using RBAC authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) — the page to open under exam time
+- [Using RBAC authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) — the page to open first
 - [Authorization overview](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) · [ServiceAccounts](https://kubernetes.io/docs/concepts/security/service-accounts/)
 - [`kubectl auth can-i`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_auth/kubectl_auth_can-i/) · [`kubectl create role`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_role/) · [`kubectl create rolebinding`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_rolebinding/)

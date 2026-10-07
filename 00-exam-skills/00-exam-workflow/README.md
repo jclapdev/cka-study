@@ -1,9 +1,9 @@
-# Exam Workflow
+# Working with kubectl
 
-The exam gives each task on a different host, grades only the final state, and allows no tool
-beyond a terminal, vim and the kubernetes.io docs. In this exercise you reach the right host,
-generate YAML instead of typing it, copy snippets from the docs, and change and check live
-objects. The [exam page](../../EXAM.md) covers the format and grading, and
+Each CKA task runs on a host you reach with `ssh`, is graded only on the final state, and
+allows no tool beyond a terminal, vim and the kubernetes.io docs. In this topic you reach the
+right host, generate YAML instead of typing it, copy snippets from the docs, and change and
+check live objects. [About the CKA](../../EXAM.md) covers the format and grading, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command does.
 
 Starts from the [`cluster` lab](../../lab/labs/cluster/README.md). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
@@ -13,15 +13,15 @@ Starts from the [`cluster` lab](../../lab/labs/cluster/README.md). Every command
 * Start on `base`, reach a worker with `ssh`, become root, and get back to `base`.
 * Use `k`, its completion, and the short names for resource types.
 * Generate a [Pod](../../references/pod.md), [Deployment](../../references/workloads.md), [Service](../../references/services.md), [ConfigMap](../../references/config.md) and [Secret](../../references/config.md#secrets) with `--dry-run=client -o yaml`.
-* Find a [manifest](../../references/exam-workflow.md#generating-yaml) on kubernetes.io, copy it, and paste it into vim with its indentation intact.
+* Find a [manifest](../../references/kubectl.md#generating-yaml) on kubernetes.io, copy it, and paste it into vim with its indentation intact.
 * Look up a field with `kubectl explain`.
 * Change live objects without opening their YAML, and replace a pod whose change is rejected.
 * Read one value back to check the result.
 
 ## Reach the right host
 
-You start on `base`, which has no `kubectl`. Each exam task names the host to `ssh` into:
-[hosts and ssh](../../references/exam-workflow.md#hosts-and-ssh).
+You start on `base`, which has no `kubectl`. Each task names the host to `ssh` into:
+[hosts and ssh](../../references/kubectl.md#hosts-and-ssh).
 
 1. Try `kubectl` on `base`:
 
@@ -52,7 +52,7 @@ You start on `base`, which has no `kubectl`. Each exam task names the host to `s
    ```
 
    The first `exit` leaves root, and the second leaves `node01`. `ssh node02` from `node01`
-   is nested ssh, which the exam does not support and the lab refuses.
+   is nested ssh, which the CKA does not support and the lab refuses.
 
 4. Go to `controlplane`, where the rest of this exercise runs:
 
@@ -62,8 +62,8 @@ You start on `base`, which has no `kubectl`. Each exam task names the host to `s
 
 ## Type less with `k`
 
-`k` is `kubectl` with bash completion, on every exam host:
-[the k alias and short names](../../references/exam-workflow.md#the-k-alias-and-short-names).
+`k` is `kubectl` with bash completion, on every host a task names:
+[the k alias and short names](../../references/kubectl.md#the-k-alias-and-short-names).
 
 1. List the nodes with `k` and the short name `no`:
 
@@ -101,7 +101,7 @@ You start on `base`, which has no `kubectl`. Each exam task names the host to `s
 
 `--dry-run=client -o yaml` prints the object a command would create, without creating it.
 Redirect it to a file to edit before applying:
-[generating YAML](../../references/exam-workflow.md#generating-yaml).
+[generating YAML](../../references/kubectl.md#generating-yaml).
 
 1. Print a Pod:
 
@@ -203,7 +203,7 @@ No `kubectl create` command writes a NetworkPolicy, a PersistentVolume or a
 PersistentVolumeClaim. A NetworkPolicy is a set of rules for which pods may talk to which, a
 PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's
 request for one. The docs have one for each, ready to copy:
-[snippets from the docs](../../references/exam-workflow.md#snippets-from-the-docs).
+[snippets from the docs](../../references/kubectl.md#snippets-from-the-docs).
 
 1. Search kubernetes.io for `network policy`, open
    [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/#default-deny-all-ingress-traffic),
@@ -215,7 +215,7 @@ request for one. The docs have one for each, ready to copy:
    vim deny.yaml
    ```
 
-   Type `:set paste` and Enter, then `i`, then paste. Paste is Ctrl+Shift+V, in the exam
+   Type `:set paste` and Enter, then `i`, then paste. Paste is Ctrl+Shift+V, in the CKA
    terminal and in the lab's. Press Esc, and `:wq` to save. The file holds:
 
    ```yaml
@@ -231,7 +231,7 @@ request for one. The docs have one for each, ready to copy:
    ```
 
    Without `:set paste`, vim can indent each pasted line one step further than the one above
-   it, and the YAML no longer parses: [vim for YAML](../../references/exam-workflow.md#vim-for-yaml).
+   it, and the YAML no longer parses: [vim for YAML](../../references/kubectl.md#vim-for-yaml).
 
 3. Apply it to `drill`:
 
@@ -240,13 +240,13 @@ request for one. The docs have one for each, ready to copy:
    ```
 
    The lab's pod network, Flannel, does not enforce NetworkPolicies, so the policy exists but
-   blocks nothing here: [plugins](../../references/pod-network.md#plugins). The grader and the
-   exam check the object.
+   blocks nothing here: [plugins](../../references/pod-network.md#plugins). The grader checks
+   the object.
 
 ## Look up a field
 
 `kubectl explain` prints the fields of any type, from the cluster's own schema:
-[kubectl explain](../../references/exam-workflow.md#kubectl-explain).
+[kubectl explain](../../references/kubectl.md#kubectl-explain).
 
 1. Show one field and what it holds:
 
@@ -306,7 +306,7 @@ request for one. The docs have one for each, ready to copy:
 ## Change live objects
 
 Common changes have their own commands, which are faster than editing YAML:
-[changing live objects](../../references/exam-workflow.md#changing-live-objects).
+[changing live objects](../../references/kubectl.md#changing-live-objects).
 
 1. Change the image, the replica count and a label:
 
@@ -345,7 +345,7 @@ Common changes have their own commands, which are faster than editing YAML:
 ## Check the result
 
 The grader reads the cluster, so read back the exact value a task asked for:
-[checking your work](../../references/exam-workflow.md#checking-your-work).
+[checking your work](../../references/kubectl.md#checking-your-work).
 
 1. Print two fields with `jsonpath`, and the same from `describe`:
 
@@ -400,7 +400,7 @@ No. Each task is a new `ssh` session. Only `k` and its completion are always the
 
 ## Practice
 
-Do it again without the steps above, the way the exam asks. Give yourself **12 minutes**.
+Do it again without the steps. Give yourself **12 minutes**.
 
 Start from a fresh [`cluster` lab](../../lab/labs/cluster/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).
@@ -497,9 +497,9 @@ k scale deploy api --replicas=3 -n shop
 
 ## Next
 
-* [exam-workflow](../../references/exam-workflow.md) has every command above, the vim keys and
+* [kubectl](../../references/kubectl.md) has every command above, the vim keys and
   the docs pages worth knowing, in one place.
 * [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is on
-  the allowed docs and lists more [imperative](../../references/exam-workflow.md#generating-yaml) commands and `jsonpath` examples.
-* [killer.sh](https://killer.sh) (not available in the exam) is the exam's remote desktop, where
+  the allowed docs and lists more [imperative](../../references/kubectl.md#generating-yaml) commands and `jsonpath` examples.
+* [killer.sh](https://killer.sh) (not available in the exam) runs the CKA's remote desktop, where
   Ctrl+Shift+C and Ctrl+Shift+V can be practised for real.

@@ -39,7 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// The last domain in the README table, shown as a section of its own below the exam domains.
+// The last domain in the README table, shown as a section of its own below the others.
 const MOCK_EXAMS = "Mock Exams";
 
 const CHEAT_SHEET = "https://kubernetes.io/docs/reference/kubectl/quick-reference/";
@@ -162,7 +162,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
               {[
                 ["/doc/lab/README.md", "Getting started"],
                 ["/labs", "Labs"],
-                ["/doc/EXAM.md", "Exam guide"],
+                ["/doc/EXAM.md", "About the CKA"],
                 ["/doc/references/README.md", "References"],
               ].map(([to, label]) => (
                 <li key={to}>

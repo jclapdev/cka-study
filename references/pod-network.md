@@ -52,7 +52,7 @@ Flannel is a simple CNI plugin that connects the nodes' pod ranges into one netw
 kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 ```
 
-Calico is another widely used CNI plugin. It enforces NetworkPolicy and defaults to `192.168.0.0/16`, so its [manifest](exam-workflow.md#generating-yaml) needs editing unless `init` used that range. With Flannel, a NetworkPolicy is accepted and has no effect.
+Calico is another widely used CNI plugin. It enforces NetworkPolicy and defaults to `192.168.0.0/16`, so its [manifest](kubectl.md#generating-yaml) needs editing unless `init` used that range. With Flannel, a NetworkPolicy is accepted and has no effect.
 
 The plugin's pods run as a [DaemonSet](daemonsets.md) that tolerates `NoSchedule` [taints](taints.md), so they start on `controlplane` while it is still `NotReady`. Flannel puts its DaemonSet in a [namespace](namespaces.md) of its own, `kube-flannel`, so `kubectl get pods -n kube-system` does not show it. Use `-A`.
 
@@ -82,6 +82,6 @@ CoreDNS is the cluster's DNS server, a [Deployment](workloads.md) of two replica
 - [Customising CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)
 - [Flannel](https://github.com/flannel-io/flannel) · [Calico quickstart](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart) (not available in the exam)
 
-The exam allows the documentation a task links in its [Quick Reference](exam-workflow.md#snippets-from-the-docs) box, which is where a plugin's docs would come from ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)).
+The CKA allows the documentation a task links in its [Quick Reference](kubectl.md#snippets-from-the-docs) box, which is where a plugin's docs would come from ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)).
 
 Related: [kubeadm](kubeadm.md), [pod](pod.md), [workers](workers.md), [control-plane](control-plane.md).

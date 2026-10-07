@@ -59,7 +59,7 @@ export default function Home() {
 
       <section className="mt-10">
         <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-xl font-bold">Exam readiness</h2>
+          <h2 className="text-xl font-bold">Domains</h2>
           <span className="text-sm text-muted">Pass mark {PASS}%</span>
         </div>
         <ul className="mt-4 space-y-4">
@@ -73,7 +73,7 @@ export default function Home() {
                 <li key={d.name}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm">
                     <span className="font-semibold">
-                      {d.name} <span className="font-normal text-muted">{d.weight}% of the exam</span>
+                      {d.name} <span className="font-normal text-muted">{d.weight}%</span>
                     </span>
                     <span className="tabular-nums text-muted">
                       {done} of {d.topics.length} topics finished · practice average {avg}%

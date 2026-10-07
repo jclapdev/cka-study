@@ -14,7 +14,7 @@ Starts from the [`crds` lab](../../lab/labs/crds/README.md). Every command runs 
 * See the schema reject a wrong value and an unknown field.
 * Install an operator, [cert-manager](../../references/crds.md#operators), with Helm, and list the CRDs it brought.
 * Build a custom resource with `k explain`, and watch the operator act on it.
-* Save a CRD list and a field's documentation to files, as exam tasks ask.
+* Save a CRD list and a field's documentation to files.
 
 ## Look for custom resources
 
@@ -177,8 +177,8 @@ An operator is a controller for custom resources. cert-manager issues [TLS](../.
 create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets):
 [operators](../../references/crds.md#operators).
 
-1. Install cert-manager's Helm chart, with its CRDs. An exam task gives the chart and version, or
-   links the operator's install page in its [Quick Reference](../../references/exam-workflow.md#snippets-from-the-docs) box:
+1. Install cert-manager's Helm chart, with its CRDs. A task gives the chart and version, or
+   links the operator's install page in its [Quick Reference](../../references/kubectl.md#snippets-from-the-docs) box:
 
    ```shell
    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
@@ -246,7 +246,7 @@ create a `Certificate` object, and its controller writes the key and certificate
 
 No `kubectl create` command and no kubernetes.io page writes a cert-manager object. `k explain`
 reads the fields from the CRD's schema, and marks the required ones:
-[kubectl explain](../../references/exam-workflow.md#kubectl-explain).
+[kubectl explain](../../references/kubectl.md#kubectl-explain).
 
 1. Find what an Issuer can be, and what a [Certificate](../../references/crds.md#operators) needs:
 
@@ -379,7 +379,7 @@ reads the fields from the CRD's schema, and marks the required ones:
 
 ## Save answers to files
 
-Exam tasks often ask for a list or a piece of documentation in a file. Only the file is graded.
+Tasks often ask for a list or a piece of documentation in a file. Only the file is graded.
 
 1. Write the names of cert-manager's CRDs to a file:
 
@@ -433,7 +433,7 @@ It adds no behaviour: nothing acts on the objects until a controller watches the
 `backups.stable.example.com`, which is `<plural>.<group>`.
 </details>
 
-<details><summary>Where is a CRD example you can copy in the exam?</summary>
+<details><summary>Where is a CRD example you can copy from the allowed docs?</summary>
 
 Search kubernetes.io for `customresourcedefinition` and open "Extend the Kubernetes API with
 CustomResourceDefinitions". The `CronTab` example is under "Create a CustomResourceDefinition".
@@ -458,7 +458,7 @@ result, change the custom resource.
 
 ## Practice
 
-Do it again without the steps above, the way the exam asks. Give yourself **18 minutes**.
+Do it again without the steps. Give yourself **18 minutes**.
 
 Start from a fresh [`crds` lab](../../lab/labs/crds/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).

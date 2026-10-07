@@ -2,7 +2,7 @@
 
 `kubeadm` turns machines that already have a [container runtime](../../references/workers.md#what-a-worker-runs) and a [kubelet](../../references/control-plane.md#components) into a working
 Kubernetes cluster. It generates the [certificates](../../references/certificates.md), writes the [control plane](../../references/control-plane.md)'s [static pod](../../references/control-plane.md#static-pods)
-[manifests](../../references/exam-workflow.md#generating-yaml), and prints a command that joins other machines to what it built.
+[manifests](../../references/kubectl.md#generating-yaml), and prints a command that joins other machines to what it built.
 [How a cluster works](../../learn/cluster-architecture.md), [how kubeadm builds a cluster](../../learn/kubeadm.md)
 and [how the pod network works](../../learn/pod-network.md) explain the parts.
 
@@ -400,7 +400,7 @@ reset.
 
 ## Practice
 
-Do it again without the steps above, the way the exam asks. Give yourself **25 minutes**.
+Do it again without the steps. Give yourself **25 minutes**.
 
 Start from a fresh [`vms` lab](../../lab/labs/vms/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).

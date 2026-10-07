@@ -4,7 +4,7 @@ The facts, commands and errors for each concept the exercises use. [Learn](../le
 
 | File | Covers |
 | --- | --- |
-| [exam-workflow](exam-workflow.md) | hosts and ssh, `k` and short names, generating YAML, docs snippets, vim for YAML, `explain`, changing and checking live objects |
+| [kubectl](kubectl.md) | hosts and ssh, `k` and short names, generating YAML, docs snippets, vim for YAML, `explain`, changing and checking live objects |
 | [kubeadm](kubeadm.md) | what `init` does phase by phase, the advertise address, tokens, `reset`, preflight failures |
 | [control-plane](control-plane.md) | apiserver, etcd, controller-manager, scheduler, static pods, the control plane taint |
 | [workers](workers.md) | kubelet, containerd/CRI, the kubelet before a cluster exists, joining, node conditions, role labels |

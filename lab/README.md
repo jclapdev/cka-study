@@ -25,7 +25,7 @@ The first lab you start builds the machines, which takes about 6 minutes. [Labs]
 
 Each topic is a short course of lessons, listed under it in the sidebar: an introduction, how the technology works, one lesson per task with steps to tick off, a quiz, and a practice exam. The lab the topic needs sits beside each lesson, with **Start lab** to start it.
 
-**Open terminal** opens a shell on `base` beside the page. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the exam terminal.
+**Open terminal** opens a shell on `base` beside the page. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the CKA terminal.
 
 To clear your progress and scores, delete `app/data/progress.db`.
 
@@ -33,11 +33,11 @@ To clear your progress and scores, delete `app/data/progress.db`.
 
 A topic whose practice exam can be graded shows **Check my work** after you press **Finish**.
 
-It checks only the cluster's final state, one sub-task at a time, and prints each result, each task's share of its weight, and the total against the 66% pass mark. How you got there is never checked, which is how the exam grades. Mark the tasks it passed, then press **Save score**.
+It checks only the cluster's final state, one sub-task at a time, and prints each result, each task's share of its weight, and the total against the 66% pass mark. How you got there is never checked, which is how the CKA grades. Mark the tasks it passed, then press **Save score**.
 
-## Differences from the exam
+## Differences from the CKA
 
-* Swap, kernel modules and kernel settings such as `net.ipv4.ip_forward` are already handled here. On the exam, check them yourself, because [kubeadm](../references/kubeadm.md)'s preflight checks report them.
+* Swap, kernel modules and kernel settings such as `net.ipv4.ip_forward` are already handled here. In the CKA, check them yourself, because [kubeadm](../references/kubeadm.md)'s preflight checks report them.
 * `free`, `top` and `kubectl describe node` show your computer's memory and CPU, not one machine's.
 
 ## Commands

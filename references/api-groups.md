@@ -50,7 +50,7 @@ roles                                            rbac.authorization.k8s.io/v1   
 | Symptom | Cause |
 | --- | --- |
 | A Role for `deployments` exists, and the Forbidden message says `API group "apps"` | The rule's `apiGroups` is `[""]`. Change it to `["apps"]`. |
-| `no matches for kind "Deployment" in version "v1"` | The [manifest](exam-workflow.md#generating-yaml)'s `apiVersion` is missing the group. It must be `apps/v1`. |
+| `no matches for kind "Deployment" in version "v1"` | The [manifest](kubectl.md#generating-yaml)'s `apiVersion` is missing the group. It must be `apps/v1`. |
 
 ## Docs
 

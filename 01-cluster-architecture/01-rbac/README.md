@@ -406,7 +406,7 @@ group to `cluster-admin`.
 
 ## Practice
 
-Do it again without the steps above, the way the exam asks. Give yourself **15 minutes**.
+Do it again without the steps. Give yourself **15 minutes**.
 
 Start from a fresh [`cluster` lab](../../lab/labs/cluster/README.md). When time is up,
 [grade the run](../../lab/README.md#grading).

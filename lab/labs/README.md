@@ -8,12 +8,12 @@ The first lab you ever start builds the machines, which takes about 6 minutes. T
 
 | Machine | Role | Address |
 | --- | --- | --- |
-| `base` | Where you start, as in the exam. It has no Kubernetes tools; you `ssh` from it to the others. | `192.168.104.2` |
+| `base` | Where you start, as in the CKA. It has no Kubernetes tools; you `ssh` from it to the others. | `192.168.104.2` |
 | `controlplane` | Control plane. Almost all work happens here. | `192.168.104.10` |
 | `node01` | Worker | `192.168.104.11` |
 | `node02` | Worker | `192.168.104.12` |
 
-The cluster runs Kubernetes 1.34, one version behind the exam's 1.35, so the cluster-upgrade exercise can upgrade it to exactly the exam's version. Every machine has passwordless `sudo`.
+The cluster runs Kubernetes 1.34, one version behind the CKA's 1.35, so the Cluster Upgrade topic can upgrade it to exactly that version. Every machine has passwordless `sudo`.
 
 Reach the machine a step or task names with `ssh`:
 
@@ -23,6 +23,6 @@ sudo -i            # root, when the task needs it
 exit               # back to base (twice after sudo -i)
 ```
 
-Go back to `base` before moving to another machine. ssh from one of `controlplane`, `node01` and `node02` to another is refused, as in the exam.
+Go back to `base` before moving to another machine. ssh from one of `controlplane`, `node01` and `node02` to another is refused, as in the CKA.
 
-`kubectl` works only on `controlplane`. On a worker it fails with `localhost:8080 was refused`. `k` is an alias for `kubectl` with bash completion, as in the exam.
+`kubectl` works only on `controlplane`. On a worker it fails with `localhost:8080 was refused`. `k` is an alias for `kubectl` with bash completion, as in the CKA.

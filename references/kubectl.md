@@ -1,10 +1,10 @@
-# Exam workflow
+# kubectl
 
-The exam is 15 to 20 tasks in 2 hours on remote Linux hosts, with a terminal, vim, Firefox and the allowed docs. Only the final state is graded, with partial credit per sub-task ([Linux Foundation tips](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad) (not available in the exam)). The fastest correct path wins, so the habits below matter as much as the Kubernetes. [EXAM.md](../EXAM.md) has the sources.
+The commands, shortcuts and checks that get a task done fastest on a remote host with only a terminal, vim and the allowed docs. Only the final state is graded, with partial credit per sub-task ([Linux Foundation tips](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad) (not available in the exam)). [About the CKA](../EXAM.md) has the format.
 
 ## Hosts and ssh
 
-You start on a machine named `base`, which has no `kubectl`, `k`, `yq` or other exam tools. Each task opens with a box naming the host to `ssh` into, and all the task's work happens there. Work on the wrong host scores nothing for that task.
+You start on a machine named `base`, which has no `kubectl`, `k`, `yq` or other tools. Each task opens with a box naming the host to `ssh` into, and all the task's work happens there. Work on the wrong host scores nothing for that task.
 
 ```bash
 ssh node01      # from base, reach the host a task names
@@ -20,7 +20,7 @@ The lab works the same way: you start on `base`, and `ssh controlplane`, `ssh no
 
 ## The k alias and short names
 
-Every exam host has `k` as an alias for `kubectl`, with bash completion. Tab completes commands, resource types, object names and namespaces after `-n`.
+Every host a task names has `k` as an alias for `kubectl`, with bash completion. Tab completes commands, resource types, object names and namespaces after `-n`.
 
 Short names save typing, and `k api-resources` lists them all ([kubectl quick reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/#resource-types)):
 
@@ -60,7 +60,7 @@ What `kubectl create` fills in by itself:
 
 ## Snippets from the docs
 
-No `kubectl create` command writes these four kinds, so copy them from the docs instead. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The kubernetes.io search box is allowed, but opening a result outside the allowed sites is not. The Quick Reference box is the part of an exam task that links documentation for the tools that task needs, and those pages are allowed for it too ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)). Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
+No `kubectl create` command writes these four kinds, so copy them from the docs instead. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The kubernetes.io search box is allowed, but opening a result outside the allowed sites is not. The Quick Reference box is the part of a task that links documentation for the tools that task needs, and those pages are allowed for it too ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)). Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
 
 | Need | Page and section |
 | --- | --- |
@@ -76,7 +76,7 @@ After pasting, change the names, the namespace and the values the task gives. Le
 
 ## vim for YAML
 
-The exam blocks the INSERT key, so enter insert mode with `i`.
+The INSERT key is blocked, so enter insert mode with `i`.
 
 | Keys | Does |
 | --- | --- |
@@ -86,7 +86,7 @@ The exam blocks the INSERT key, so enter insert mode with `i`.
 | `V`, move, `>` or `<` | Selects lines and shifts them right or left by one indent. |
 | `:set et sw=2 ts=2` | Indents with two spaces instead of a tab, which YAML requires. |
 
-Paste in the exam terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, the same as in the lab's terminal in the study app. In Firefox they are Ctrl+V and Ctrl+C.
+Paste in the terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, in the CKA and in the lab. In Firefox they are Ctrl+V and Ctrl+C.
 
 ## kubectl explain
 
