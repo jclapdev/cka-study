@@ -1,6 +1,6 @@
 import { Link, useRouteLoaderData } from "react-router";
 import type { loader as rootLoader } from "~/root";
-import { Meter, pretty } from "~/root";
+import { Meter } from "~/root";
 import { PrepareLab } from "~/components/PrepareLab";
 
 type Data = Awaited<ReturnType<typeof rootLoader>>;
@@ -32,8 +32,8 @@ export default function Home() {
           <div className="rounded-md border border-line px-5 py-4">
             <div className="flex flex-wrap items-center gap-4">
               <div className="min-w-0 flex-1 basis-56">
-                <p className="text-sm text-muted">{pretty(next.domain)}</p>
-                <p className="text-lg font-semibold">{pretty(next.topic)}</p>
+                <p className="text-sm text-muted">{domains.find((d) => d.topics.includes(next))?.name}</p>
+                <p className="text-lg font-semibold">{next.name}</p>
                 <span className="mt-1 flex items-center gap-3 text-sm tabular-nums text-muted">
                   <span className="w-40"><Meter done={next.progress!.stepsDone} total={next.progress!.steps} /></span>
                   {next.progress!.stepsDone} of {next.progress!.steps} steps
@@ -73,7 +73,7 @@ export default function Home() {
                 <li key={d.name}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm">
                     <span className="font-semibold">
-                      {pretty(d.name)} <span className="font-normal text-muted">{d.weight}% of the exam</span>
+                      {d.name} <span className="font-normal text-muted">{d.weight}% of the exam</span>
                     </span>
                     <span className="tabular-nums text-muted">
                       {done} of {d.topics.length} topics finished · practice average {avg}%
@@ -104,7 +104,7 @@ export default function Home() {
             <tbody key={d.name}>
               <tr>
                 <th colSpan={4} className="pt-6 pb-2 text-left font-bold">
-                  {pretty(d.name)} {d.weight !== null && <span className="font-normal text-muted">{d.weight}%</span>}
+                  {d.name} {d.weight !== null && <span className="font-normal text-muted">{d.weight}%</span>}
                 </th>
               </tr>
               {d.topics.length === 0 && (
@@ -117,10 +117,10 @@ export default function Home() {
                   <td className="py-2">
                     {t.progress ? (
                       <Link to={`/t/${t.id}`} className="hover:text-accent hover:underline">
-                        {pretty(t.topic)}
+                        {t.name}
                       </Link>
                     ) : (
-                      <span className="text-muted">{pretty(t.topic)}</span>
+                      <span className="text-muted">{t.name}</span>
                     )}
                     {(missed(t) || score(t)) && (
                       <span className="mt-0.5 block text-sm text-muted sm:hidden">

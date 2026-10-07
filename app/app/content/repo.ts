@@ -6,32 +6,35 @@ export const REPO = path.resolve(process.env.CKA_REPO ?? path.join(process.cwd()
 
 const NUMBERED = /^\d\d-[a-z0-9-]+$/;
 
-export type Topic = { domain: string; topic: string; id: string; written: boolean };
+export type Topic = { domain: string; topic: string; id: string; name: string; written: boolean };
 export type Domain = { name: string; weight: number | null; topics: Topic[] };
 
-function dirs(dir: string) {
-  return fs
-    .readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && NUMBERED.test(d.name))
-    .map((d) => d.name)
-    .sort();
-}
-
+/**
+ * Every domain and topic, named and ordered as the Exercises table in the root README lists them.
+ * A domain row reads `| Name (25%) | [Topic](<domain>/<topic>…) | status |`, and each row after it
+ * with an empty first cell adds a topic.
+ */
 export function listDomains(): Domain[] {
   const readme = fs.readFileSync(path.join(REPO, "README.md"), "utf8");
-  return dirs(REPO).map((name) => {
-    const weight = readme.match(new RegExp(`${name} \\((\\d+)%\\)`));
-    return {
+  const domains: Domain[] = [];
+  for (const [, first, second] of readme.matchAll(/^\| (.*?) ?\| (.*?) \|.*\|$/gm)) {
+    if (first === "Domain" || first.startsWith("---")) continue;
+    if (first) {
+      const m = first.match(/^(.+?)(?: \((\d+)%\))?$/)!;
+      domains.push({ name: m[1], weight: m[2] ? Number(m[2]) : null, topics: [] });
+    }
+    const link = second.match(/^\[(.+)\]\((\d\d-[a-z0-9-]+)\/(\d\d-[a-z0-9-]+)/);
+    if (!link || !domains.length) continue;
+    const [, name, domain, topic] = link;
+    domains.at(-1)!.topics.push({
+      domain,
+      topic,
+      id: `${domain}/${topic}`,
       name,
-      weight: weight ? Number(weight[1]) : null,
-      topics: dirs(path.join(REPO, name)).map((topic) => ({
-        domain: name,
-        topic,
-        id: `${name}/${topic}`,
-        written: fs.existsSync(path.join(REPO, name, topic, "README.md")),
-      })),
-    };
-  });
+      written: fs.existsSync(path.join(REPO, domain, topic, "README.md")),
+    });
+  }
+  return domains;
 }
 
 /** Repo-relative path of a topic's README, or null when the topic does not exist. */

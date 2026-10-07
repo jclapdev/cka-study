@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { learnTitle, listDomains, listLabs, readMarkdown, topicReadme } from "../app/content/repo";
+import fs from "node:fs";
+import path from "node:path";
+import { learnTitle, listDomains, listLabs, readMarkdown, REPO, topicReadme } from "../app/content/repo";
 import { parseLabState } from "../app/lab/state.server";
 import { mdSection, pageLinks, parseExercise, renderDoc, summarize, untitled } from "../app/content/parse";
 
@@ -8,15 +10,31 @@ const RBAC = "01-cluster-architecture/01-rbac/README.md";
 const HELM = "01-cluster-architecture/02-helm/README.md";
 
 describe("repo", () => {
-  it("lists every domain and topic folder", () => {
+  it("names every domain and topic from the README table", () => {
     const domains = listDomains();
-    expect(domains.map((d) => d.name)).toContain("99-mock-exams");
-    expect(domains[0].name).toBe("00-exam-skills");
-    expect(domains[0].topics.filter((t) => t.written).map((t) => t.topic)).toEqual(["00-exam-workflow"]);
-    const arch = domains.find((d) => d.name === "01-cluster-architecture")!;
+    expect(domains.map((d) => d.name)).toEqual([
+      "kubectl Essentials",
+      "Cluster Architecture",
+      "Workloads and Scheduling",
+      "Services and Networking",
+      "Storage",
+      "Troubleshooting",
+      "Mock Exams",
+    ]);
+    expect(domains[0].topics.map((t) => [t.name, t.id])).toEqual([["Working with kubectl", "00-exam-skills/00-exam-workflow"]]);
+    const arch = domains[1];
     expect(arch.weight).toBe(25);
-    expect(arch.topics).toHaveLength(9);
-    expect(arch.topics.filter((t) => t.written).map((t) => t.topic)).toEqual(["00-kubeadm-install", "01-rbac", "02-helm", "03-kustomize", "04-crds-operators"]);
+    expect(arch.topics.filter((t) => t.written).map((t) => t.name)).toEqual(["kubeadm Installation", "RBAC", "Helm", "Kustomize", "CRDs and Operators"]);
+    expect(domains.at(-1)!.topics).toEqual([]);
+  });
+
+  it("has a README row for every topic folder", () => {
+    const listed = listDomains().flatMap((d) => d.topics.map((t) => t.id));
+    const folders = fs
+      .readdirSync(REPO)
+      .filter((d) => /^\d\d-/.test(d) && d !== "99-mock-exams")
+      .flatMap((d) => fs.readdirSync(path.join(REPO, d)).filter((t) => /^\d\d-/.test(t)).map((t) => `${d}/${t}`));
+    expect(listed.sort()).toEqual(folders.sort());
   });
 
   it("refuses paths outside the repo, non-Markdown and the app", () => {

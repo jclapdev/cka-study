@@ -5,7 +5,6 @@ import { listLabs, readMarkdown } from "~/content/repo";
 import { Markdown } from "~/components/Markdown";
 import { PrepareLab } from "~/components/PrepareLab";
 import type { loader as rootLoader } from "~/root";
-import { pretty } from "~/root";
 
 const INDEX = "lab/labs/README.md";
 
@@ -48,7 +47,7 @@ export default function Labs({ loaderData }: Route.ComponentProps) {
                   {users.map((t, i) => (
                     <span key={t.id}>
                       {i > 0 && ", "}
-                      <Link to={`/t/${t.id}`} className="text-accent hover:underline">{pretty(t.topic)}</Link>
+                      <Link to={`/t/${t.id}`} className="text-accent hover:underline">{t.name}</Link>
                     </span>
                   ))}
                   .

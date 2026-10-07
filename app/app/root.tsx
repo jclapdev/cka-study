@@ -39,16 +39,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const NAMES: Record<string, string> = {
-  rbac: "RBAC", crds: "CRDs", ha: "HA", pv: "PV", pvc: "PVC", api: "API", coredns: "CoreDNS",
-  etcd: "etcd", kubeadm: "kubeadm", configmaps: "ConfigMaps", storageclasses: "StorageClasses",
-};
-
-export const pretty = (folder: string) => {
-  const s = folder.replace(/^\d\d-/, "").replace(/-/g, " ").replace(/\b\w+\b/g, (w) => NAMES[w] ?? w);
-  return s[0].toUpperCase() + s.slice(1);
-};
-
 const CHEAT_SHEET = "https://kubernetes.io/docs/reference/kubectl/quick-reference/";
 
 const navItem = ({ isActive }: { isActive: boolean }) =>
@@ -108,7 +98,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
             {loaderData.domains.map((d) => (
               <li key={d.name}>
                 <p className="flex justify-between px-2 pb-1 text-sm font-semibold text-muted">
-                  <span>{pretty(d.name)}</span>
+                  <span>{d.name}</span>
                   {d.weight !== null && <span>{d.weight}%</span>}
                 </p>
                 {d.topics.length === 0 && <p className="px-2 py-1 text-[0.95rem] text-muted">Coming soon</p>}
@@ -124,7 +114,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                           }
                         >
                           <span className="flex items-baseline justify-between gap-2">
-                            {pretty(t.topic)}
+                            {t.name}
                             {t.progress.missed > 0 && (
                               <span className="text-xs text-missed" title="Quiz questions you missed">
                                 {t.progress.missed} missed
@@ -156,7 +146,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                         </>
                       ) : (
                         <span className="block px-2 py-1 text-[0.95rem] text-muted" title="Coming soon">
-                          {pretty(t.topic)}
+                          {t.name}
                         </span>
                       )}
                     </li>

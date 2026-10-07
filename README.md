@@ -21,35 +21,35 @@ The Practice sections match the real exam:
 
 | Domain | Topic | Status |
 | --- | --- | --- |
-| 00-exam-skills | [00-exam-workflow](00-exam-skills/00-exam-workflow/README.md) | ready |
-| 01-cluster-architecture (25%) | [00-kubeadm-install](01-cluster-architecture/00-kubeadm-install/README.md) | ready |
-| | [01-rbac](01-cluster-architecture/01-rbac/README.md) | ready |
-| | [02-helm](01-cluster-architecture/02-helm/README.md) | ready |
-| | [03-kustomize](01-cluster-architecture/03-kustomize/README.md) | ready |
-| | [04-crds-operators](01-cluster-architecture/04-crds-operators/README.md) | ready |
-| | 05-extension-interfaces | |
-| | 06-etcd-backup-restore | |
-| | 07-cluster-upgrade | |
-| | 08-ha-control-plane | |
-| 02-workloads-scheduling (15%) | 00-deployments-rollout-rollback | |
-| | 01-configmaps-secrets | |
-| | 02-self-healing | |
-| | 03-autoscaling | |
-| | 04-scheduling-admission | |
-| 03-services-networking (20%) | 00-pod-connectivity | |
-| | 01-services-endpoints | |
-| | 02-network-policies | |
-| | 03-ingress | |
-| | 04-gateway-api | |
-| | 05-coredns | |
-| 04-storage (10%) | 00-volume-types-access-modes-reclaim | |
-| | 01-pv-pvc-lifecycle | |
-| | 02-storageclasses-dynamic-provisioning | |
-| 05-troubleshooting (30%) | 00-cluster-and-nodes | |
-| | 01-control-plane-components | |
-| | 02-resource-monitoring | |
-| | 03-container-output-streams | |
-| | 04-services-networking-debug | |
-| 99-mock-exams | Full sets of 15 to 20 mixed tasks in 2 hours. | |
+| kubectl Essentials | [Working with kubectl](00-exam-skills/00-exam-workflow/README.md) | ready |
+| Cluster Architecture (25%) | [kubeadm Installation](01-cluster-architecture/00-kubeadm-install/README.md) | ready |
+| | [RBAC](01-cluster-architecture/01-rbac/README.md) | ready |
+| | [Helm](01-cluster-architecture/02-helm/README.md) | ready |
+| | [Kustomize](01-cluster-architecture/03-kustomize/README.md) | ready |
+| | [CRDs and Operators](01-cluster-architecture/04-crds-operators/README.md) | ready |
+| | [CNI, CSI and CRI](01-cluster-architecture/05-extension-interfaces) | |
+| | [etcd Backup and Restore](01-cluster-architecture/06-etcd-backup-restore) | |
+| | [Cluster Upgrade](01-cluster-architecture/07-cluster-upgrade) | |
+| | [High Availability](01-cluster-architecture/08-ha-control-plane) | |
+| Workloads and Scheduling (15%) | [Rollouts and Rollbacks](02-workloads-scheduling/00-deployments-rollout-rollback) | |
+| | [ConfigMaps and Secrets](02-workloads-scheduling/01-configmaps-secrets) | |
+| | [Self-Healing](02-workloads-scheduling/02-self-healing) | |
+| | [Autoscaling](02-workloads-scheduling/03-autoscaling) | |
+| | [Scheduling](02-workloads-scheduling/04-scheduling-admission) | |
+| Services and Networking (20%) | [Pod Networking](03-services-networking/00-pod-connectivity) | |
+| | [Services](03-services-networking/01-services-endpoints) | |
+| | [Network Policies](03-services-networking/02-network-policies) | |
+| | [Ingress](03-services-networking/03-ingress) | |
+| | [Gateway API](03-services-networking/04-gateway-api) | |
+| | [CoreDNS](03-services-networking/05-coredns) | |
+| Storage (10%) | [Volumes and Access Modes](04-storage/00-volume-types-access-modes-reclaim) | |
+| | [Persistent Volumes](04-storage/01-pv-pvc-lifecycle) | |
+| | [StorageClasses](04-storage/02-storageclasses-dynamic-provisioning) | |
+| Troubleshooting (30%) | [Node Troubleshooting](05-troubleshooting/00-cluster-and-nodes) | |
+| | [Control Plane Troubleshooting](05-troubleshooting/01-control-plane-components) | |
+| | [Resource Monitoring](05-troubleshooting/02-resource-monitoring) | |
+| | [Container Logs](05-troubleshooting/03-container-output-streams) | |
+| | [Network Troubleshooting](05-troubleshooting/04-services-networking-debug) | |
+| Mock Exams | Full sets of 15 to 20 mixed tasks in 2 hours. | |
 
 [learn/](learn/README.md) explains how each technology works, with diagrams and further reading. [references/](references/README.md) holds the facts, commands and errors to look up.
