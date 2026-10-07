@@ -1,4 +1,4 @@
-# Granting Permissions with RBAC
+# RBAC
 
 Role-based access control ([RBAC](../../references/rbac.md)) decides which requests the [apiserver](../../references/control-plane.md#components) allows, by matching the
 identity behind a request against the rules that have been bound to it.

@@ -1,4 +1,4 @@
-# Bootstrapping a Cluster with kubeadm
+# kubeadm Installation
 
 `kubeadm` turns machines that already have a [container runtime](../../references/workers.md#what-a-worker-runs) and a [kubelet](../../references/control-plane.md#components) into a working
 Kubernetes cluster. It generates the [certificates](../../references/certificates.md), writes the [control plane](../../references/control-plane.md)'s [static pod](../../references/control-plane.md#static-pods)

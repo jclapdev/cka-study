@@ -1,4 +1,4 @@
-# Customizing Manifests with Kustomize
+# Kustomize
 
 [Kustomize](../../references/kustomize.md) builds a final set of [manifests](../../references/kubectl.md#generating-yaml) from plain YAML files plus a `kustomization.yaml` that
 lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is

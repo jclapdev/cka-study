@@ -28,6 +28,11 @@ describe("repo", () => {
     expect(domains.at(-1)!.topics).toEqual([]);
   });
 
+  it("titles each written topic with its name from the README table", () => {
+    for (const t of listDomains().flatMap((d) => d.topics).filter((t) => t.written))
+      expect(summarize(readMarkdown(`${t.id}/README.md`)!).title).toBe(t.name);
+  });
+
   it("has a README row for every topic folder", () => {
     const listed = listDomains().flatMap((d) => d.topics.map((t) => t.id));
     const folders = fs
@@ -49,7 +54,7 @@ describe("repo", () => {
 describe("parse", () => {
   it("reads kubeadm-install's recall and practice", async () => {
     const ex = await parseExercise(readMarkdown(KUBEADM)!, KUBEADM);
-    expect(ex.title).toBe("Bootstrapping a Cluster with kubeadm");
+    expect(ex.title).toBe("kubeadm Installation");
     const recall = ex.sections.find((s) => s.kind === "recall");
     expect(recall?.kind === "recall" && recall.items).toHaveLength(5);
     const practice = ex.sections.find((s) => s.kind === "practice");

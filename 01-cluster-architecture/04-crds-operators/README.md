@@ -1,4 +1,4 @@
-# Extending the API with CRDs and Operators
+# CRDs and Operators
 
 A [CustomResourceDefinition](../../references/crds.md) (CRD) adds a new resource type to the [apiserver](../../references/control-plane.md#components), and an [operator](../../references/crds.md#operators) is a
 controller that watches objects of that type and does the work they describe. Installing an
