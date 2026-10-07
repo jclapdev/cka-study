@@ -57,6 +57,14 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => setOpen(false), [pathname]);
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    try { setHidden(localStorage.getItem("sidebar") === "hidden"); } catch {}
+  }, []);
+  const toggleSidebar = () => {
+    setHidden(!hidden);
+    try { localStorage.setItem("sidebar", hidden ? "shown" : "hidden"); } catch {}
+  };
   // A lab started from another page or tab keeps every page's lab status current until it is ready.
   const revalidator = useRevalidator();
   const starting = loaderData.lab.status === "starting";
@@ -66,8 +74,13 @@ export default function App({ loaderData }: Route.ComponentProps) {
     return () => clearInterval(t);
   }, [starting, revalidator]);
   return (
-    <div className="lg:grid lg:grid-cols-[17rem_1fr]">
-      <nav className="border-b border-line bg-surface lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
+    <div className={hidden ? "" : "lg:grid lg:grid-cols-[17rem_1fr]"}>
+      {hidden && (
+        <button onClick={toggleSidebar} aria-label="Show sidebar" title="Show sidebar" className="fixed left-3 top-3 z-20 hidden rounded border border-line bg-surface p-1.5 hover:bg-paper lg:block">
+          <SidebarIcon />
+        </button>
+      )}
+      <nav className={`border-b border-line bg-surface lg:sticky ${hidden ? "lg:hidden" : ""} lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r`}>
         <div className="flex items-center justify-between px-5 py-4">
           <NavLink to="/" className="text-lg font-bold">
             CKA Prep
@@ -79,6 +92,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
             className="rounded border border-line px-3 py-1 text-sm lg:hidden"
           >
             {open ? "Close" : "Topics"}
+          </button>
+          <button onClick={toggleSidebar} aria-label="Hide sidebar" title="Hide sidebar" className="hidden rounded p-1.5 text-muted hover:bg-paper lg:block">
+            <SidebarIcon />
           </button>
         </div>
         <ul id="topics" className={`space-y-5 px-3 pb-6 lg:block ${open ? "block" : "hidden"}`}>
@@ -152,6 +168,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Outlet />
       </main>
     </div>
+  );
+}
+
+function SidebarIcon() {
+  return (
+    <svg aria-hidden viewBox="0 0 20 20" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2.5" y="3.5" width="15" height="13" rx="2" />
+      <path d="M7.5 3.5v13" />
+    </svg>
   );
 }
 
