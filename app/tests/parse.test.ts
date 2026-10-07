@@ -114,36 +114,25 @@ describe("lab", () => {
       const ex = await parseExercise(readMarkdown(file)!, file);
       expect(ex.lab).toBe(lab);
       expect(summarize(readMarkdown(file)!).lab).toBe(lab);
-      expect(ex.labHtml).toContain('href="#lab"');
-      expect(ex.introHtml).not.toContain("Starts from");
+      expect(ex.introHtml).toContain('href="#lab"');
       expect(ex.sections.map((x) => x.title)).not.toEqual(expect.arrayContaining(["Prerequisites", "Lab setup", "Clean up"]));
     }
   });
 
   it("names a lab folder in every written exercise", () => {
-    const names = listLabs().map((l) => l.name);
+    const names = listLabs();
     for (const t of listDomains().flatMap((d) => d.topics).filter((t) => t.written)) {
       const lab = summarize(readMarkdown(`${t.id}/README.md`)!).lab;
       if (lab) expect(names).toContain(lab);
     }
   });
 
-  it("lists each lab after the lab it builds on", () => {
-    const labs = listLabs();
-    expect(labs.map((l) => [l.name, l.from])).toEqual([
-      ["vms", null],
-      ["cluster", "vms"],
-      ["crds", "cluster"],
-      ["helm", "cluster"],
-      ["kustomize", "cluster"],
-    ]);
-  });
-
-  it("links other labs to the Labs page, even on a topic page", async () => {
-    const helm = listLabs().find((l) => l.name === "helm")!;
-    const doc = await renderDoc(untitled(helm.md), "lab/labs/helm/README.md", { id: "01-cluster-architecture/02-helm", learn: ["helm"] });
-    expect(doc.html).toContain('href="/labs#cluster"');
-    expect(doc.html).not.toContain("<h1");
+  it("names an existing lab in each base file", () => {
+    const names = listLabs();
+    for (const l of names) {
+      const base = path.join(REPO, "lab/labs", l, "base");
+      if (fs.existsSync(base)) expect(names).toContain(fs.readFileSync(base, "utf8").trim());
+    }
   });
 });
 
@@ -170,10 +159,10 @@ describe("lab state", () => {
 });
 
 describe("bundle", () => {
-  it("pulls the Machines section out of the Labs page", () => {
-    const machines = mdSection(readMarkdown("lab/labs/README.md")!, "Machines");
+  it("pulls the Machines section out of Getting started", () => {
+    const machines = mdSection(readMarkdown("lab/README.md")!, "Machines");
     expect(machines).toContain("controlplane");
-    expect(mdSection(readMarkdown("lab/README.md")!, "Machines")).toBe("");
+    expect(machines).not.toContain("Grading");
     expect(mdSection(readMarkdown("lab/README.md")!, "nope")).toBe("");
   });
 });

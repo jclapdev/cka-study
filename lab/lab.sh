@@ -7,9 +7,9 @@
 #   docker compose exec app lab/lab.sh status
 #   docker compose exec app lab/lab.sh stop
 #
-# Each lab is a folder in lab/labs. Its README.md names the lab it builds on in a
-# "Builds on the [`<lab>` lab]" line, and its setup.sh, if any, runs on top of that lab.
-# A lab with no such line starts from freshly built machines (tag `clean`).
+# Each lab is a folder in lab/labs. Its `base` file names the lab it builds on, and its
+# setup.sh, if any, runs on top of that lab. A lab with no `base` file starts from
+# freshly built machines (tag `clean`).
 #
 # The first start of a lab saves the result as a docker image per machine,
 # cka-<machine>:<lab>, labelled with a hash of the lab's setup and everything it builds
@@ -19,7 +19,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 NODES=(controlplane node01 node02)
 
-from() { sed -n 's/^Builds on the \[`\([a-z0-9-]*\)` lab\].*/\1/p' "lab/labs/$1/README.md"; }
+from() { cat "lab/labs/$1/base" 2>/dev/null || true; }
 sum() { if command -v sha256sum >/dev/null; then sha256sum; else shasum -a 256; fi | cut -c1-12; }
 hash() {
   local parent; parent=$(from "$1")

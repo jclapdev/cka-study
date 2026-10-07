@@ -46,8 +46,8 @@ export type Lesson = {
   stepKeys: string[];
 };
 
-/** `lab` is the lab named by the "Starts from the … lab" line; `labHtml` is that line rendered. */
-export type Exercise = { title: string; introHtml: string; lab: string | null; labHtml: string; sections: Section[]; lessons: Lesson[] };
+/** `lab` is the lab folder the introduction links to. */
+export type Exercise = { title: string; introHtml: string; lab: string | null; sections: Section[]; lessons: Lesson[] };
 export type Summary = { title: string; stepKeys: string[]; recallKeys: string[]; hasPractice: boolean; lab: string | null; lessons: Lesson[] };
 
 /** Reads a Learn page's title from its name; the parser itself never touches the disk. */
@@ -142,17 +142,16 @@ export function summarize(md: string, learnTitle: LearnTitle = (n) => n): Summar
     stepKeys: lessons.flatMap((l) => l.stepKeys),
     recallKeys: sections.flatMap((s) => (s.kind === "recall" ? recallKeys(md, s.nodes).map((r) => r.key) : [])),
     hasPractice: sections.some((s) => s.kind === "practice"),
-    lab: labOf(intro).lab,
+    lab: labOf(intro),
     lessons,
   };
 }
 
-/** The "Starts from the [`<lab>` lab](…/lab/labs/<lab>/README.md)" paragraph and the lab it names. */
+/** The lab folder the introduction links to, as in "Every command runs in [the lab](…/lab/labs/<lab>/README.md)". */
 function labOf(intro: RootContent[]) {
-  const labLine = intro.find((n) => n.type === "paragraph" && /^Starts from/.test(toString(n)));
   let lab: string | null = null;
-  if (labLine) visit(labLine, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/labs\/([\w-]+)\/README\.md/)?.[1] ?? null));
-  return { labLine, lab: lab as string | null };
+  for (const n of intro) visit(n, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/labs\/([\w-]+)\/README\.md/)?.[1] ?? null));
+  return lab as string | null;
 }
 
 // ---------- rendering ----------
@@ -186,8 +185,6 @@ function rewriteLinks({ file, topic }: { file: string; topic?: InTopic }) {
       const learn = rel.match(/^learn\/([\w-]+)\.md$/)?.[1];
       const lab = rel.match(LAB_README);
       if (topic && lab && TOPIC_README.test(file)) el.properties.href = "#lab";
-      else if (lab) el.properties.href = `/labs#${lab[1]}`;
-      else if (rel === "lab/labs/README.md") el.properties.href = `/labs${suffix}`;
       else if (topic && learn && topic.learn.includes(learn)) el.properties.href = `/t/${topic.id}/${learn}${suffix}`;
       else if (readme) el.properties.href = `/t/${readme[1]}/${readme[2]}${suffix}`;
       else if (rel.endsWith(".md")) el.properties.href = `/doc/${rel}${suffix}`;
@@ -243,10 +240,8 @@ export function inTopic(md: string, file: string): InTopic | undefined {
 
 /** Parses a README into an Exercise. `file` is its repo-relative path, used to resolve links. */
 export async function parseExercise(md: string, file: string, learnTitle: LearnTitle = (n) => n): Promise<Exercise> {
-  const { title, intro: introNodes, sections } = splitSections(md);
+  const { title, intro, sections } = splitSections(md);
   const render = renderer(file, inTopic(md, file));
-  const { labLine, lab } = labOf(introNodes);
-  const intro = introNodes.filter((n) => n !== labLine);
   const out: Section[] = [];
 
   for (const s of sections) {
@@ -299,8 +294,7 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
   return {
     title,
     introHtml: await render.nodes(intro),
-    lab,
-    labHtml: labLine ? await render.nodes([labLine]) : "",
+    lab: labOf(intro),
     sections: out,
     lessons: lessonsOf(md, sections, learnTitle),
   };

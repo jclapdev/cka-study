@@ -161,7 +161,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <ul>
               {[
                 ["/doc/lab/README.md", "Getting started"],
-                ["/labs", "Labs"],
                 ["/doc/EXAM.md", "About the CKA"],
                 ["/doc/references/README.md", "References"],
               ].map(([to, label]) => (
@@ -196,23 +195,23 @@ function SidebarIcon() {
   );
 }
 
-const LAB_TEXT: Record<LabState["status"], [string, (lab: string | null) => string]> = {
-  running: ["bg-done", (l) => `${l} lab running`],
-  starting: ["bg-accent animate-pulse", (l) => `Starting the ${l} lab`],
-  failed: ["bg-missed", (l) => `The ${l} lab failed to start`],
-  stopped: ["bg-line", () => "No lab running"],
-  none: ["bg-line", () => "No lab running"],
-  unavailable: ["bg-missed", () => "Docker is not running"],
+const LAB_TEXT: Record<LabState["status"], [string, string]> = {
+  running: ["bg-done", "Lab running"],
+  starting: ["bg-accent animate-pulse", "Lab starting"],
+  failed: ["bg-missed", "Lab failed to start"],
+  stopped: ["bg-line", "No lab running"],
+  none: ["bg-line", "No lab running"],
+  unavailable: ["bg-missed", "Docker is not running"],
 };
 
-/** One line under Dashboard saying what the machines are doing, linking the Labs page. */
+/** One line under Dashboard saying what the machines are doing. */
 function LabIndicator({ s }: { s: LabState }) {
   const [dot, text] = LAB_TEXT[s.status];
   return (
-    <NavLink to="/labs" className={({ isActive }) => `flex items-center gap-2 rounded px-2 py-1 text-sm text-muted hover:bg-paper ${isActive ? "bg-paper" : ""}`}>
+    <p className="flex items-center gap-2 px-2 py-1 text-sm text-muted">
       <span aria-hidden className={`size-2 shrink-0 rounded-full ${dot}`} />
-      {text(s.lab)}
-    </NavLink>
+      {text}
+    </p>
   );
 }
 

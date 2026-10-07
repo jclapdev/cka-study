@@ -23,7 +23,7 @@ export async function action({ params, request }: Route.ActionArgs) {
     await promisify(execFile)(LAB_SH, ["stop"], { cwd: REPO });
     return null;
   }
-  if (!listLabs().some((l) => l.name === lab)) throw data(`No lab named ${lab}`, { status: 400 });
+  if (!listLabs().includes(lab)) throw data(`No lab named ${lab}`, { status: 400 });
   job.starting = lab;
   job.failed = null;
 

@@ -34,7 +34,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   const labFile = `lab/labs/${exercise.lab}/README.md`;
   const lab = exercise.lab ? readMarkdown(labFile) : null;
   const labHtml = lab ? (await renderDoc(untitled(lab), labFile, topic)).html : "";
-  const machinesHtml = (await renderDoc(mdSection(readMarkdown("lab/labs/README.md")!, "Machines"), "lab/labs/README.md", topic)).html;
+  const machinesHtml = (await renderDoc(mdSection(readMarkdown("lab/README.md")!, "Machines"), "lab/README.md", topic)).html;
   return {
     id,
     exercise: { ...exercise, sections: exercise.sections.filter((s) => lesson.sections.includes(s.slug)) },
@@ -203,13 +203,9 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
       <h2 className="text-lg font-bold">Lab</h2>
       {exercise.lab ? (
         <>
-          <Markdown html={exercise.labHtml} className="text-sm" />
+          <Markdown html={labHtml} className="text-sm" />
           <PrepareLab lab={exercise.lab} terminal={term ? null : () => setTerm(true)} />
           {!term && <div>{openTerminal}</div>}
-          <details className="rounded-md border border-line px-4 py-2">
-            <summary className="cursor-pointer text-sm font-semibold">About this lab</summary>
-            <Markdown html={labHtml} className="mt-3 text-sm" />
-          </details>
         </>
       ) : (
         <p className="text-muted">This topic has no lab.</p>

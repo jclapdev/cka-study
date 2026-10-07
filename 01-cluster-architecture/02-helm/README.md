@@ -4,7 +4,7 @@
 keeps a numbered history of that release so it can be upgraded, rolled back and uninstalled as
 one unit. [How Helm works](../../learn/helm.md) explains what happens during an install.
 
-Starts from the [`helm` lab](../../lab/labs/helm/README.md). Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
+Every command runs in [the lab](../../lab/labs/helm/README.md) on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -403,7 +403,7 @@ No. The namespace is not part of the release, so it stays.
 
 Do it again without the steps. Give yourself **15 minutes**.
 
-Start from a fresh [`helm` lab](../../lab/labs/helm/README.md). When time is up,
+Reset [the lab](../../lab/labs/helm/README.md) first. When time is up,
 [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 20%.** Add the chart repository

@@ -54,7 +54,6 @@ export default function Home() {
         ) : (
           <p className="text-muted">This topic has no lab.</p>
         )}
-        <Link to="/labs" className="mt-2 inline-block text-sm text-accent hover:underline">All labs</Link>
       </section>
 
       <section className="mt-10">

@@ -65,15 +65,15 @@ export function PrepareLab({ lab, terminal }: { lab: string; terminal: (() => vo
   let text: React.ReactNode;
   let actions: React.ReactNode;
   if (busy === "starting" || (s.status === "starting" && mine)) {
-    text = <>Starting the <Name lab={lab} /> lab. This takes {firstStart(s, lab)}.</>;
+    text = <>Starting the lab. This takes {firstStart(s, lab)}.</>;
     actions = startButton("Start lab");
   } else if (s.status === "unavailable") {
     text = <>Docker is not running. Start Docker, then reload this page.</>;
   } else if (s.status === "starting") {
-    text = <>The <Name lab={s.lab} /> lab is starting.</>;
+    text = <>Another lab is starting.</>;
     actions = startButton("Start lab");
   } else if (s.status === "running" && mine) {
-    text = <>The <Name lab={lab} /> lab is running. It started at <Time iso={s.startedAt} />.</>;
+    text = <>The lab is running. It started at <Time iso={s.startedAt} />.</>;
     actions = (
       <>
         {terminalButton}
@@ -82,13 +82,13 @@ export function PrepareLab({ lab, terminal }: { lab: string; terminal: (() => vo
       </>
     );
   } else if (s.status === "running") {
-    text = <>The <Name lab={s.lab} /> lab is running. Starting the <Name lab={lab} /> lab resets all machines and takes {firstStart(s, lab)}.</>;
+    text = <>Another lab is running. Starting this one resets the machines and takes {firstStart(s, lab)}.</>;
     actions = startButton("Start lab");
   } else if (s.status === "failed" && mine) {
-    text = <>The <Name lab={lab} /> lab failed to start. See <a href="/doc/lab/README.md#troubleshooting" className="underline">troubleshooting</a>.</>;
+    text = <>The lab failed to start. See <a href="/doc/lab/README.md#troubleshooting" className="underline">troubleshooting</a>.</>;
     actions = startButton("Try again");
   } else {
-    text = <>Starting the <Name lab={lab} /> lab takes {firstStart(s, lab)}.</>;
+    text = <>Starting the lab takes {firstStart(s, lab)}.</>;
     actions = startButton("Start lab");
   }
 
@@ -111,11 +111,9 @@ type State = NonNullable<ReturnType<typeof useRouteLoaderData<typeof rootLoader>
 
 function firstStart(s: State, lab: string) {
   if (s.saved.includes(lab)) return "under a minute";
-  if (!s.saved.length) return "about 6 minutes, since it builds the machines first";
-  return "a few minutes, since its first start sets it up";
+  if (!s.saved.length) return "about 6 minutes";
+  return "a few minutes";
 }
-
-const Name = ({ lab }: { lab: string | null }) => <span className="font-mono font-semibold">{lab}</span>;
 
 /** Shown in the reader's own time zone, so it is filled in after the page loads. */
 function Time({ iso }: { iso: string | null }) {

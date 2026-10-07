@@ -16,7 +16,7 @@ exit            # leave root; exit again to go back to base
 - Nested ssh, such as `ssh node02` from `node01`, is not supported. Go back to `base` first.
 - Each task is a new session. An alias, an exported variable or a `.vimrc` you set is gone in the next task.
 
-The lab works the same way: you start on `base`, and `ssh controlplane`, `ssh node01` and `ssh node02` work only from there ([machines](../lab/labs/README.md#machines)).
+The lab works the same way: you start on `base`, and `ssh controlplane`, `ssh node01` and `ssh node02` work only from there ([machines](../lab/README.md#machines)).
 
 ## The k alias and short names
 

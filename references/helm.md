@@ -49,7 +49,7 @@ A chart installs the [CustomResourceDefinitions](crds.md) (CRDs) in its `crds/` 
 
 ## In this lab
 
-The `helm` lab installs Helm on `controlplane` only, the one machine with the admin kubeconfig.
+In the lab, Helm is installed on `controlplane` only, the one machine with the admin kubeconfig.
 
 podinfo is a small demo web application, used in the lab because its chart is small. A release of the podinfo chart creates a [Deployment](workloads.md), a [Service](services.md) and one Secret per revision:
 

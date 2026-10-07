@@ -45,7 +45,7 @@ something if any binding allows it, and removing access means removing bindings.
 
 ## In this lab
 
-The `cluster` lab has 71 ClusterRoles. 65 are prefixed `system:` and let the
+The lab's cluster has 71 ClusterRoles. 65 are prefixed `system:` and let the
 [control plane](control-plane.md) components talk to the apiserver. `flannel` belongs to the [pod
 network](pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node [join](workers.md#joining). The remaining four are meant
 for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
