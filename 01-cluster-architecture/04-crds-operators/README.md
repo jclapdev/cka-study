@@ -5,7 +5,9 @@ controller that watches objects of that type and does the work they describe. In
 operator usually means installing its CRDs and its controller together, often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases).
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
-Every command runs in [the lab](../../lab/labs/crds/README.md) on `controlplane`, reached with `ssh controlplane` from `base`.
+<!-- lab: crds -->
+
+Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -455,8 +457,7 @@ result, change the custom resource.
 
 Do it again without the steps. Give yourself **18 minutes**.
 
-Reset [the lab](../../lab/labs/crds/README.md) first. When time is up,
-[grade the run](../../lab/README.md#grading).
+When time is up, [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Install cert-manager with Helm from the chart
    `oci://quay.io/jetstack/charts/cert-manager`, version `v1.21.2`, as the release

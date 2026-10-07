@@ -71,7 +71,7 @@ start() {
 lab=${2:-}
 case "${1:-}" in
   start | rebuild)
-    [ -n "$lab" ] && [ -f "lab/labs/$lab/README.md" ] || { echo "usage: $0 $1 <lab>, one of: $(cd lab/labs && ls -d */ | tr -d / | tr '\n' ' ')"; exit 1; }
+    [ -n "$lab" ] && [ -d "lab/labs/$lab" ] || { echo "usage: $0 $1 <lab>, one of: $(cd lab/labs && ls -d */ | tr -d / | tr '\n' ' ')"; exit 1; }
     [ "$1" = start ] || for n in "${NODES[@]}"; do docker image rm "cka-$n:$lab" >/dev/null 2>&1 || true; done
     start "$lab"
     echo

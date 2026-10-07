@@ -2,7 +2,7 @@ import "@xterm/xterm/css/xterm.css";
 import { useEffect, useRef, useState } from "react";
 
 /** A shell on base, the machine the exam starts you on. Copy and paste use the exam terminal's keys, Ctrl+Shift+C and Ctrl+Shift+V. */
-export function Terminal({ onHide }: { onHide: () => void }) {
+export function Terminal({ onReset }: { onReset: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -68,16 +68,12 @@ export function Terminal({ onHide }: { onHide: () => void }) {
     <div className="flex h-full flex-col bg-[#1b2433] dark:bg-[#0b0e13]">
       <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-sm text-[#e3e8ef]">
         <span className="font-semibold">Terminal</span>
-        {failed && (
-          <span className="text-[#8b97a8]">
-            Disconnected. <a href="#lab" className="underline">Restart the lab</a>.
-          </span>
-        )}
+        {failed && <span className="text-[#8b97a8]">Disconnected.</span>}
         <button onClick={() => setSession((s) => s + 1)} className="ml-auto rounded border border-white/20 px-2 py-1 hover:border-white/60">
           New session
         </button>
-        <button onClick={onHide} className="rounded border border-white/20 px-2 py-1 hover:border-white/60">
-          Hide
+        <button onClick={onReset} className="rounded border border-white/20 px-2 py-1 hover:border-white/60">
+          Reset
         </button>
       </div>
       <div ref={ref} className="min-h-0 flex-1 p-2" />

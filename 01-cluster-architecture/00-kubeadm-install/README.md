@@ -6,7 +6,9 @@ Kubernetes cluster. It generates the [certificates](../../references/certificate
 [How a cluster works](../../learn/cluster-architecture.md), [how kubeadm builds a cluster](../../learn/kubeadm.md)
 and [how the pod network works](../../learn/pod-network.md) explain the parts.
 
-Every command runs in [the lab](../../lab/labs/vms/README.md) on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+<!-- lab: vms -->
+
+Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -395,8 +397,7 @@ reset.
 
 Do it again without the steps. Give yourself **25 minutes**.
 
-Reset [the lab](../../lab/labs/vms/README.md) first. When time is up,
-[grade the run](../../lab/README.md#grading).
+When time is up, [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 19%.** Initialise a control plane with pod network CIDR
    `10.244.0.0/16`. The API server must advertise `controlplane`'s own IPv4 address.

@@ -46,7 +46,7 @@ export type Lesson = {
   stepKeys: string[];
 };
 
-/** `lab` is the lab folder the introduction links to. */
+/** `lab` is the lab named by the introduction's `<!-- lab: <name> -->` comment. */
 export type Exercise = { title: string; introHtml: string; lab: string | null; sections: Section[]; lessons: Lesson[] };
 export type Summary = { title: string; stepKeys: string[]; recallKeys: string[]; hasPractice: boolean; lab: string | null; lessons: Lesson[] };
 
@@ -147,24 +147,25 @@ export function summarize(md: string, learnTitle: LearnTitle = (n) => n): Summar
   };
 }
 
-/** The lab folder the introduction links to, as in "Every command runs in [the lab](…/lab/labs/<lab>/README.md)". */
+/** The lab named by a `<!-- lab: <name> -->` comment in the introduction. */
 function labOf(intro: RootContent[]) {
-  let lab: string | null = null;
-  for (const n of intro) visit(n, "link", (l: { url: string }) => void (lab ??= l.url.match(/lab\/labs\/([\w-]+)\/README\.md/)?.[1] ?? null));
-  return lab as string | null;
+  for (const n of intro) {
+    const m = n.type === "html" ? n.value.match(/^<!--\s*lab:\s*([\w-]+)\s*-->/) : null;
+    if (m) return m[1];
+  }
+  return null;
 }
 
 // ---------- rendering ----------
 
 const TOPIC_README = /^(\d\d-[^/]+)\/(\d\d-[^/]+)\/README\.md$/;
-const LAB_README = /^lab\/labs\/([\w-]+)\/README\.md$/;
 
 /** A page shown inside a topic: the topic's id and the Learn pages that are its lessons. */
 export type InTopic = { id: string; learn: string[] };
 
 /**
  * Points links at app routes: topic READMEs to /t/, other Markdown to /doc/, the web to a new tab.
- * Inside a topic, its lab opens the lab panel beside the lesson and its Learn pages open as lessons.
+ * Inside a topic, its Learn pages open as lessons.
  */
 function rewriteLinks({ file, topic }: { file: string; topic?: InTopic }) {
   return (tree: HastRoot) => {
@@ -183,9 +184,7 @@ function rewriteLinks({ file, topic }: { file: string; topic?: InTopic }) {
       const suffix = hash ? `#${hash}` : "";
       const readme = rel.match(TOPIC_README);
       const learn = rel.match(/^learn\/([\w-]+)\.md$/)?.[1];
-      const lab = rel.match(LAB_README);
-      if (topic && lab && TOPIC_README.test(file)) el.properties.href = "#lab";
-      else if (topic && learn && topic.learn.includes(learn)) el.properties.href = `/t/${topic.id}/${learn}${suffix}`;
+      if (topic && learn && topic.learn.includes(learn)) el.properties.href = `/t/${topic.id}/${learn}${suffix}`;
       else if (readme) el.properties.href = `/t/${readme[1]}/${readme[2]}${suffix}`;
       else if (rel.endsWith(".md")) el.properties.href = `/doc/${rel}${suffix}`;
     });
@@ -318,12 +317,6 @@ async function task(item: ListItem, n: number, render: (c: RootContent[]) => Pro
     }
   }
   return { n, hosts, weight, html: await render(children) };
-}
-
-/** The `## <name>` section of a page, without its heading, or "" when there is none. */
-export function mdSection(md: string, name: string) {
-  const m = md.match(new RegExp(`^## ${name}\\n([\\s\\S]*?)(?=^#{1,2} |(?![\\s\\S]))`, "m"));
-  return m ? m[1].trim() : "";
 }
 
 /** A page without its `# title` line, for showing under a heading of its own. */

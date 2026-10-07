@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { learnTitle, listDomains, listLabs, readMarkdown, REPO, topicReadme } from "../app/content/repo";
 import { parseLabState } from "../app/lab/state.server";
-import { mdSection, pageLinks, parseExercise, renderDoc, summarize, untitled } from "../app/content/parse";
+import { pageLinks, parseExercise, renderDoc, summarize, untitled } from "../app/content/parse";
 
 const KUBEADM = "01-cluster-architecture/00-kubeadm-install/README.md";
 const RBAC = "01-cluster-architecture/01-rbac/README.md";
@@ -88,7 +88,6 @@ describe("parse", () => {
   it("rewrites links into app routes", async () => {
     const ex = await parseExercise(readMarkdown(RBAC)!, RBAC);
     const html = JSON.stringify(ex);
-    expect(html).toContain('href=\\"#lab\\"');
     expect(html).toContain('href=\\"/doc/references/rbac.md\\"');
     expect(html).toContain('href=\\"/t/01-cluster-architecture/01-rbac/access-control\\"');
     expect(html).toContain('target=\\"_blank\\"');
@@ -114,7 +113,6 @@ describe("lab", () => {
       const ex = await parseExercise(readMarkdown(file)!, file);
       expect(ex.lab).toBe(lab);
       expect(summarize(readMarkdown(file)!).lab).toBe(lab);
-      expect(ex.introHtml).toContain('href="#lab"');
       expect(ex.sections.map((x) => x.title)).not.toEqual(expect.arrayContaining(["Prerequisites", "Lab setup", "Clean up"]));
     }
   });
@@ -155,15 +153,6 @@ describe("lab state", () => {
     expect(parseLabState("clean\n", "", idle)).toMatchObject({ status: "none", saved: [] });
     expect(parseLabState("cluster\n", up, { starting: "kustomize", failed: null })).toMatchObject({ status: "starting", lab: "kustomize" });
     expect(parseLabState("cluster\n", up, { starting: null, failed: "crds" })).toMatchObject({ status: "failed", lab: "crds" });
-  });
-});
-
-describe("bundle", () => {
-  it("pulls the Machines section out of Getting started", () => {
-    const machines = mdSection(readMarkdown("lab/README.md")!, "Machines");
-    expect(machines).toContain("controlplane");
-    expect(machines).not.toContain("Grading");
-    expect(mdSection(readMarkdown("lab/README.md")!, "nope")).toBe("");
   });
 });
 

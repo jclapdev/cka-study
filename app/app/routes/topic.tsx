@@ -2,19 +2,18 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
 import { useCallback, useState } from "react";
-import { data, Link, useSearchParams } from "react-router";
+import { data, Link } from "react-router";
 import type { Route } from "./+types/topic";
 import { INTRO, lessonHref } from "~/content/links";
-import { inTopic, mdSection, parseExercise, renderDoc, untitled } from "~/content/parse";
+import { inTopic, parseExercise, renderDoc, untitled } from "~/content/parse";
 import { hasGrader, learnTitle, readMarkdown, REPO, topicReadme } from "~/content/repo";
 import { addAttempt, setMark, setNote, topicState } from "~/db/progress";
 import { Markdown } from "~/components/Markdown";
 import { Notes } from "~/components/Notes";
 import { PracticeRun } from "~/components/PracticeRun";
-import { PrepareLab } from "~/components/PrepareLab";
 import { RecallCard } from "~/components/RecallCard";
 import { Step } from "~/components/Step";
-import { Terminal } from "~/components/Terminal";
+import { LabPane, useLab } from "~/components/LabPane";
 
 async function load(params: Route.LoaderArgs["params"]) {
   const file = topicReadme(params.domain, params.topic);
@@ -31,10 +30,6 @@ export async function loader({ params }: Route.LoaderArgs) {
   const topic = inTopic(md, file);
   const learnFile = `learn/${lesson.slug}.md`;
   const learnHtml = lesson.kind === "learn" ? (await renderDoc(untitled(readMarkdown(learnFile) ?? ""), learnFile, topic)).html : "";
-  const labFile = `lab/labs/${exercise.lab}/README.md`;
-  const lab = exercise.lab ? readMarkdown(labFile) : null;
-  const labHtml = lab ? (await renderDoc(untitled(lab), labFile, topic)).html : "";
-  const machinesHtml = (await renderDoc(mdSection(readMarkdown("lab/README.md")!, "Machines"), "lab/README.md", topic)).html;
   return {
     id,
     exercise: { ...exercise, sections: exercise.sections.filter((s) => lesson.sections.includes(s.slug)) },
@@ -43,8 +38,6 @@ export async function loader({ params }: Route.LoaderArgs) {
     next: exercise.lessons[index + 1] ?? null,
     learnHtml,
     state: topicState(id),
-    labHtml,
-    machinesHtml,
     grader: hasGrader(params.domain, params.topic),
   };
 }
@@ -91,19 +84,12 @@ export async function action({ params, request }: Route.ActionArgs) {
 }
 
 export default function Topic({ loaderData }: Route.ComponentProps) {
-  const { id, exercise, lesson, prev, next, learnHtml, state, labHtml, machinesHtml, grader } = loaderData;
-  const [params] = useSearchParams();
+  const { id, exercise, lesson, prev, next, learnHtml, state, grader } = loaderData;
   const [running, setRunning] = useState(false);
-  const [term, setTerm] = useState(() => params.get("terminal") === "1");
   const [missedOnly, setMissedOnly] = useState(false);
   const onRunning = useCallback((r: boolean) => setRunning(r), []);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
-
-  const openTerminal = (
-    <button onClick={() => setTerm(true)} className="rounded border border-line px-3 py-1.5 text-sm font-semibold hover:border-accent">
-      Open terminal
-    </button>
-  );
+  const lab = useLab(exercise.lab);
 
   const body = (
     <article key={`${id}/${lesson.slug}`} className="min-w-0">
@@ -159,7 +145,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
                   attempts={state.attempts}
                   grader={grader}
                   onRunning={onRunning}
-                  terminalButton={term ? null : openTerminal}
+                  onStart={exercise.lab ? lab.start : undefined}
                 />
               </Section>
             );
@@ -192,33 +178,8 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
     </article>
   );
 
-  // Hidden rather than removed while a practice exam runs, so a lab being prepared keeps its output.
-  const lab = (
-    <aside
-      id="lab"
-      aria-label="Lab"
-      hidden={running}
-      className={`mt-14 scroll-mt-6 space-y-3 ${term ? "" : "xl:sticky xl:top-6 xl:mt-0 xl:max-h-[calc(100dvh-3rem)] xl:self-start xl:overflow-y-auto"}`}
-    >
-      <h2 className="text-lg font-bold">Lab</h2>
-      {exercise.lab ? (
-        <>
-          <Markdown html={labHtml} className="text-sm" />
-          <PrepareLab lab={exercise.lab} terminal={term ? null : () => setTerm(true)} />
-          {!term && <div>{openTerminal}</div>}
-        </>
-      ) : (
-        <p className="text-muted">This topic has no lab.</p>
-      )}
-      <details className="rounded-md border border-line px-4 py-2">
-        <summary className="cursor-pointer text-sm font-semibold">Machines</summary>
-        <Markdown html={machinesHtml} className="mt-3 text-sm" />
-      </details>
-    </aside>
-  );
-
   const page = (
-    <div className={`mx-auto ${term ? "max-w-3xl" : "max-w-3xl xl:max-w-6xl"}`}>
+    <div className="mx-auto max-w-3xl">
       {!running && (
         <header className="mb-8">
           {lesson.kind !== "intro" && (
@@ -229,26 +190,21 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
           <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{lesson.kind === "intro" ? exercise.title : lesson.title}</h1>
         </header>
       )}
-      <div className={term ? "" : "xl:grid xl:grid-cols-[minmax(0,1fr)_18rem] xl:gap-12"}>
-        {body}
-        {lab}
-      </div>
+      {body}
     </div>
   );
 
-  // With the terminal open, a workspace like the exam's: the page on the left and the terminal on
-  // the right, each filling the screen beside the topic list (17rem, from root.tsx) and scrolling
-  // on its own. Below lg the terminal takes the bottom half. The page pane keeps main's padding,
-  // which the practice exam's sticky clock bar relies on. The elements stay the same either way, so
-  // opening or hiding the terminal never resets a practice exam.
+  if (!exercise.lab) return page;
+
+  // The lesson on the left and the lab on the right, each filling the screen beside the topic list
+  // (17rem, from root.tsx) and scrolling on its own. Below lg the lab takes the bottom half. The
+  // lesson pane keeps main's padding, which the practice exam's sticky clock bar relies on.
   return (
-    <div className={term ? "fixed inset-0 z-20 grid grid-rows-2 bg-paper lg:left-[17rem] lg:grid-cols-2 lg:grid-rows-1" : ""}>
-      <div className={term ? "min-h-0 overflow-y-auto px-4 py-8 sm:px-10" : ""}>{page}</div>
-      {term && (
-        <div className="min-h-0 border-t border-line lg:border-l lg:border-t-0">
-          <Terminal onHide={() => setTerm(false)} />
-        </div>
-      )}
+    <div className="fixed inset-0 z-20 grid grid-rows-2 bg-paper lg:left-[17rem] lg:grid-cols-2 lg:grid-rows-1">
+      <div className="min-h-0 overflow-y-auto px-4 py-8 sm:px-10">{page}</div>
+      <div className="min-h-0 border-t border-line lg:border-l lg:border-t-0">
+        <LabPane lab={lab} />
+      </div>
     </div>
   );
 }

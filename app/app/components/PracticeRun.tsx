@@ -19,14 +19,15 @@ export function PracticeRun({
   attempts,
   onRunning,
   grader,
-  terminalButton,
+  onStart,
 }: {
   practice: Practice;
   checkHtml: string | null;
   attempts: Attempt[];
   onRunning: (running: boolean) => void;
   grader: boolean;
-  terminalButton: React.ReactNode;
+  /** Resets the lab, so each run starts clean. */
+  onStart?: () => void;
 }) {
   const fetcher = useFetcher();
   const grading = useFetcher<{ grade: string }>();
@@ -45,6 +46,7 @@ export function PracticeRun({
   useEffect(() => onRunning(startedAt !== null), [startedAt, onRunning]);
 
   const start = () => {
+    onStart?.();
     setStartedAt(Date.now());
     setNow(Date.now());
     setEndedAt(null);
@@ -113,7 +115,6 @@ export function PracticeRun({
           </span>
         </div>
         <div className="flex gap-2">
-          {terminalButton}
           <button onClick={reset} className="rounded border border-line px-3 py-2 text-sm hover:border-accent">
             Quit
           </button>

@@ -2,7 +2,9 @@
 
 <One paragraph: what this tool or concept does, in plain words.>
 
-Every command runs in [the lab](../../lab/labs/<lab-name>/README.md) on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+<!-- lab: <lab-name> -->
+
+Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -76,8 +78,7 @@ A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
 
 Do it again without the steps. Give yourself **<N> minutes**.
 
-Reset [the lab](../../lab/labs/<lab-name>/README.md) first. When time is up,
-[grade the run](../../lab/README.md#grading).
+When time is up, [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight <N>%.** <Task in exam wording, no steps. Name any file the
    exam would hand over, such as `/opt/course/1/kustomization.yaml`, placed by `setup.sh`.>

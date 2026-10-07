@@ -1,6 +1,5 @@
-import { execFile, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import path from "node:path";
-import { promisify } from "node:util";
 import { data } from "react-router";
 import type { Route } from "./+types/lab";
 import { listLabs, REPO } from "~/content/repo";
@@ -10,7 +9,6 @@ const LAB_SH = path.join(REPO, "lab/lab.sh");
 
 /**
  * POST /lab/<lab> runs `lab/lab.sh start <lab>` and streams its output.
- * POST /lab/stop stops the machines. No lab folder may be named `stop`.
  */
 export async function action({ params, request }: Route.ActionArgs) {
   // It wipes the machines, so only the app's own pages may ask.
@@ -18,11 +16,6 @@ export async function action({ params, request }: Route.ActionArgs) {
   if (job.starting) throw data("A lab is already starting.", { status: 409 });
   const lab = params.state;
 
-  if (lab === "stop") {
-    job.failed = null;
-    await promisify(execFile)(LAB_SH, ["stop"], { cwd: REPO });
-    return null;
-  }
   if (!listLabs().includes(lab)) throw data(`No lab named ${lab}`, { status: 400 });
   job.starting = lab;
   job.failed = null;

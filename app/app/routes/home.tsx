@@ -1,7 +1,6 @@
 import { Link, useRouteLoaderData } from "react-router";
 import type { loader as rootLoader } from "~/root";
 import { Meter } from "~/root";
-import { PrepareLab } from "~/components/PrepareLab";
 
 type Data = Awaited<ReturnType<typeof rootLoader>>;
 type Topic = Data["domains"][number]["topics"][number];
@@ -11,13 +10,10 @@ const score = (t: Topic) =>
 const PASS = 66;
 
 export default function Home() {
-  const { domains, lab } = useRouteLoaderData<typeof rootLoader>("root")!;
+  const { domains } = useRouteLoaderData<typeof rootLoader>("root")!;
   const written = domains.flatMap((d) => d.topics).filter((t) => t.progress);
   const next = written.find((t) => t.progress!.stepsDone < t.progress!.steps) ?? written[0];
   const finished = written.filter((t) => t.progress!.steps && t.progress!.stepsDone === t.progress!.steps).length;
-  // The terminal opens beside the next topic that uses the running lab.
-  const nextLab = next && "lab" in next ? next.lab : null;
-  const labTopic = lab.lab === nextLab ? next : written.find((t) => "lab" in t && t.lab === lab.lab);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -46,15 +42,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      <section className="mt-8">
-        <h2 className="mb-3 text-xl font-bold">Lab</h2>
-        {nextLab ? (
-          <PrepareLab lab={nextLab} terminal={labTopic ? `/t/${labTopic.id}?terminal=1` : null} />
-        ) : (
-          <p className="text-muted">This topic has no lab.</p>
-        )}
-      </section>
 
       <section className="mt-10">
         <div className="flex items-baseline justify-between gap-4">

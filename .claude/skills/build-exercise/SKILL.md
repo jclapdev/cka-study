@@ -12,7 +12,7 @@ In the study app, a topic is a short course of lessons listed under it in the si
 3. One lesson per `##` section of the README before Quiz, named by its heading, such as "Find a chart" or "Install a release".
 4. **Quiz**, then **Practice**, which also shows Check your work and Further reading.
 
-The lab panel sits beside every lesson: `lab/labs/<lab-name>/README.md`, Start lab, the terminal and the machines. A link to a `references/*.md` page opens that page.
+A topic with a lab shows the lab beside every lesson: a Start lab button, then the terminal with New session and Reset. Nothing on the page describes the lab. A link to a `references/*.md` page opens that page.
 
 `01-cluster-architecture/03-kustomize/` is the finished example. Match it.
 
@@ -20,11 +20,10 @@ The lab panel sits beside every lesson: `lab/labs/<lab-name>/README.md`, Start l
 
 - [ ] 1. Read the topic's competencies in `EXAM.md` and teach only what the exam tests.
 - [ ] 2. Pick the lab from the folders in `lab/labs/`: `vms` (bare machines), `cluster` (working cluster), or one built on them. If the exercise needs something else, such as an add-on, a broken component or files under `/opt/course`, add a folder `lab/labs/<lab-name>/` like `lab/labs/helm/`:
-  - `README.md` opens with `# <lab-name>`, then a sentence or two on what the learner finds on the machines.
-  - `base` holds one line, the name of the lab it builds on, such as `cluster`.
+  - `base` holds one line, the name of the lab it builds on, such as `cluster`. Anything the learner must know about the lab goes in the exercise text where a task needs it, never in the lab folder.
   - `setup.sh` (executable) changes the parent lab through `docker exec`. It runs once; `lab/lab.sh` saves the result and later starts restore it, so a setup that takes minutes is fine.
 
-  Nothing else changes: `lab/lab.sh` and the Start lab button read the folders. Test it with `docker compose exec app lab/lab.sh start <lab-name>`. Labs share the four machines in `compose.yaml`; a lab that needs other machines, such as an HA control plane, needs a change to `compose.yaml` and `lab/lab.sh` first.
+  Nothing else changes: `lab/lab.sh` and the app read the folders. Test it with `docker compose exec app lab/lab.sh start <lab-name>`. Labs share the four machines in `compose.yaml`; a lab that needs other machines, such as an HA control plane, needs a change to `compose.yaml` and `lab/lab.sh` first.
 - [ ] 3. Run every command on the lab first and save the real output. Do this for the steps, for each command a reference page will quote, and for each error message a failure-modes table will quote. Nothing that looks like command output is written from memory.
 - [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Its `# title` is the topic's short name in the root `README.md` table, such as `Helm` or `etcd Backup and Restore`. Keep each `##` section to one task, because each one is a lesson: Helm has seven. Each step is a command and one sentence on what to notice, with a link on any term the lesson has not linked yet. Show the trimmed output from step 3 only when the reader has to read something in it (see Gotchas). Every lesson links at least one reference page. Explanations belong on Learn and reference pages, not in steps.
 - [ ] 5. Get every manifest the way the exam allows, fastest source first (the "How to work in the exam" section of `EXAM.md`), and never have the reader type a whole manifest:
@@ -46,7 +45,7 @@ The lab panel sits beside every lesson: `lab/labs/<lab-name>/README.md`, Start l
 - [ ] 12. Reread every sentence you wrote. Delete narration and author-side text, and check the wording rules in `CLAUDE.md` (see Gotchas).
 - [ ] 13. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`. Run `scripts/check-links-once.py` on the same files and fix each `REPEAT` and `TRAILING` (see Gotchas). Run `scripts/check-terms.py` with no arguments and fix every line it prints. An `UNKNOWN` word is either a new concept (step 6a) or a known word to add to the term list as `known`.
 - [ ] 14. In the root `README.md` table, the topic's row links its `README.md` with the short name as the link text, and its status is **ready** with Practice, **steps only** without. The sidebar and dashboard take every domain and topic name from this table, and a test checks that each written topic's `# title` matches it.
-- [ ] 15. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Start lab in the lab panel and wait for "The `<lab-name>` lab is running", open the terminal and run the first steps from `base`. Then open every lesson from the sidebar and check that each renders with its steps, each Learn lesson's diagrams draw, and each reference link opens its page.
+- [ ] 15. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Start lab beside the lesson, wait for the terminal, and run the first steps from `base`. Then open every lesson from the sidebar and check that each renders with its steps, each Learn lesson's diagrams draw, and each reference link opens its page.
 
 ## Gotchas
 
@@ -64,7 +63,7 @@ The lab panel sits beside every lesson: `lab/labs/<lab-name>/README.md`, Start l
 - Test a failure mode on a freshly started lab, not after `kubeadm reset`. Reset leaves `/etc/cni/net.d/` and `/run/flannel/` behind, and a failure test of the kubeadm exercise gave the wrong result because the next cluster reused them.
 - `admin.conf` authenticates in the group `kubeadm:cluster-admins`. `system:masters` belongs to `super-admin.conf`.
 - The app finds sections by heading name: `## Objectives`, `## Quiz`, `## Practice`, `## Check your work`, `## Further reading`. Every other `##` heading before Quiz is a lesson of steps, even one with no numbered list. Objectives stays on Introduction, and Check your work and Further reading stay on Practice.
-- The lab line must link ``[the lab](../../lab/labs/<lab-name>/README.md)``, as in the template, and never names the lab; the Practice line links it the same way. `lab/labs/<lab-name>/` must exist. Otherwise the lab panel says the topic has no lab. A topic folder never holds a `setup.sh`; it belongs to the lab.
+- The introduction names its lab in an invisible ``<!-- lab: <lab-name> -->`` comment, as in the template, and the visible text never names or describes the lab. `lab/labs/<lab-name>/` must exist. Otherwise the topic shows no lab. A topic folder never holds a `setup.sh`; it belongs to the lab.
 - Editing a lab's `setup.sh` makes its next start set it up again, along with every lab built on it. The first start of a lab with a changed setup takes minutes, not seconds.
 - Each Practice task opens with a bold lead-in, ``**Host `controlplane`, weight 19%.**`` (or ``**Hosts `a`, `b`, weight 25%.**``), and the weights add up to 100. The time budget is a bold ``**N minutes**`` in the section's opening text.
 - Quiz answers and the Practice solution use `<details><summary>…</summary>` with a blank line after `</summary>`.

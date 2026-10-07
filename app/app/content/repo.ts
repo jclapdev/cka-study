@@ -71,7 +71,7 @@ export function listLabs(): string[] {
   if (!fs.existsSync(dir)) return [];
   return fs
     .readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && fs.existsSync(path.join(dir, d.name, "README.md")))
+    .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
 }

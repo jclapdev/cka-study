@@ -4,7 +4,9 @@ Role-based access control ([RBAC](../../references/rbac.md)) decides which reque
 identity behind a request against the rules that have been bound to it.
 [How access control works](../../learn/access-control.md) explains the model.
 
-Every command runs in [the lab](../../lab/labs/cluster/README.md) on `controlplane`, reached with `ssh controlplane` from `base`.
+<!-- lab: cluster -->
+
+Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -403,8 +405,7 @@ group to `cluster-admin`.
 
 Do it again without the steps. Give yourself **15 minutes**.
 
-Reset [the lab](../../lab/labs/cluster/README.md) first. When time is up,
-[grade the run](../../lab/README.md#grading).
+When time is up, [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in
    it.

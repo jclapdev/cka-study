@@ -5,7 +5,9 @@ lists them and the changes to make, such as a namespace, a name prefix or an ima
 built into `kubectl`, so no template language and no extra tool is involved.
 [How Kustomize works](../../learn/kustomize.md) explains bases, overlays and generated names.
 
-Every command runs in [the lab](../../lab/labs/kustomize/README.md) on `controlplane`, reached with `ssh controlplane` from `base`.
+<!-- lab: kustomize -->
+
+Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
 
 ## Objectives
 
@@ -478,8 +480,7 @@ template. `includeSelectors: true` adds it to the pod template and the selectors
 
 Do it again without the steps. Give yourself **15 minutes**.
 
-Reset [the lab](../../lab/labs/kustomize/README.md) first. When time is up,
-[grade the run](../../lab/README.md#grading).
+When time is up, [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 25%.** In `~/shop/base`, create a kustomization with a
    Deployment `shop` running `nginx:1.27`, and a [ClusterIP](../../references/services.md#service-types) Service `shop` on port 80 for it.

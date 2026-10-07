@@ -3,7 +3,7 @@ import { isRouteErrorResponse, Link, Links, Meta, NavLink, Outlet, Scripts, Scro
 import type { Route } from "./+types/root";
 import { lessonHref } from "./content/links";
 import { overview } from "./db/progress";
-import { labState, type LabState } from "./lab/state.server";
+import { labState } from "./lab/state.server";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -96,7 +96,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <NavLink to="/" end className={navItem}>
               Dashboard
             </NavLink>
-            <LabIndicator s={loaderData.lab} />
           </li>
             {loaderData.domains.map((d) => (
               <li key={d.name} className={d.name === MOCK_EXAMS ? "border-t border-line pt-4" : undefined}>
@@ -192,26 +191,6 @@ function SidebarIcon() {
       <rect x="2.5" y="3.5" width="15" height="13" rx="2" />
       <path d="M7.5 3.5v13" />
     </svg>
-  );
-}
-
-const LAB_TEXT: Record<LabState["status"], [string, string]> = {
-  running: ["bg-done", "Lab running"],
-  starting: ["bg-accent animate-pulse", "Lab starting"],
-  failed: ["bg-missed", "Lab failed to start"],
-  stopped: ["bg-line", "No lab running"],
-  none: ["bg-line", "No lab running"],
-  unavailable: ["bg-missed", "Docker is not running"],
-};
-
-/** One line under Dashboard saying what the machines are doing. */
-function LabIndicator({ s }: { s: LabState }) {
-  const [dot, text] = LAB_TEXT[s.status];
-  return (
-    <p className="flex items-center gap-2 px-2 py-1 text-sm text-muted">
-      <span aria-hidden className={`size-2 shrink-0 rounded-full ${dot}`} />
-      {text}
-    </p>
   );
 }
 

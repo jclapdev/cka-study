@@ -6,7 +6,9 @@ right host, generate YAML instead of typing it, copy snippets from the docs, and
 check live objects. [About the CKA](../../EXAM.md) covers the format and grading, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command does.
 
-Every command runs in [the lab](../../lab/labs/cluster/README.md) on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+<!-- lab: cluster -->
+
+Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
 
 ## Objectives
 
@@ -394,8 +396,7 @@ No. Each task is a new `ssh` session. Only `k` and its completion are always the
 
 Do it again without the steps. Give yourself **12 minutes**.
 
-Reset [the lab](../../lab/labs/cluster/README.md) first. When time is up,
-[grade the run](../../lab/README.md#grading).
+When time is up, [grade the run](../../lab/README.md#grading).
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `shop`, and in it a Deployment `api`
    running `nginx:1.27` with 2 replicas.
