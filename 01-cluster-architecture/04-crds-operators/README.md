@@ -596,7 +596,7 @@ Grade the run, or check by hand on `controlplane`:
    6
    ```
 
-## Next
+## Further reading
 
 * [crds](../../references/crds.md) has the parts of a CRD, validation, operators and the failure
   modes in one place.

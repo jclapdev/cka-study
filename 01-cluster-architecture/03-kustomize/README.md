@@ -608,7 +608,7 @@ Grade the run, or check by hand on `controlplane`:
    staging
    ```
 
-## Next
+## Further reading
 
 * [kustomize](../../references/kustomize.md) has the fields an overlay can set, patches,
   generated names and the failure modes in one place.

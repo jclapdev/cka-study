@@ -124,7 +124,7 @@ function lessonsOf(md: string, sections: Raw[], learnTitle: LearnTitle): Lesson[
   for (const s of sections) {
     const stepKeys =
       s.kind === "steps" ? s.nodes.flatMap((n) => (n.type === "list" ? orderedItems(n) : [])).map((_, i) => `${s.slug}#${i + 1}`) : [];
-    if (s.kind === "plain" || (s.kind === "steps" && !stepKeys.length)) {
+    if (s.kind === "plain" || (s.kind === "steps" && !stepKeys.length && !taught)) {
       (taught ? out.at(-1)! : out[0]).sections.push(s.slug);
       continue;
     }

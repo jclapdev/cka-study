@@ -195,9 +195,16 @@ describe("lessons", () => {
       "Practice",
     ]);
     expect(s.lessons[0].sections).toEqual(["objectives"]);
-    expect(s.lessons.at(-1)!.sections).toEqual(["practice", "check-your-work", "next"]);
+    expect(s.lessons.at(-1)!.sections).toEqual(["practice", "check-your-work", "further-reading"]);
     expect(s.lessons.flatMap((l) => l.stepKeys)).toEqual(s.stepKeys);
     expect(pageLinks("[pods](../../references/pod.md)", "learn")).toEqual([]);
+  });
+
+  it("keeps a section without numbered steps as a lesson of its own once lessons have started", () => {
+    const titles = summarize(readMarkdown(KUBEADM)!, learnTitle).lessons.map((l) => l.title);
+    expect(titles).toContain("Point kubectl at the cluster");
+    expect(titles).toContain("Check the control plane");
+    expect(titles).not.toContain("Objectives");
   });
 
   it("opens a reference from a Learn page as a page of its own", async () => {

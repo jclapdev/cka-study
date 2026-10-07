@@ -6,7 +6,7 @@
 - TRAILING: a link tacked on after a colon at the end of a sentence, as in
   "... in one namespace: [releases](helm.md#releases)." Put the link on the term instead.
 
-Links in code blocks, web links and links in a "## Next", "## Docs" or "## Further reading"
+Links in code blocks, web links and links in a "## Docs" or "## Further reading"
 list are not checked.
 Usage: check-links-once.py FILE.md [FILE.md ...]   Exits 1 if anything is reported.
 """
@@ -14,11 +14,11 @@ import re
 import sys
 
 LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
-LISTS = re.compile(r"^## (Next|Docs|Further reading)\b")
+LISTS = re.compile(r"^## (Docs|Further reading)\b")
 # A topic README is split into lessons at each `##` heading, and each lesson is a page of its own.
-# Objectives stays on the Introduction, and Check your work and Next stay on Practice.
+# Objectives stays on the Introduction, and Check your work and Further reading stay on Practice.
 LESSONS = re.compile(r"(^|/)\d\d-[^/]+/\d\d-[^/]+/README\.md$")
-SAME_LESSON = re.compile(r"^## (Objectives|Check your work|Next)\b")
+SAME_LESSON = re.compile(r"^## (Objectives|Check your work|Further reading)\b")
 
 failed = False
 for path in sys.argv[1:]:
@@ -45,9 +45,10 @@ for path in sys.argv[1:]:
                 failed = True
             else:
                 seen[key] = n
-            before = line[: m.start()].rstrip()
+            unquote = lambda s: re.sub(r"^\s*(>\s*)*", "", s).rstrip()  # a line inside a > note
+            before = unquote(line[: m.start()])
             if not before and n > 1:
-                before = lines[n - 2].rstrip()
+                before = unquote(lines[n - 2])
             after = line[m.end():].lstrip()
             if before.endswith(":") and (after[:1] in (".", "") or after.startswith(").")):
                 print(f"{path}:{n}: TRAILING [{text}] after a colon")

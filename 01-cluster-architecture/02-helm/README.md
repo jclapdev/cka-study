@@ -473,7 +473,7 @@ Grade the run, or check by hand on `controlplane`:
    kind: Deployment
    ```
 
-## Next
+## Further reading
 
 * [helm](../../references/helm.md) has the model, where releases are stored, and the error
   messages in one place.

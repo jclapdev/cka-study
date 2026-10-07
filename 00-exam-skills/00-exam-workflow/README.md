@@ -487,7 +487,7 @@ Grade the run, or check by hand on `controlplane`:
    containerd github.com/containerd/containerd/v2 2.2.1
    ```
 
-## Next
+## Further reading
 
 * [kubectl](../../references/kubectl.md) has every command in this topic, the vim keys and
   the docs pages worth knowing, in one place.

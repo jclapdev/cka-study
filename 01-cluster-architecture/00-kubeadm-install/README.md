@@ -107,8 +107,7 @@ wrong [address](../../references/kubeadm.md#the-advertise-address) is not fixabl
 > If `kubeadm init` stops with `[ERROR Port-6443]: Port 6443 is in use` or `[ERROR
 > FileAvailable--etc-kubernetes-manifests-kube-apiserver.yaml]`, a control plane from an earlier
 > attempt is still there. `sudo kubeadm reset -f` removes it. Swap being on only gives a
-> preflight warning, and `init` fails later at `wait-control-plane`:
-> [kubeadm failure modes](../../references/kubeadm.md#failure-modes).
+> preflight warning, and `init` [fails later](../../references/kubeadm.md#failure-modes) at `wait-control-plane`.
 
 ### If pods are created through the apiserver, how did the apiserver pod start?
 
@@ -233,8 +232,7 @@ which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so b
 > The node goes `Ready` as soon as the file exists, even if the plugin is broken. If the pod
 > CIDR given to `init` does not match Flannel's `10.244.0.0/16`, or `init` was given none, the
 > node is still `Ready`, but the Flannel pod is in `CrashLoopBackOff` and CoreDNS stays in
-> `ContainerCreating`. `kubectl logs -n kube-flannel -l app=flannel` names the mismatch:
-> three CIDRs, not one.
+> `ContainerCreating`. `kubectl logs -n kube-flannel -l app=flannel` names the mismatch.
 
 ## Join the workers
 
@@ -507,7 +505,7 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
    kubectl get pods -n kube-system
    ```
 
-## Next
+## Further reading
 
 * [Creating a cluster with kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
   is the upstream version of these steps, including the options not used here.

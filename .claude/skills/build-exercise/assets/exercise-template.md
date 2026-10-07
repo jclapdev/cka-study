@@ -122,6 +122,6 @@ Run these on `controlplane`.
    <expected output>
    ```
 
-## Next
+## Further reading
 
 * [<kubernetes.io page>](https://kubernetes.io/docs/...) <says what it adds beyond this exercise>.

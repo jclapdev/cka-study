@@ -456,7 +456,7 @@ k auth can-i list pods -n default --as=anyone --as-group=auditors
 ```
 </details>
 
-## Next
+## Further reading
 
 * [rbac](../../references/rbac.md) has the object model, the subject kinds, the roles every
   subject gets, and the failure modes in one place.
