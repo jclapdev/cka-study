@@ -5,12 +5,14 @@ description: Use this skill when writing, extending, fixing or finishing a CKA e
 
 # Build an exercise
 
-In the study app, each topic page has four tabs, all built from Markdown in this repo:
+In the study app, a topic is a short course of lessons listed under it in the sidebar, all built from Markdown in this repo:
 
-1. **Learn** holds every `learn/*.md` page the README links to: how a technology works and why, with diagrams and further reading.
-2. **Lab** is `lab/labs/<lab-name>/README.md`, the lab folder the exercise's lab line names, with buttons that start, reset and stop it.
-3. **Exercise** is the topic's `README.md`.
-4. **References** holds every `references/*.md` page the README links to: the facts, commands and errors to look up. Each page in either tab shows its one-line summary from the table in that folder's `README.md`.
+1. **Introduction**: the README's opening paragraph and Objectives.
+2. One lesson per `learn/*.md` page the README links to: how a technology works and why, with diagrams and further reading.
+3. One lesson per `##` section of the README before Quiz, named by its heading, such as "Find a chart" or "Install a release".
+4. **Quiz**, then **Practice**, which also shows Check your work and Further reading.
+
+The lab panel sits beside every lesson: the lab line, Start lab and the terminal, and `lab/labs/<lab-name>/README.md` under "About this lab". A link to a `references/*.md` page opens that page.
 
 `01-cluster-architecture/03-kustomize/` is the finished example. Match it.
 
@@ -23,7 +25,7 @@ In the study app, each topic page has four tabs, all built from Markdown in this
 
   Nothing else changes: `lab/lab.sh`, the Labs page and the Start lab button all read the folders. Test it with `docker compose exec app lab/lab.sh start <lab-name>`. Labs share the four machines in `compose.yaml`; a lab that needs other machines, such as an HA control plane, needs a change to `compose.yaml` and `lab/lab.sh` first.
 - [ ] 3. Run every command on the lab first and save the real output. Do this for the steps, for each command a reference page will quote, and for each error message a failure-modes table will quote. Nothing that looks like command output is written from memory.
-- [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Each step is a command, one sentence on what to notice, and a link to the reference page that explains it. Show the trimmed output from step 3 only when the reader has to read something in it (see Gotchas). Every step group links at least one reference page. Explanations belong on Learn and reference pages, not in steps.
+- [ ] 4. Write `<domain>/<topic>/README.md` from [the exercise template](assets/exercise-template.md). Its `# title` is the topic's short name in the root `README.md` table, such as `Helm` or `etcd Backup and Restore`. Keep each `##` section to one task, because each one is a lesson: Helm has seven. Each step is a command and one sentence on what to notice, with a link on any term the lesson has not linked yet. Show the trimmed output from step 3 only when the reader has to read something in it (see Gotchas). Every lesson links at least one reference page. Explanations belong on Learn and reference pages, not in steps.
 - [ ] 5. Get every manifest the way the exam allows, fastest source first (the "How to work in the exam" section of `EXAM.md`), and never have the reader type a whole manifest:
   1. `kubectl create`, `run` or `expose` with `--dry-run=client -o yaml > file` whenever one of them can write it.
   2. Otherwise, a snippet from a kubernetes.io page. The step names the search term, links the page section with its anchor, says to copy the block and paste it, then shows the lines to change and the finished file. Prefer the docs' own `cat <<EOF` blocks and example files with copy buttons.
@@ -40,10 +42,10 @@ In the study app, each topic page has four tabs, all built from Markdown in this
 - [ ] 9. Check that each technology the exercise uses has a Learn page in `learn/`, and write any that is missing from [the Learn template](assets/learn-template.md). A Learn page explains why the technology exists and how its parts work together, with mermaid diagrams, and links the reference pages for the facts. It covers one technology across every topic that uses it, so extend an existing page before writing a new one. Link each Learn page from the README's opening paragraph, and add its row to the table in `learn/README.md`.
 - [ ] 10. Write the Practice section the way the exam asks: a host lead-in and weight per task, a solution that starts each task with `ssh <host>` from `base`, and a lab whose `setup.sh` (step 2) places any files the exam would hand over (for example a kustomization under `/opt/course/<n>/`). The solution uses `k`.
 - [ ] 11. Write `grade.sh` in the topic folder from [the grader template](assets/grade-template.sh). One `task` per Practice task with its weight, and one `check` per sub-task that inspects only the final state. Start the lab and run it: it must score 0%. Run the solution and run it again: it must score 100%. The exercise links [grading](../../lab/README.md#grading) and never says how the grader runs.
-- [ ] 12. Reread every sentence you wrote. Delete narration, and check the wording rules in `CLAUDE.md` (see Gotchas).
-- [ ] 13. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`. Run `scripts/check-terms.py` with no arguments and fix every line it prints. An `UNKNOWN` word is either a new concept (step 6a) or a known word to add to the term list as `known`.
-- [ ] 14. Set the topic's status in the root `README.md`: **ready** with Practice, **steps only** without.
-- [ ] 15. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Start lab on the Lab tab and wait for "The `<lab-name>` lab is running", open the terminal and run the first steps from `base`, then check that every step renders, each Learn page and reference opens from its list, and each diagram draws.
+- [ ] 12. Reread every sentence you wrote. Delete narration and author-side text, and check the wording rules in `CLAUDE.md` (see Gotchas).
+- [ ] 13. Run `scripts/check-doc-links.sh` on every file you touched, and fix or remove each `FAIL` and each `NOT ALLOWED`. Run `scripts/check-links-once.py` on the same files and fix each `REPEAT` and `TRAILING` (see Gotchas). Run `scripts/check-terms.py` with no arguments and fix every line it prints. An `UNKNOWN` word is either a new concept (step 6a) or a known word to add to the term list as `known`.
+- [ ] 14. In the root `README.md` table, the topic's row links its `README.md` with the short name as the link text, and its status is **ready** with Practice, **steps only** without. The sidebar and dashboard take every domain and topic name from this table, and a test checks that each written topic's `# title` matches it.
+- [ ] 15. Run `cd app && pnpm test`. Then run `pnpm dev` and open the topic in a browser. Press Start lab in the lab panel and wait for "The `<lab-name>` lab is running", open the terminal and run the first steps from `base`. Then open every lesson from the sidebar and check that each renders with its steps, each Learn lesson's diagrams draw, and each reference link opens its page.
 
 ## Gotchas
 
@@ -53,23 +55,24 @@ In the study app, each topic page has four tabs, all built from Markdown in this
   - Framing importance: "worth recognising on sight", "which is why it is worth reading rather than skimming", "the single most common reason…"
   - Exam coaching with no fact in it: "which is what you want under exam time", "because the exam asks you to read these as often as write them".
   - Punchlines and fragments: "One role, one subject list.", "kubectl says the quiet part out loud."
+  - Author-side text about how the course is put together: "The lab installed one release, `legacy`, for the Practice section to find." says instead "One release, `legacy`, is already installed." The same goes for "this exercise", "the steps above" and "the columns this section does not discuss".
+  - Exam framing: "the way the exam asks", "every exam host", "as exam tasks ask". Name the CKA only for a fact about it, such as its hosts, its keys or the docs it allows, and keep "practice exam" and "(not available in the exam)".
 
   A test for each sentence: if deleting it loses no fact about Kubernetes or the lab, delete it.
 - kubectl behaviour differs from what memory suggests. `kubectl create role --resource=deployments` fills in the `apps` group by itself, and `kubectl get nodes -n dev` prints no warning. Both were written wrong from memory, and only running them on the lab caught it.
 - Test a failure mode on a freshly started lab, not after `kubeadm reset`. Reset leaves `/etc/cni/net.d/` and `/run/flannel/` behind, and a failure test of the kubeadm exercise gave the wrong result because the next cluster reused them.
 - `admin.conf` authenticates in the group `kubeadm:cluster-admins`. `system:masters` belongs to `super-admin.conf`.
-- The app finds sections by heading name: `## Quiz`, `## Practice`, `## Check your work`, `## Next`. Every `##` heading before Quiz is treated as a group of steps.
-- The lab line must read exactly ``Starts from the [`<lab-name>` lab](../../lab/labs/<lab-name>/README.md).``, and `lab/labs/<lab-name>/` must exist. Otherwise the Lab tab is empty. A topic folder never holds a `setup.sh`; it belongs to the lab.
+- The app finds sections by heading name: `## Objectives`, `## Quiz`, `## Practice`, `## Check your work`, `## Further reading`. Every other `##` heading before Quiz is a lesson of steps, even one with no numbered list. Objectives stays on Introduction, and Check your work and Further reading stay on Practice.
+- The lab line must read exactly ``Starts from the [`<lab-name>` lab](../../lab/labs/<lab-name>/README.md).``, and `lab/labs/<lab-name>/` must exist. Otherwise the lab panel says the topic has no lab. A topic folder never holds a `setup.sh`; it belongs to the lab.
 - Editing a lab's `setup.sh` makes its next start set it up again, along with every lab built on it. The first start of a lab with a changed setup takes minutes, not seconds.
 - Each Practice task opens with a bold lead-in, ``**Host `controlplane`, weight 19%.**`` (or ``**Hosts `a`, `b`, weight 25%.**``), and the weights add up to 100. The time budget is a bold ``**N minutes**`` in the section's opening text.
 - Quiz answers and the Practice solution use `<details><summary>…</summary>` with a blank line after `</summary>`.
-- Reference and Learn links in an exercise must be relative (`../../references/<page>.md`, `../../learn/<page>.md`), or the tab won't list the page. Links within one folder are plain `<page>.md`, and between the folders `../references/<page>.md` or `../learn/<page>.md`.
+- Reference and Learn links in an exercise must be relative (`../../references/<page>.md`, `../../learn/<page>.md`). Only a relative Learn link makes the page a lesson of the topic. Links within one folder are plain `<page>.md`, and between the folders `../references/<page>.md` or `../learn/<page>.md`.
 - A Learn page may link sources outside the exam's allowed docs in its Further reading list, each marked "(not available in the exam)". It never mentions how the lab is built.
-- A step links the section that explains it, not the top of the page: `[values](../../references/helm.md#values)`, with the section's heading as the link text, or the page's name before a generic heading such as `[kubeadm failure modes](…#failure-modes)`. A link on a word inside a sentence keeps the word and still gets the anchor. Link the top of the page only when its opening paragraph is the explanation. The anchor is the heading in lowercase with spaces turned into hyphens and punctuation dropped. A reference page with one section per idea the steps use makes this possible.
-- The table row in `references/README.md` must stay in the form `| [<page>](<page>.md) | <what it covers> |`. The app reads it with a pattern, and a page without a row shows up with no summary.
+- A link sits on the term it explains, inside the sentence, the first time the term appears in a lesson: "A chart's templates read settings from its [values](../../references/helm.md#values)." Never tack it on after a colon ("…ships in the chart: [values](…)."), and never link the same section twice in one lesson; a later mention is plain text. Each lesson, Learn page and reference page counts on its own. A link goes to the section that explains the term, not the top of the page, unless the page's opening paragraph is the explanation. The anchor is the heading in lowercase with spaces turned into hyphens and punctuation dropped. A reference page with one section per idea the steps use makes this possible.
 - Exercises never mention `docker`, saved copies, the computer the lab runs on or the lab's IP addresses. Those belong only in `lab/README.md` and `lab/labs/`.
 - The reader starts on `base`, which has no `kubectl`, as in the exam. Steps run on `controlplane`, reached with `ssh controlplane`. Work on a worker goes `exit` to `base`, `ssh node01`, then `exit` and `ssh controlplane` again. ssh from one cluster machine to another is refused in the lab, as in the exam, so a step that does it fails.
-- The exam's hosts share nothing between tasks: each task is a new `ssh` session. Don't teach an alias, an exported variable or a `.vimrc` as setup the reader can rely on later. `k` and its completion exist everywhere, in the lab too (`lab/exam-mode.sh`).
+- The exam's hosts share nothing between tasks: each task is a new `ssh` session. Don't teach an alias, an exported variable or a `.vimrc` as setup the reader can rely on later. `k` and its completion exist everywhere, in the lab too (`lab/Dockerfile`).
 - A grader `check` runs on `controlplane` as the lab user. Use `k` there, `ssh node01 …` for a worker, and `sudo` for root-owned files. `ssh` works inside checks only because `lab/grade-lib.sh` lends `controlplane` a key for the run; the reader's `controlplane` has none. A check that fails on a fresh restore and passes after the solution is the only proof it works.
 - `kubectl create deployment` names the container after the image (`nginx` for `nginx:1.27`) and labels the pods `app: <name>`, which is the selector `kubectl create service clusterip <name>` writes. A patch or `envFrom` step must use that container name.
 - Check every kubernetes.io claim against the live page, not memory. Flags get removed: `--pod-eviction-timeout` no longer exists, for example.

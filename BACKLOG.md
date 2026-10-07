@@ -24,5 +24,5 @@ Fix these in order before building more topics. Compared with KodeKloud's CKA co
 ## Then
 
 - [x] 11. Apply 1–9 to the 6 finished topics, their Learn pages and their references.
-- [ ] 12. Update the `build-exercise` skill and `CLAUDE.md` so new topics come out this way.
+- [x] 12. Update the `build-exercise` skill and `CLAUDE.md` so new topics come out this way.
 - [ ] 13. Build the remaining 22 topics, then the mock exams.
