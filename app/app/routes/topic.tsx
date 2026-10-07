@@ -90,16 +90,47 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   const onRunning = useCallback((r: boolean) => setRunning(r), []);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
   const lab = useLab(exercise.lab);
-  const [focus, setFocus] = useState<Focus>("both");
+  // The lesson's share of the width (the height below lg) in percent: 0 hides the lesson, 100 hides the lab.
+  const grid = useRef<HTMLDivElement>(null);
+  const [split, setSplit] = useState(50);
+  const [popped, setPopped] = useState(false);
+  const [wide, setWide] = useState(true);
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("panes");
-      if (saved === "lesson" || saved === "lab") setFocus(saved);
+      const saved = Number(localStorage.getItem("split") ?? NaN);
+      if (saved >= 0 && saved <= 100) setSplit(saved);
     } catch {}
+    const lg = matchMedia("(min-width: 64rem)");
+    const onChange = () => setWide(lg.matches);
+    onChange();
+    lg.addEventListener("change", onChange);
+    return () => lg.removeEventListener("change", onChange);
   }, []);
-  const saveFocus = (f: Focus) => {
-    setFocus(f);
-    try { localStorage.setItem("panes", f); } catch {}
+  const keep = (p: number) => {
+    try { localStorage.setItem("split", String(p)); } catch {}
+    return p;
+  };
+  const length = () => {
+    const r = grid.current!.getBoundingClientRect();
+    return { start: wide ? r.left : r.top, total: wide ? r.width : r.height };
+  };
+  const drag = (e: React.PointerEvent) => {
+    if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+    const { start, total } = length();
+    setSplit(settle((wide ? e.clientX : e.clientY) - start, total));
+  };
+  const onKey = (e: React.KeyboardEvent) => {
+    const { total } = length();
+    const min = (Math.min(320, total / 2) / total) * 100;
+    const step = { ArrowLeft: -5, ArrowUp: -5, ArrowRight: 5, ArrowDown: 5 }[e.key];
+    let p: number;
+    if (e.key === "Home") p = 0;
+    else if (e.key === "End") p = 100;
+    else if (!step) return;
+    else if (split === 0 || split === 100) p = split === 0 ? min : 100 - min;
+    else p = split + step < min ? 0 : split + step > 100 - min ? 100 : split + step;
+    e.preventDefault();
+    setSplit(keep(p));
   };
   // The lab pane hides while the terminal has a window of its own, and comes back when it closes.
   const popup = useRef<{ win: Window; timer: number } | null>(null);
@@ -112,10 +143,10 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
       if (!win.closed) return;
       clearInterval(timer);
       popup.current = null;
-      setFocus("both");
+      setPopped(false);
     }, 1000);
     popup.current = { win, timer };
-    setFocus("lesson");
+    setPopped(true);
   };
 
   const body = (
@@ -224,50 +255,62 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   if (!exercise.lab) return page;
 
   // The lesson on the left and the lab on the right, each filling the screen beside the topic list
-  // (17rem, from root.tsx, unless hidden) and scrolling on its own. Below lg the lab takes the bottom
-  // half. The lesson pane keeps main's padding, which the practice exam's sticky clock bar relies on.
-  // A hidden pane stays mounted, so the terminal keeps its session.
-  const tracks = { both: "minmax(0,1fr) minmax(0,1fr)", lesson: "minmax(0,1fr) 0", lab: "0 minmax(0,1fr)" }[focus];
+  // (17rem, from root.tsx, unless hidden) and scrolling on its own. Below lg the lab is the bottom part.
+  // The divider between them drags; a side dragged to the edge is hidden but stays mounted, so the
+  // terminal keeps its session. The lesson pane keeps main's padding, which the practice exam's sticky
+  // clock bar relies on. While the terminal has a window of its own the lab pane hides.
+  const shown = popped ? 100 : split;
+  const tracks = `minmax(0,${shown}fr) minmax(0,${100 - shown}fr)`;
   const gone = "invisible overflow-hidden p-0!";
   return (
     <div
+      ref={grid}
       style={{ "--tracks": tracks } as React.CSSProperties}
       className="fixed inset-0 z-20 grid grid-rows-(--tracks) bg-paper lg:left-[17rem] lg:grid-cols-(--tracks) lg:grid-rows-1 lg:group-data-[sidebar=hidden]/app:left-0"
     >
-      <div className={`min-h-0 overflow-y-auto px-4 py-8 sm:px-10 ${focus === "lab" ? gone : ""}`}>{page}</div>
-      <div className={`relative min-h-0 border-t border-line lg:border-l lg:border-t-0 ${focus === "lesson" ? "border-0" : ""}`}>
-        <div className={`h-full ${focus === "lesson" ? gone : ""}`}>
+      <div id="lesson" className={`min-h-0 overflow-y-auto px-4 py-8 sm:px-10 ${shown === 0 ? gone : ""}`}>{page}</div>
+      <div className={`relative min-h-0 border-t border-line lg:border-l lg:border-t-0 ${shown === 100 ? "border-0" : ""}`}>
+        <div className={`h-full ${shown === 100 ? gone : ""}`}>
           <LabPane lab={lab} onPopOut={popOut} />
         </div>
-        <div
-          className={`absolute left-1/2 top-0 z-30 flex -translate-x-1/2 overflow-hidden rounded-full border border-line bg-surface shadow lg:left-0 lg:top-1/2 lg:-translate-y-1/2 lg:flex-col ${
-            { both: "-translate-y-1/2 lg:-translate-x-1/2", lesson: "-translate-y-full lg:-translate-x-full", lab: "translate-y-0 lg:translate-x-0" }[focus]
-          }`}
-        >
-          {focus !== "lab" && (
-            <PaneButton label={focus === "lesson" ? "Show lab" : "Hide lesson"} onClick={() => saveFocus(focus === "lesson" ? "both" : "lab")} dir="back" />
-          )}
-          {focus !== "lesson" && (
-            <PaneButton label={focus === "lab" ? "Show lesson" : "Hide lab"} onClick={() => saveFocus(focus === "lab" ? "both" : "lesson")} dir="forward" />
-          )}
-        </div>
+        {!popped && (
+          <div
+            role="separator"
+            tabIndex={0}
+            aria-label="Resize lesson and lab"
+            aria-controls="lesson"
+            aria-orientation={wide ? "vertical" : "horizontal"}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(split)}
+            aria-valuetext={split === 0 ? "Lesson hidden" : split === 100 ? "Lab hidden" : `Lesson ${Math.round(split)}%`}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={drag}
+            onLostPointerCapture={() => setSplit(keep)}
+            onDoubleClick={() => setSplit(keep(50))}
+            onKeyDown={onKey}
+            className={`group absolute inset-x-0 top-0 z-30 flex h-2 cursor-row-resize touch-none items-center justify-center outline-none lg:inset-x-auto lg:inset-y-0 lg:left-0 lg:h-auto lg:w-2 lg:cursor-col-resize ${
+              shown === 100 ? "-translate-y-full lg:translate-y-0 lg:-translate-x-full" : ""
+            }`}
+          >
+            <span className="h-1 w-10 rounded-full bg-line group-hover:bg-accent group-focus-visible:bg-accent group-focus-visible:ring-2 group-focus-visible:ring-accent lg:h-10 lg:w-1" />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/** Moves the divider between the lesson and the lab: back is left (up below lg), forward is right (down). */
-function PaneButton({ label, onClick, dir }: { label: string; onClick: () => void; dir: "back" | "forward" }) {
-  return (
-    <button onClick={onClick} aria-label={label} title={label} className="p-1 text-muted hover:bg-paper hover:text-ink">
-      <svg aria-hidden viewBox="0 0 20 20" className={`size-4 ${dir === "back" ? "-rotate-90 lg:rotate-180" : "rotate-90 lg:rotate-0"}`} fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M8 5l5 5-5 5" />
-      </svg>
-    </button>
-  );
+/** Where the divider lands for a pointer px into a total-px pane: each side is hidden (0 or 100) or at least 320px. */
+function settle(px: number, total: number) {
+  const min = Math.min(320, total / 2);
+  if (px < min / 2) return 0;
+  if (px > total - min / 2) return 100;
+  return (Math.min(Math.max(px, min), total - min) / total) * 100;
 }
-
-type Focus = "both" | "lesson" | "lab";
 
 function Section({ s, hideTitle, children }: { s: { slug: string; title: string }; hideTitle?: boolean; children: React.ReactNode }) {
   return (
