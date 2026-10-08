@@ -48,4 +48,4 @@ Control plane components are pods too, but [static ones](control-plane.md).
 - [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
 - [Taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
 
-Related: [control-plane](control-plane.md), [pod-network](pod-network.md).
+Related: [Control plane](control-plane.md), [Pod network](pod-network.md).

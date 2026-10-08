@@ -69,6 +69,18 @@ export default function App({ loaderData }: Route.ComponentProps) {
   }, [starting, revalidator]);
   // The terminal popped out into its own window.
   if (pathname === "/terminal") return <Outlet />;
+  // A reference or Learn page opened in a tab of its own, without the topic list.
+  if (/^\/doc\/(references|learn)\/(?!README\.md)/.test(pathname))
+    return (
+      <div data-sidebar="hidden" className="group/app">
+        <main className="min-w-0 px-4 py-8 sm:px-10">
+          <NavLink to="/" className="mb-6 inline-block text-lg font-bold">
+            CKA Prep
+          </NavLink>
+          <Outlet />
+        </main>
+      </div>
+    );
   return (
     <div data-sidebar={hidden ? "hidden" : undefined} className={`group/app ${hidden ? "" : "lg:grid lg:grid-cols-[17rem_1fr]"}`}>
       {hidden && (

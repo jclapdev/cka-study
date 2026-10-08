@@ -36,7 +36,7 @@ Every type lives at a path under an API group and version, such as `/apis/apps/v
 
 | Way | Example | When it fits |
 | --- | --- | --- |
-| Imperative commands | `kubectl create deployment web --image=nginx` | One-off changes, and the fastest path in a timed task. |
+| Imperative commands | `kubectl create deployment web --image=nginx` | One-off changes, and the fastest path. |
 | Imperative object configuration | `kubectl create -f web.yaml`, `kubectl replace -f web.yaml` | Working from a file you keep. |
 | Declarative object configuration | `kubectl apply -f web.yaml` | Files that you edit and apply again and again. |
 

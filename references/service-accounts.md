@@ -20,7 +20,7 @@ spec:
 
 `kubectl create token <name>` issues a token by hand, which is useful for testing ([get a token](https://kubernetes.io/docs/concepts/security/service-accounts/#get-a-token)).
 
-## In this lab
+## Example
 
 ```bash
 kubectl create serviceaccount deploy-bot -n dev
@@ -28,7 +28,7 @@ kubectl get serviceaccounts -n dev
 kubectl auth whoami --as=system:serviceaccount:dev:deploy-bot
 ```
 
-In the lab, `whoami` prints:
+`whoami` prints:
 
 ```
 ATTRIBUTE   VALUE

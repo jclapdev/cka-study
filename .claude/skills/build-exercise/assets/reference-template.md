@@ -6,9 +6,9 @@
 
 <The facts a step relies on, in full sentences. A table when comparing kinds against the same criteria. Why it works this way goes on the Learn page.>
 
-## In this lab
+## <Example, named for what it shows, e.g. "Initial namespaces">
 
-<What it looks like on the lab cluster, with real output captured from the lab.>
+<What it looks like on a cluster, as Kubernetes facts: "A new kubeadm cluster has…", "The output is similar to this:". Output is captured from the lab, but the page never says so.>
 
 ```
 <captured output>

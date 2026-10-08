@@ -16,7 +16,7 @@ Kubernetes has no User or Group resource ([users in Kubernetes](https://kubernet
 
 For a client [certificate](certificates.md) signed by the cluster CA, the certificate's common name (`CN`) becomes the username, and each organisation (`O`) becomes a group ([X509 client certificates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certificates)).
 
-## In this lab
+## kubeadm's admin kubeconfigs
 
 [kubeadm](kubeadm.md) writes two admin [kubeconfigs](kubeconfig.md), each with a client certificate:
 

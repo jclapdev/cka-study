@@ -32,7 +32,7 @@ Three kinds, named in a binding's `subjects` ([referring to subjects](https://ku
 
 - **ServiceAccount** — an in-cluster identity, referred to in full as
   `system:serviceaccount:<namespace>:<name>`. The only kind Kubernetes creates
-  ([service-accounts](service-accounts.md)).
+  ([ServiceAccounts](service-accounts.md)).
 - **User** — has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a [certificate](certificates.md) or token
   authenticates as that name ([authentication](authentication.md)). `kubeadm` writes `kubernetes-admin` into
   `admin.conf`.
@@ -43,9 +43,9 @@ Three kinds, named in a binding's `subjects` ([referring to subjects](https://ku
 Permissions are purely additive. There is no deny rule, so a subject can do
 something if any binding allows it, and removing access means removing bindings.
 
-## In this lab
+## Built-in roles
 
-The lab's cluster has 71 ClusterRoles. 65 are prefixed `system:` and let the
+A new [kubeadm](kubeadm.md) cluster with Flannel has 71 ClusterRoles. 65 are prefixed `system:` and let the
 [control plane](control-plane.md) components talk to the apiserver. `flannel` belongs to the [pod
 network](pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node [join](workers.md#joining). The remaining four are meant
 for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
@@ -76,14 +76,14 @@ kubectl get clusterrolebinding kubeadm:cluster-admins -o wide
 ## Reading and testing permissions
 
 `kubectl auth can-i` answers `yes` or `no` without needing the subject's
-credentials, which is why it is the fastest tool under time pressure:
+credentials:
 
 ```bash
 kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
 kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
 ```
 
-`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation) another subject (authentication), and works on any command, so a denied request can be seen in
+`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation) another subject ([authentication](authentication.md#commands)), and works on any command, so a denied request can be seen in
 full rather than as a bare `no`:
 
 ```
@@ -94,7 +94,7 @@ Error from server (Forbidden): pods is forbidden: User
 
 The message names all five things a rule has to match: subject, verb, resource,
 API group and namespace. Whichever one is wrong is the one to fix. `""` is the
-core API group ([api-groups](api-groups.md)).
+core API group ([API groups](api-groups.md)).
 
 ## Failure modes
 
@@ -109,6 +109,6 @@ core API group ([api-groups](api-groups.md)).
 
 ## Docs
 
-- [Using RBAC authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) — the page to open first
+- [Using RBAC authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
 - [Authorization overview](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) · [ServiceAccounts](https://kubernetes.io/docs/concepts/security/service-accounts/)
 - [`kubectl auth can-i`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_auth/kubectl_auth_can-i/) · [`kubectl create role`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_role/) · [`kubectl create rolebinding`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_rolebinding/)

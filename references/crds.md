@@ -34,7 +34,7 @@ An operator is a controller, running in pods, that watches its custom resources 
 
 Installing an operator means installing its CRDs and its controller, usually as a [Deployment](workloads.md) ([deploying operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/#deploying-operators)). The controller also needs a [ServiceAccount](service-accounts.md) with RBAC permission for the objects it manages, which its [chart](helm.md#charts-repositories-and-releases) or [manifest](kubectl.md#generating-yaml) includes. Configuring it means creating custom resources, never editing what it created: a [Secret](config.md#secrets) deleted by hand is created again within seconds, because the custom resource still asks for it.
 
-In the lab, the operator is cert-manager. cert-manager is an operator that issues [TLS](certificates.md#client-and-serving-certificates) [certificates](certificates.md) and keeps them in Secrets. It runs three Deployments: `cert-manager` is the controller, `cert-manager-webhook` checks cert-manager objects for the apiserver before they are stored, and `cert-manager-cainjector` copies CA certificates into the objects that need them. Its six CRDs add these types:
+cert-manager is an operator that issues [TLS](certificates.md#client-and-serving-certificates) [certificates](certificates.md) and keeps them in Secrets. It runs three Deployments: `cert-manager` is the controller, `cert-manager-webhook` checks cert-manager objects for the apiserver before they are stored, and `cert-manager-cainjector` copies CA certificates into the objects that need them. Its six CRDs add these types:
 
 - An Issuer is a namespaced object that says how certificates get signed: self-signed (signed with the certificate's own key, so nothing else vouches for it), by a CA whose key is in a Secret, or by an outside service such as an ACME server. A ClusterIssuer is the same but cluster-scoped, so any namespace can use it.
 - A Certificate is a request for a certificate that the operator keeps valid. It names the DNS names to cover, the Secret to write and the issuer to use.
@@ -50,7 +50,7 @@ A chart can ship CRDs in two ways ([Helm and CRDs](https://helm.sh/docs/topics/c
 - In the chart's `crds/` folder. [Helm](helm.md) installs them before anything else, only on `install`, and never upgrades or deletes them. `--skip-crds` leaves them out.
 - As ordinary templates, switched on by a value. cert-manager does this: without `--set crds.enabled=true`, its chart renders no CRDs at all, and with it, six.
 
-`helm template` shows which applies: `helm template x <chart> | grep -c '^kind: CustomResourceDefinition'`. See helm.
+`helm template` shows which applies: `helm template x <chart> | grep -c '^kind: CustomResourceDefinition'`.
 
 ## Commands
 

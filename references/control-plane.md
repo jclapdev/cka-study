@@ -3,7 +3,7 @@
 The control plane is the set of components that store the cluster's desired state and act to
 make the nodes match it. Workloads run on nodes.
 
-In this lab the control plane is a single node, `controlplane`. [How a cluster works](../learn/cluster-architecture.md) explains how the parts fit together.
+[How a cluster works](../learn/cluster-architecture.md) explains how the parts fit together.
 
 ## Components
 
@@ -19,8 +19,8 @@ In this lab the control plane is a single node, `controlplane`. [How a cluster w
 A controller is a loop that compares the state an object asks for with what exists, and acts on
 the difference, such as creating a pod when a [Deployment](workloads.md) has too few.
 
-`kubectl get pods -n kube-system` shows all of these except the kubelet.
-`systemctl status kubelet` and `journalctl -u kubelet` for that one.
+`kubectl get pods -n kube-system` shows all of these except the kubelet, which
+`systemctl status kubelet` and `journalctl -u kubelet` show.
 
 ## Static pods
 
@@ -33,8 +33,8 @@ Because the kubelet reads the files directly:
 
 - Editing a [manifest](kubectl.md#generating-yaml) file restarts that component within seconds. This is how a
   control plane component is reconfigured.
-- Deleting a static pod with `kubectl delete pod` does nothing lasting. In the lab,
-  `kube-scheduler-controlplane` is back `Running` 5 seconds after it is deleted,
+- Deleting a static pod with `kubectl delete pod` does nothing lasting.
+  `kube-scheduler-controlplane` is back `Running` within seconds of being deleted,
   because the kubelet recreates it from the file.
 - The pod object the apiserver shows is a mirror of the file, and its owner is the
   [Node](workers.md), not a controller.
@@ -53,10 +53,6 @@ there. Removing the taint is how a single-node cluster runs workloads:
 kubectl taint node controlplane node-role.kubernetes.io/control-plane-      # trailing dash removes
 ```
 
-## Files kubeadm writes on the control plane node
-
-Listed on [kubeadm](kubeadm.md).
-
 ## Docs
 
 - [Cluster architecture](https://kubernetes.io/docs/concepts/architecture/)
@@ -67,5 +63,5 @@ Listed on [kubeadm](kubeadm.md).
 - [Operating etcd](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)
 - [kube-scheduler](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/)
 
-Related: [kubeadm](kubeadm.md), [pod](pod.md), [workers](workers.md), [pod-network](pod-network.md),
+Related: [kubeadm](kubeadm.md), [Pod](pod.md), [Workers](workers.md), [Pod network](pod-network.md),
 [kubeconfig](kubeconfig.md).

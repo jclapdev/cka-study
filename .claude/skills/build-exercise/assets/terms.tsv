@@ -41,7 +41,7 @@ ACME	references/crds.md#operators
 Helm	references/helm.md
 chart	references/helm.md#charts-repositories-and-releases
 OCI	references/helm.md#charts-repositories-and-releases
-podinfo	references/helm.md#in-this-lab
+podinfo	references/helm.md#podinfo
 Kustomize	references/kustomize.md
 strategic merge patch	references/kustomize.md#patches
 CNI	references/pod-network.md

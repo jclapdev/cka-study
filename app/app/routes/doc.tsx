@@ -3,6 +3,8 @@ import type { Route } from "./+types/doc";
 import { renderDoc } from "~/content/parse";
 import { readMarkdown } from "~/content/repo";
 import { Markdown } from "~/components/Markdown";
+import { useReferences } from "~/components/ReferencePanel";
+import { Split } from "~/components/Split";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const file = params["*"] ?? "";
@@ -13,12 +15,15 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.title ?? "Doc"} · CKA Prep` }];
 
-export default function Doc({ loaderData }: Route.ComponentProps) {
-  return (
-    <article className="mx-auto max-w-3xl">
+export default function Doc({ loaderData, params }: Route.ComponentProps) {
+  const refs = useReferences(params["*"] ?? "", true);
+  const page = (
+    <article onClick={refs.onClick} className="mx-auto max-w-3xl">
       <Markdown html={loaderData.html} />
     </article>
   );
+  if (!refs.open) return page;
+  return <Split left={page} right={refs.panel} reveal place={refs.place} label="Resize page and reference" />;
 }
 
 export { Problem as ErrorBoundary } from "~/root";

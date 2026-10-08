@@ -76,9 +76,7 @@ A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
 
 ## Practice
 
-Do it again without the steps. Give yourself **<N> minutes**.
-
-When time is up, [grade the run](../../lab/README.md#grading).
+Do it again without the steps, in **<N> minutes**.
 
 1. **Host `controlplane`, weight <N>%.** <Task in exam wording, no steps. Name any file the
    exam would hand over, such as `/opt/course/1/kustomization.yaml`, placed by `setup.sh`.>

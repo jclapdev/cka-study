@@ -34,7 +34,7 @@ cannot list resource "deployments" in API group "apps" in the namespace "dev"
 kubectl api-resources | grep -E '^(NAME|pods|deployments|roles) '
 ```
 
-In the lab this prints:
+The output is similar to this:
 
 ```
 NAME                                SHORTNAMES   APIVERSION                        NAMESPACED   KIND

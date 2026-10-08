@@ -20,7 +20,7 @@ kubectl api-resources --namespaced=true
 
 This matters for [RBAC](rbac.md). A RoleBinding grants access inside its own namespace, so it can never reach a cluster-scoped resource. Access to nodes or PersistentVolumes, which are pieces of storage that belong to the whole cluster, needs a ClusterRoleBinding.
 
-## In this lab
+## Initial namespaces
 
 A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#initial-namespaces)), and [Flannel](pod-network.md#plugins) adds a fifth:
 
@@ -32,9 +32,9 @@ A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namesp
 | `kube-node-lease` | One Lease per node. A Lease is a small object with a timestamp, and the kubelet renews its node's every few seconds as a heartbeat. |
 | `kube-flannel` | The Flannel pod network. |
 
-In the lab, Kubernetes 1.34 serves 32 cluster-scoped and 33 namespaced resource types.
+Kubernetes 1.34 serves 32 cluster-scoped and 33 namespaced resource types.
 
-Each new namespace gets a ServiceAccount called `default` straight away. See [service-accounts](service-accounts.md).
+Each new namespace gets a ServiceAccount called `default` straight away ([ServiceAccounts](service-accounts.md#the-model)).
 
 ## Commands
 
@@ -51,6 +51,7 @@ kubectl config set-context --current --namespace=dev  # make dev the default for
 | --- | --- |
 | `No resources found in default namespace.` | The objects are in another namespace. Add `-n <ns>` or `-A`. |
 | `kubectl auth can-i` prints `Warning: resource 'nodes' is not namespace scoped` | The question is about a cluster-scoped type, so any namespace in it, or in a RoleBinding for it, has no effect. |
+
 ## Docs
 
 - [Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)

@@ -1,17 +1,57 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Markdown } from "~/components/Markdown";
 
-/** The reference page a plain left-click landed on, or null. Other clicks open the full page as usual. */
+/** The reference or Learn page a plain left-click landed on, or null. Other clicks open the full page as usual. */
 export function referenceHref(e: React.MouseEvent) {
   if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
-  const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="/doc/references/"]');
+  const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="/doc/references/"], a[href^="/doc/learn/"]');
   if (!a) return null;
   e.preventDefault();
   return a.getAttribute("href");
 }
 
+/**
+ * Reference pages opened from the page, the last one showing beside it, emptied when `page` changes.
+ * `onClick` goes on the page. On a page that scrolls the window until the panel splits the screen
+ * (`splitsOnOpen`), the link clicked stays at the same height on screen when the page moves into
+ * the split, through `place`, and when it moves back on close.
+ */
+export function useReferences(page: string, splitsOnOpen: boolean) {
+  const [refs, setRefs] = useState<string[]>([]);
+  // The clicked link: its position among the page's links, and its distance from the top of the screen.
+  const anchor = useRef<{ n: number; top: number } | null>(null);
+  useEffect(() => setRefs([]), [page]);
+  const onClick = (e: React.MouseEvent) => {
+    const href = referenceHref(e);
+    if (!href) return;
+    if (!refs.length && splitsOnOpen) {
+      const a = (e.target as HTMLElement).closest("a")!;
+      anchor.current = { n: [...e.currentTarget.querySelectorAll("a")].indexOf(a), top: a.getBoundingClientRect().top };
+    }
+    setRefs([href]);
+  };
+  const place = (pane: HTMLElement) => {
+    const a = anchor.current && pane.querySelector("article")?.querySelectorAll("a")[anchor.current.n];
+    if (a) pane.scrollTop += a.getBoundingClientRect().top - anchor.current!.top;
+  };
+  const close = useCallback(() => {
+    const a = anchor.current && document.querySelector("#lesson article")?.querySelectorAll("a")[anchor.current.n];
+    const top = a?.getBoundingClientRect().top;
+    setRefs([]);
+    if (!splitsOnOpen || top === undefined) return;
+    requestAnimationFrame(() => {
+      const again = document.querySelector("main article")?.querySelectorAll("a")[anchor.current!.n];
+      if (again) window.scrollBy(0, again.getBoundingClientRect().top - top);
+    });
+  }, [splitsOnOpen]);
+  const panel = refs.length ? (
+    <ReferencePanel refs={refs} onOpen={(h) => setRefs([...refs, h])} onBack={() => setRefs(refs.slice(0, -1))} onClose={close} />
+  ) : null;
+  return { open: refs.length > 0, onClick, panel, place: splitsOnOpen ? place : undefined };
+}
+
 /** The last of `refs`, a stack of reference pages opened one from another, shown beside the lesson. */
-export function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string[]; onOpen: (href: string) => void; onBack: () => void; onClose: () => void }) {
+function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string[]; onOpen: (href: string) => void; onBack: () => void; onClose: () => void }) {
   const href = refs[refs.length - 1];
   const [path, hash] = href.split("#");
   const body = useRef<HTMLDivElement>(null);
@@ -21,7 +61,7 @@ export function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string
   useEffect(() => {
     const abort = new AbortController();
     setHtml(undefined);
-    fetch(path.replace("/doc/references/", "/reference/"), { signal: abort.signal })
+    fetch(`/reference/${path.slice("/doc/".length)}`, { signal: abort.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((doc) => setHtml(doc?.html ?? null))
       .catch(() => abort.signal.aborted || setHtml(null));

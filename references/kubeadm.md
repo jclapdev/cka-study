@@ -1,10 +1,10 @@
 # kubeadm
 
-kubeadm turns machines that already run a [container runtime](workers.md#what-a-worker-runs) and a [kubelet](control-plane.md#components) into a cluster. `kubeadm init` builds the [control plane](control-plane.md) on one machine, and `kubeadm join` adds more machines to it ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)). It does not install a pod network; see [pod-network](pod-network.md).
+kubeadm turns machines that already run a [container runtime](workers.md#what-a-worker-runs) and a [kubelet](control-plane.md#components) into a cluster. `kubeadm init` builds the [control plane](control-plane.md) on one machine, and `kubeadm join` adds more machines to it ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)). It does not install a [pod network](pod-network.md).
 
 ## What `kubeadm init` does
 
-`init` runs a fixed list of phases, and each line it prints starts with the phase's name in brackets ([init workflow](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#init-workflow)). In the lab, one run prints 84 lines and takes about 90 seconds.
+`init` runs a fixed list of phases, and each line it prints starts with the phase's name in brackets ([init workflow](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#init-workflow)). A run prints about 84 lines and takes about 90 seconds.
 
 | Phase | What it does |
 | --- | --- |
@@ -21,7 +21,7 @@ The files it leaves on the control plane node:
 
 | Path | Contents |
 | --- | --- |
-| `/etc/kubernetes/manifests/` | The static pod manifests (control-plane). |
+| `/etc/kubernetes/manifests/` | The static pod manifests. |
 | `/etc/kubernetes/*.conf` | The kubeconfigs, root-owned with mode `600` ([kubeconfig](kubeconfig.md)). |
 | `/etc/kubernetes/pki/` | The CA and all component certificates ([which certificate is which](https://kubernetes.io/docs/setup/best-practices/certificates/#all-certificates)). |
 | `/var/lib/etcd/` | The etcd data directory. |
@@ -29,16 +29,16 @@ The files it leaves on the control plane node:
 
 ## The advertise address
 
-`--apiserver-advertise-address` is the address the apiserver tells the rest of the cluster to reach it on. `init` writes it into the apiserver's certificate, into every kubeconfig, and into the join command. In the lab:
+`--apiserver-advertise-address` is the address the apiserver tells the rest of the cluster to reach it on. `init` writes it into the apiserver's certificate, into every kubeconfig, and into the join command:
 
 ```
-[certs] apiserver serving cert is signed for DNS names [controlplane kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.168.104.10]
+[certs] apiserver serving cert is signed for DNS names [controlplane kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local] and IPs [10.96.0.1 192.0.2.10]
 ```
 
 A client that connects on an address missing from that list fails the certificate check:
 
 ```
-Unable to connect to the server: tls: failed to verify certificate: x509: certificate is valid for 10.96.0.1, 192.168.104.10, not 127.0.0.1
+Unable to connect to the server: tls: failed to verify certificate: x509: certificate is valid for 10.96.0.1, 192.0.2.10, not 127.0.0.1
 ```
 
 Changing the address means `kubeadm reset` and a new `init`.

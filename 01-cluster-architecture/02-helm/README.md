@@ -123,7 +123,6 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
 
    Without `--create-namespace`, the install fails with
    `Error: INSTALLATION FAILED: create: failed to create: namespaces "apps" not found`.
-   `NOTES` is text the chart author wrote.
 
 2. List releases in the namespace, then without one:
 
@@ -403,9 +402,7 @@ No. The namespace is not part of the release, so it stays.
 
 ## Practice
 
-Do it again without the steps. Give yourself **15 minutes**.
-
-When time is up, [grade the run](../../lab/README.md#grading).
+Do it again without the steps, in **15 minutes**.
 
 1. **Host `controlplane`, weight 20%.** Add the chart repository
    `https://stefanprodan.github.io/podinfo` under the name `podinfo`. Install the chart
@@ -418,7 +415,7 @@ When time is up, [grade the run](../../lab/README.md#grading).
 4. **Host `controlplane`, weight 20%.** Write the manifests that chart version `6.15.0` of
    `podinfo/podinfo` would create for a release `preview` in `store` to `~/preview.yaml`,
    without the chart's test pods. Do not install it.
-5. **Host `controlplane`, weight 15%.** A release of chart version `6.14.0` of [podinfo](../../references/helm.md#in-this-lab) is
+5. **Host `controlplane`, weight 15%.** A release of chart version `6.14.0` of [podinfo](../../references/helm.md#podinfo) is
    installed somewhere in the cluster. Uninstall it, and leave its namespace in place.
 
 <details><summary>Solution</summary>
@@ -448,7 +445,7 @@ helm uninstall legacy -n legacy
 
 ## Check your work
 
-Grade the run, or check by hand on `controlplane`:
+On `controlplane`:
 
 1. `shop` is back on chart version 6.14.1 with 3 replicas, and `legacy` is gone:
 

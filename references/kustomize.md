@@ -1,6 +1,6 @@
 # Kustomize
 
-Kustomize builds a set of [manifests](kubectl.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. The lab's `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
+Kustomize builds a set of [manifests](kubectl.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
 
 [How Kustomize works](../learn/kustomize.md) explains bases and overlays and compares Kustomize with [Helm](helm.md).
 
@@ -36,7 +36,7 @@ The `labels` field adds labels to each object's own `metadata.labels` only ([Kus
 - `includeTemplates: true` also adds them to the [pod template](workloads.md#the-pod-template), so the pods carry them.
 - `includeSelectors: true` adds them to the pod template and to selectors.
 
-In the lab, an overlay with `env: prod` and neither flag gave a Deployment that `kubectl get deploy -l env=prod` finds, and pods that `kubectl get pods -l env=prod` does not. A Deployment's selector cannot be changed after it is created, so turning on `includeSelectors` for a Deployment that already exists fails with `spec.selector: … field is immutable`. `commonLabels`, which older examples use, behaves like `includeSelectors: true` and is deprecated.
+With `env: prod` and neither flag, `kubectl get deploy -l env=prod` finds the Deployment, and `kubectl get pods -l env=prod` finds none of its pods. A Deployment's selector cannot be changed after it is created, so turning on `includeSelectors` for a Deployment that already exists fails with `spec.selector: … field is immutable`. `commonLabels`, which older examples use, behaves like `includeSelectors: true` and is deprecated.
 
 ## Patches
 
@@ -67,7 +67,7 @@ Kustomize adds a hash of the contents to the generated name, such as `web-config
 
 `kubectl kustomize` and every `-k` command also accept a Git URL, such as a project's `config/` folder at a tag ([kubectl kustomize](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_kustomize/)).
 
-## In this lab
+## Remote kustomizations
 
 A remote kustomization is fetched and built the same way as a local one. The Gateway API project's [CRD](crds.md) folder at `v1.6.2` builds to 12 objects:
 

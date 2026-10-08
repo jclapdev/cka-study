@@ -21,16 +21,16 @@ TLS (Transport Layer Security) is the protocol that sets up an encrypted, authen
 | `apiserver.crt` | The apiserver's serving certificate. |
 | `apiserver-kubelet-client.crt` | The apiserver's client certificate for calling kubelets. |
 | `etcd/ca.crt` and the rest of `etcd/` | A separate CA for etcd, and etcd's own certificates. |
-| `front-proxy-ca.crt` | A CA for API extensions, not used by anything in this course. |
+| `front-proxy-ca.crt` | A CA for API extensions. |
 | `sa.key`, `sa.pub` | A key pair, not a certificate, that signs [ServiceAccount](service-accounts.md) tokens. |
 
 The kubeconfigs in `/etc/kubernetes/` (`admin.conf`, `controller-manager.conf`, `scheduler.conf`) carry client certificates signed by the same CA ([kubeconfig](kubeconfig.md#on-a-kubeadm-cluster)). [kubeadm](kubeadm.md) signs them for one year and the CA for ten ([certificate expiry](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#check-certificate-expiration)).
 
 ## Certificate signing requests
 
-A CSR (certificate signing request) is a request for a CA to sign a new certificate. In Kubernetes it is also an object, `CertificateSigningRequest`, that someone approves before the controller-manager signs it ([certificate signing requests](https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/)). A worker gets its kubelet's client certificate this way when it [joins](workers.md#joining), and that request is approved automatically. `kubectl get csr` lists the requests. The cluster deletes approved requests after an hour, so the lab shows `No resources found`.
+A CSR (certificate signing request) is a request for a CA to sign a new certificate. In Kubernetes it is also an object, `CertificateSigningRequest`, that someone approves before the controller-manager signs it ([certificate signing requests](https://kubernetes.io/docs/reference/access-authn-authz/certificate-signing-requests/)). A worker gets its kubelet's client certificate this way when it [joins](workers.md#joining), and that request is approved automatically. `kubectl get csr` lists the requests. The cluster deletes approved requests after an hour, so on a cluster older than that it prints `No resources found`.
 
-## In this lab
+## Example
 
 The apiserver's serving certificate, signed by the cluster CA (`CN = kubernetes`), with the names a client may use:
 
@@ -40,7 +40,7 @@ issuer=CN = kubernetes
 notBefore=Sep 30 01:22:26 2026 GMT
 notAfter=Sep 30 01:27:26 2027 GMT
 X509v3 Subject Alternative Name:
-    DNS:controlplane, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, IP Address:10.96.0.1, IP Address:192.168.104.10
+    DNS:controlplane, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, IP Address:10.96.0.1, IP Address:192.0.2.10
 ```
 
 `10.96.0.1` is the `kubernetes` [Service](services.md), which is how pods reach the apiserver.
@@ -75,7 +75,7 @@ kubectl certificate approve <name>
 | Symptom | Cause |
 | --- | --- |
 | `Unable to connect to the server: tls: failed to verify certificate: x509: certificate signed by unknown authority` | The client's CA doesn't match the CA that signed the server's certificate, such as a kubeconfig left from an earlier cluster. |
-| `x509: certificate is valid for 10.96.0.1, 192.168.104.10, not 127.0.0.1` | The client used an address that isn't in the serving certificate ([the advertise address](kubeadm.md#the-advertise-address)). |
+| `x509: certificate is valid for 10.96.0.1, 192.0.2.10, not 127.0.0.1` | The client used an address that isn't in the serving certificate ([the advertise address](kubeadm.md#the-advertise-address)). |
 
 ## Docs
 

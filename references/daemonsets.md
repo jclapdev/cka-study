@@ -2,9 +2,9 @@
 
 A DaemonSet runs one copy of a pod on every node, or on every node that matches its selector. When a node joins, the DaemonSet adds a pod to it, and when a node leaves, its pod is removed ([DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)). [Node](workers.md) agents are deployed this way: [kube-proxy](control-plane.md#components), the pod network's agent, log collectors.
 
-## In this lab
+## On a kubeadm cluster
 
-After the workers join, the cluster runs two DaemonSets:
+A [kubeadm](kubeadm.md) cluster with [Flannel](pod-network.md#plugins) and two workers runs two DaemonSets:
 
 ```
 NAMESPACE      NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
@@ -14,7 +14,7 @@ kube-system    kube-proxy        3         3         3       3            3     
 
 `DESIRED` is the number of nodes that should run a copy. Each pod is named `<daemonset>-<random>`, such as `kube-proxy-4wdrl`, and `kubectl get pods -o wide` shows which node it runs on.
 
-A DaemonSet's pods still obey [taints](taints.md) ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). Both DaemonSets here tolerate every `NoSchedule` taint, so they also run on `controlplane`, which [kubeadm](kubeadm.md) taints `node-role.kubernetes.io/control-plane:NoSchedule` ([control-plane](control-plane.md)).
+A DaemonSet's pods still obey [taints](taints.md) ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). Both DaemonSets here tolerate every `NoSchedule` taint, so they also run on `controlplane`, which kubeadm taints `node-role.kubernetes.io/control-plane:NoSchedule` ([control-plane](control-plane.md)).
 
 ## Commands
 

@@ -53,7 +53,7 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
    ```
 
    The first `exit` leaves root, and the second leaves `node01`. `ssh node02` from `node01`
-   is nested ssh, which the CKA does not support and the lab refuses.
+   is nested ssh, which the CKA does not support.
 
 4. Go to `controlplane`, where the rest of the steps run:
 
@@ -213,8 +213,8 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
    vim deny.yaml
    ```
 
-   Type `:set paste` and Enter, then `i`, then paste. Paste is Ctrl+Shift+V, in the CKA
-   terminal and in the lab's. Press Esc, and `:wq` to save. The file holds:
+   Type `:set paste` and Enter, then `i`, then paste. Paste is Ctrl+Shift+V, as in the
+   CKA terminal. Press Esc, and `:wq` to save. The file holds:
 
    ```yaml
    ---
@@ -237,8 +237,8 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
    k apply -f deny.yaml -n drill
    ```
 
-   The lab's pod network, [Flannel](../../references/pod-network.md#plugins), does not enforce NetworkPolicies, so the policy exists but
-   blocks nothing here. A task that asks for a NetworkPolicy is graded on the object.
+   This cluster's pod network, [Flannel](../../references/pod-network.md#plugins), does not enforce NetworkPolicies, so the policy exists but
+   blocks nothing here.
 
 ## Look up a field
 
@@ -394,9 +394,7 @@ No. Each task is a new `ssh` session. Only `k` and its completion are always the
 
 ## Practice
 
-Do it again without the steps. Give yourself **12 minutes**.
-
-When time is up, [grade the run](../../lab/README.md#grading).
+Do it again without the steps, in **12 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `shop`, and in it a Deployment `api`
    running `nginx:1.27` with 2 replicas.
@@ -465,7 +463,7 @@ k scale deploy api --replicas=3 -n shop
 
 ## Check your work
 
-Grade the run, or check by hand on `controlplane`:
+On `controlplane`:
 
 1. The Deployment's image and ready replicas:
 

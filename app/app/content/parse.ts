@@ -275,6 +275,7 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
       const { found, rest } = detailsBlocks(md, s.nodes);
       const introNodes = rest.filter((n) => !(n.type === "list" && n.ordered));
       const list = rest.find((n): n is List => n.type === "list" && !!n.ordered);
+      const timed = (n: RootContent) => /(\d+)\s*minutes/.test(toString(n));
       const budget = introNodes.map((n) => toString(n)).join(" ").match(/(\d+)\s*minutes/);
       const tasks: Task[] = [];
       for (const [i, item] of (list?.children ?? []).entries()) tasks.push(await task(item, i + 1, render.nodes));
@@ -282,7 +283,8 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
         kind: "practice",
         ...base,
         minutes: budget ? Number(budget[1]) : null,
-        introHtml: await render.nodes(introNodes),
+        // The time shows beside the start button, so the paragraph that sets it is not repeated.
+        introHtml: await render.nodes(introNodes.filter((n) => !timed(n))),
         tasks,
         solutionHtml: found.length ? await render.markdown(found.map((f) => f.body).join("\n")) : "",
       });

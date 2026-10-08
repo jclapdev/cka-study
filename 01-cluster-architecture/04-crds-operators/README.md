@@ -175,8 +175,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
 An [operator](../../references/crds.md#operators) is a controller for custom resources. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates](../../references/certificates.md): you
 create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets).
 
-1. Install cert-manager's Helm chart, with its CRDs. A task gives the chart and version, or
-   links the operator's install page in its [Quick Reference](../../references/kubectl.md#snippets-from-the-docs) box:
+1. Install cert-manager's Helm chart, with its CRDs:
 
    ```shell
    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
@@ -376,8 +375,6 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
 
 ## Save answers to files
 
-Tasks often ask for a list or a piece of documentation in a file. Only the file is graded.
-
 1. Write the names of cert-manager's CRDs to a file:
 
    ```shell
@@ -455,9 +452,7 @@ result, change the custom resource.
 
 ## Practice
 
-Do it again without the steps. Give yourself **18 minutes**.
-
-When time is up, [grade the run](../../lab/README.md#grading).
+Do it again without the steps, in **18 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Install cert-manager with Helm from the chart
    `oci://quay.io/jetstack/charts/cert-manager`, version `v1.21.2`, as the release
@@ -574,7 +569,7 @@ k apply -f nightly.yaml
 
 ## Check your work
 
-Grade the run, or check by hand on `controlplane`:
+On `controlplane`:
 
 1. The Certificate is Ready:
 

@@ -19,7 +19,7 @@ Nothing in the file is a permission. It is identity only; what that identity may
 2. `$KUBECONFIG` — colon-separated list, merged left to right
 3. `~/.kube/config`
 
-`sudo kubectl` runs as root, so it reads `/root/.kube/config`, not the invoking user's. On the lab's [control plane](control-plane.md) node, root has no kubeconfig, so `sudo kubectl get nodes` fails with `localhost:8080 was refused` while plain `kubectl get nodes` works.
+`sudo kubectl` runs as root, so it reads `/root/.kube/config`, not the invoking user's. When root has no kubeconfig of its own on the [control plane](control-plane.md) node, `sudo kubectl get nodes` fails with `localhost:8080 was refused` while plain `kubectl get nodes` works.
 
 ## On a kubeadm cluster
 
@@ -70,4 +70,4 @@ kubectl config current-context
 - [Controlling access to the API](https://kubernetes.io/docs/concepts/security/controlling-access/)
 - [Service accounts](https://kubernetes.io/docs/concepts/security/service-accounts/)
 
-Related: [control-plane](control-plane.md), [workers](workers.md).
+Related: [Control plane](control-plane.md), [Workers](workers.md).

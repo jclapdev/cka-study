@@ -1,6 +1,6 @@
 # kubectl
 
-The commands, shortcuts and checks that get a task done fastest on a remote host with only a terminal, vim and the allowed docs. Only the final state is graded, with partial credit per sub-task ([Linux Foundation tips](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad) (not available in the exam)). [About the CKA](../EXAM.md) has the format.
+The commands, shortcuts and checks for working with `kubectl` and vim in a terminal. [About the CKA](../EXAM.md) has the CKA's format and grading.
 
 ## Hosts and ssh
 
@@ -15,8 +15,6 @@ exit            # leave root; exit again to go back to base
 - `kubectl` needs a [kubeconfig](kubeconfig.md). On a host without one it fails with `The connection to the server localhost:8080 was refused`. A task on a worker is about that machine's files and services.
 - Nested ssh, such as `ssh node02` from `node01`, is not supported. Go back to `base` first.
 - Each task is a new session. An alias, an exported variable or a `.vimrc` you set is gone in the next task.
-
-The lab works the same way: you start on `base`, and `ssh controlplane`, `ssh node01` and `ssh node02` work only from there.
 
 ## The k alias and short names
 
@@ -60,7 +58,7 @@ What `kubectl create` fills in by itself:
 
 ## Snippets from the docs
 
-No `kubectl create` command writes these four kinds, so copy them from the docs instead. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The kubernetes.io search box is allowed, but opening a result outside the allowed sites is not. The Quick Reference box is the part of a task that links documentation for the tools that task needs, and those pages are allowed for it too ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)). Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
+No `kubectl create` command writes these four kinds, so copy them from the docs instead. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The Quick Reference box is the part of a CKA task that links the documentation for the tools that task needs. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
 
 | Need | Page and section |
 | --- | --- |
@@ -86,7 +84,7 @@ The INSERT key is blocked, so enter insert mode with `i`.
 | `V`, move, `>` or `<` | Selects lines and shifts them right or left by one indent. |
 | `:set et sw=2 ts=2` | Indents with two spaces instead of a tab, which YAML requires. |
 
-Paste in the terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, in the CKA and in the lab. In Firefox they are Ctrl+V and Ctrl+C.
+Paste in the terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, as in the CKA. In Firefox they are Ctrl+V and Ctrl+C.
 
 ## kubectl explain
 
@@ -113,7 +111,7 @@ Most of a running pod's spec cannot change ([pod update and replacement](https:/
 
 ## Checking your work
 
-Read back the exact value the task asked for, the way a grader would:
+Read back the exact value you changed:
 
 ```bash
 k get deploy web -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'

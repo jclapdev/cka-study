@@ -6,15 +6,15 @@ A label is a key-value pair on an object, such as `node-role.kubernetes.io/worke
 
 A key has an optional prefix and a name, separated by `/`. Prefixes such as `kubernetes.io/` are reserved for Kubernetes components ([syntax and character set](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set)). A value can be empty, which `kubectl` writes as `key=`.
 
-## In this lab
+## Node labels
 
-[kubeadm](kubeadm.md) puts these labels on `controlplane`:
+[kubeadm](kubeadm.md) and the [kubelet](control-plane.md#components) put these labels on `controlplane`:
 
 ```
-beta.kubernetes.io/arch=arm64,beta.kubernetes.io/os=linux,kubernetes.io/arch=arm64,kubernetes.io/hostname=controlplane,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=
+beta.kubernetes.io/os=linux,kubernetes.io/hostname=controlplane,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=
 ```
 
-The ROLES column of `kubectl get nodes` is built from `node-role.kubernetes.io/<role>` labels. See [workers](workers.md).
+The ROLES column of `kubectl get nodes` is built from `node-role.kubernetes.io/<role>` labels ([roles](workers.md#roles)).
 
 ## Commands
 

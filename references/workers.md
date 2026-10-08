@@ -2,12 +2,10 @@
 
 A node is one machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet, [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). The only difference is that it has no control plane [static pods](control-plane.md#static-pods).
 
-This lab has two: `node01` and `node02`.
-
 ## What a worker runs
 
 - **kubelet**, a systemd service. It is the only agent that starts containers. It registers the node, watches the apiserver for pods assigned to it, and reports their status.
-- **The container runtime** is the program that pulls images and starts and stops containers. containerd is the runtime here. The CRI (container runtime interface) is the API the kubelet uses to give a runtime instructions, and containerd serves it at `/run/containerd/containerd.sock`. crictl is a command-line client for the CRI ([`crictl`](https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/)), so `sudo crictl ps` lists the node's containers. `docker` is not the tool here.
+- **The container runtime** is the program that pulls images and starts and stops containers. containerd is one such runtime. The CRI (container runtime interface) is the API the kubelet uses to give a runtime instructions, and containerd serves it at `/run/containerd/containerd.sock`. crictl is a command-line client for the CRI ([`crictl`](https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/)), so `sudo crictl ps` lists the node's containers.
 - **kube-proxy** and the pod network agent, both as [DaemonSet](daemonsets.md) pods.
 
 A worker has no admin [kubeconfig](kubeconfig.md), only `/etc/kubernetes/kubelet.conf` for the kubelet's own identity. `kubectl` on a worker fails with `The connection to the server localhost:8080 was refused`. Run `kubectl` on the control plane node.
@@ -40,7 +38,7 @@ Tokens expire 24 hours after they are created ([bootstrap tokens](https://kubern
 sudo kubeadm token create --print-join-command
 ```
 
-`join` fails when the worker cannot reach the apiserver's advertise address on 6443, or when the node has state left from an earlier join (`sudo kubeadm reset -f` clears it). See kubeadm.
+`join` fails when the worker cannot reach the apiserver's advertise address on 6443, or when the node has state left from an earlier join (`sudo kubeadm reset -f` clears it). [kubeadm's failure modes](kubeadm.md#failure-modes) list the errors.
 
 ## Node conditions
 
@@ -72,4 +70,4 @@ kubeadm labels `controlplane` with `node-role.kubernetes.io/control-plane=` and 
 - [Container runtime interface](https://kubernetes.io/docs/concepts/architecture/cri/)
 - [Installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
 
-Related: [kubeadm](kubeadm.md), [control-plane](control-plane.md), [pod-network](pod-network.md), [pod](pod.md).
+Related: [kubeadm](kubeadm.md), [Control plane](control-plane.md), [Pod network](pod-network.md), [Pod](pod.md).

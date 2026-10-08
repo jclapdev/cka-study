@@ -22,7 +22,7 @@ A taint has a key, an optional value and an effect, written `key=value:Effect`, 
 
 The node controller adds and removes these from the node's conditions ([taint nodes by condition](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-nodes-by-condition)). Every pod gets tolerations for `not-ready` and `unreachable` with `tolerationSeconds: 300`, so its pods are evicted from a lost node after 5 minutes ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)).
 
-## In this lab
+## On a kubeadm cluster
 
 Only `controlplane` is tainted, so ordinary pods run on `node01` and `node02`:
 
@@ -42,7 +42,7 @@ The [CoreDNS](pod-network.md#coredns) pods tolerate the control plane taint, so 
  {"effect":"NoExecute","key":"node.kubernetes.io/unreachable","operator":"Exists","tolerationSeconds":300}]
 ```
 
-With 2 pods on each worker, tainting `node02` with `disk=slow:NoSchedule` and scaling to 8 put all 4 new pods on `node01`. The 2 pods already on `node02` stayed:
+A [Deployment](workloads.md) with 2 pods on each worker, after `node02` is tainted `disk=slow:NoSchedule` and the Deployment is scaled to 8, has all 4 new pods on `node01`. The 2 pods already on `node02` stay:
 
 ```
       6 node01

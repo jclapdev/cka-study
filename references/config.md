@@ -39,9 +39,9 @@ env:
       key: password
 ```
 
-The container printed `MODE=prod PASSWORD=s3cret`. Environment variables are read once, when the container starts, so a change to the ConfigMap reaches the pod only after it restarts. A ConfigMap mounted as files is updated in place after a short delay ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
+The container sees `MODE=prod` and `PASSWORD=s3cret`. Environment variables are read once, when the container starts, so a change to the ConfigMap reaches the pod only after it restarts. A ConfigMap mounted as files is updated in place after a short delay ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
 
-## In this lab
+## kube-root-ca.crt
 
 Every namespace has a ConfigMap `kube-root-ca.crt` that holds the cluster CA's certificate, `ca.crt`, so pods can check the [apiserver](control-plane.md#components)'s certificate. The [control plane](control-plane.md) creates it in each new namespace:
 

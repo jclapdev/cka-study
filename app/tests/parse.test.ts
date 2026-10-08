@@ -81,6 +81,7 @@ describe("parse", () => {
     const practice = ex.sections.find((x) => x.kind === "practice");
     if (practice?.kind !== "practice") throw new Error("no practice");
     expect(practice.minutes).toBe(15);
+    expect(practice.introHtml).not.toContain("minutes");
     expect(practice.tasks).toHaveLength(5);
     expect(practice.tasks.reduce((a, t) => a + t.weight, 0)).toBe(100);
   });

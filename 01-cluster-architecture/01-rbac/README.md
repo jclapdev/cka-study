@@ -327,7 +327,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    subject gets it. The three `self…reviews` rows come from `system:basic-user`, which lets a
    subject ask what it is and what it may do. The `/api`, `/apis` and `/openapi` rows come
    from `system:discovery`, and the `/healthz`, `/livez`, `/readyz` and `/version` rows from
-   `system:public-info-viewer`. These paths are [non-resource URLs](../../references/rbac.md#in-this-lab).
+   `system:public-info-viewer`. These paths are [non-resource URLs](../../references/rbac.md#built-in-roles).
 
 4. See how much of this the cluster already came with:
 
@@ -403,9 +403,7 @@ group to `cluster-admin`.
 
 ## Practice
 
-Do it again without the steps. Give yourself **15 minutes**.
-
-When time is up, [grade the run](../../lab/README.md#grading).
+Do it again without the steps, in **15 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in
    it.

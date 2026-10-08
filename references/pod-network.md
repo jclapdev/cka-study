@@ -2,7 +2,7 @@
 
 Kubernetes requires that every pod gets its own IP and that any pod can reach any other pod on any node without NAT ([the Kubernetes network model](https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model)). NAT (network address translation) is rewriting a packet's addresses on the way through, as a home router does, and pods must not need it to reach each other.
 
-Kubernetes does not build this network itself. CNI (Container Network Interface) is the standard way for a separate program, a CNI plugin, to give each pod its address and connect it to the others ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). A cluster needs exactly one plugin, and [kubeadm](kubeadm.md) installs none. This lab uses [Flannel](#plugins). [How the pod network works](../learn/pod-network.md) explains the model.
+Kubernetes does not build this network itself. CNI (Container Network Interface) is the standard way for a separate program, a CNI plugin, to give each pod its address and connect it to the others ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). A cluster needs exactly one plugin, and [kubeadm](kubeadm.md) installs none. [How the pod network works](../learn/pod-network.md) explains the model.
 
 ## Three CIDRs, not one
 
@@ -16,7 +16,7 @@ A CIDR is a range of IP addresses written as a first address and a prefix length
 
 No interface holds a Service IP. [kube-proxy](control-plane.md#components) writes iptables or [IPVS](services.md#how-a-service-ip-answers) rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
 
-All three must be disjoint. The controller-manager splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. In the lab:
+All three must be disjoint. The controller-manager splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. On a cluster with two workers:
 
 ```
 NAME           CIDR
@@ -25,7 +25,7 @@ node01         10.244.1.0/24
 node02         10.244.2.0/24
 ```
 
-The plugin's own configuration must contain those ranges. Flannel's is `10.244.0.0/16`. When they disagree, the Flannel pods crash-loop and [CoreDNS](#coredns) stays in `ContainerCreating`, but the nodes still go `Ready` (see below). The Flannel log names the cause:
+The plugin's own configuration must contain those ranges. [Flannel](#plugins)'s is `10.244.0.0/16`. When they disagree, the Flannel pods crash-loop and [CoreDNS](#coredns) stays in `ContainerCreating`, but the nodes still go `Ready` (see below). The Flannel log names the cause:
 
 | `init` was given | Flannel log |
 | --- | --- |
@@ -40,7 +40,7 @@ Read it with `kubectl logs -n kube-flannel -l app=flannel`.
 - CoreDNS pods stay `Pending`, because a `NotReady` node carries the [taint](taints.md) `node.kubernetes.io/not-ready:NoSchedule`, which CoreDNS does not tolerate
 - `/etc/cni/net.d/` is empty (root-only directory: `sudo ls /etc/cni/net.d/`)
 
-After a CNI plugin installs, that directory holds a conflist file, `10-flannel.conflist` for Flannel. A conflist is the plugin's configuration file in the CNI format, which tells the kubelet which plugin to call for each new pod. Once it exists, the kubelet marks the node `Ready`. In the lab this takes 16 seconds.
+After a CNI plugin installs, that directory holds a conflist file, `10-flannel.conflist` for Flannel. A conflist is the plugin's configuration file in the CNI format, which tells the kubelet which plugin to call for each new pod. Once it exists, the kubelet marks the node `Ready` within seconds.
 
 The file is the only thing the kubelet checks. Flannel's `install-cni` init container, a container that runs to completion before the pod's main container starts, copies it in before the Flannel agent starts, so the node goes `Ready` even when the agent then crash-loops. `Ready` means the configuration exists. Both CoreDNS pods `Running` means pods are getting addresses.
 
@@ -82,6 +82,4 @@ CoreDNS is the cluster's DNS server, a [Deployment](workloads.md) of two replica
 - [Customising CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)
 - [Flannel](https://github.com/flannel-io/flannel) · [Calico quickstart](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart) (not available in the exam)
 
-The CKA allows the documentation a task links in its [Quick Reference](kubectl.md#snippets-from-the-docs) box, which is where a plugin's docs would come from ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed) (not available in the exam)).
-
-Related: [kubeadm](kubeadm.md), [pod](pod.md), [workers](workers.md), [control-plane](control-plane.md).
+Related: [kubeadm](kubeadm.md), [Pod](pod.md), [Workers](workers.md), [Control plane](control-plane.md).

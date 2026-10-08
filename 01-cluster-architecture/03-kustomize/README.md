@@ -48,7 +48,7 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
    The output is similar to this:
 
    ```
-   error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/home/john.guest/web/base'
+   error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/home/candidate/web/base'
    ```
 
    A folder of manifests is not a kustomization until it has that file.
@@ -478,9 +478,7 @@ template. `includeSelectors: true` adds it to the pod template and the selectors
 
 ## Practice
 
-Do it again without the steps. Give yourself **15 minutes**.
-
-When time is up, [grade the run](../../lab/README.md#grading).
+Do it again without the steps, in **15 minutes**.
 
 1. **Host `controlplane`, weight 25%.** In `~/shop/base`, create a kustomization with a
    Deployment `shop` running `nginx:1.27`, and a [ClusterIP](../../references/services.md#service-types) Service `shop` on port 80 for it.
@@ -594,7 +592,7 @@ k apply -k /opt/course/3/overlay
 
 ## Check your work
 
-Grade the run, or check by hand on `controlplane`:
+On `controlplane`:
 
 1. The `staging` Deployment runs 2 replicas of `nginx:1.28` and reads the generated ConfigMap:
 
