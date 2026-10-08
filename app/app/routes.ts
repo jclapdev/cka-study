@@ -4,6 +4,7 @@ export default [
   index("routes/home.tsx"),
   route("t/:domain/:topic/:lesson?", "routes/topic.tsx"),
   route("doc/*", "routes/doc.tsx"),
+  route("reference/*", "routes/reference.ts"),
   route("lab/:state", "routes/lab.ts"),
   route("terminal", "routes/terminal.tsx"),
   route("*", "routes/missing.ts"),

@@ -1,6 +1,4 @@
-import { useEffect, useRef } from "react";
-import { useFetcher } from "react-router";
-import type { loader } from "~/routes/doc";
+import { useEffect, useRef, useState } from "react";
 import { Markdown } from "~/components/Markdown";
 
 /** The reference page a plain left-click landed on, or null. Other clicks open the full page as usual. */
@@ -16,14 +14,20 @@ export function referenceHref(e: React.MouseEvent) {
 export function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string[]; onOpen: (href: string) => void; onBack: () => void; onClose: () => void }) {
   const href = refs[refs.length - 1];
   const [path, hash] = href.split("#");
-  const fetcher = useFetcher<typeof loader>();
   const body = useRef<HTMLDivElement>(null);
+  // The page's HTML, or null when it didn't load.
+  const [html, setHtml] = useState<string | null | undefined>();
 
   useEffect(() => {
-    fetcher.load(path);
+    const abort = new AbortController();
+    setHtml(undefined);
+    fetch(path.replace("/doc/references/", "/reference/"), { signal: abort.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((doc) => setHtml(doc?.html ?? null))
+      .catch(() => abort.signal.aborted || setHtml(null));
+    return () => abort.abort();
   }, [path]);
 
-  const html = fetcher.state === "idle" ? fetcher.data?.html : undefined;
   useEffect(() => {
     if (!html || !body.current) return;
     const target = hash && body.current.querySelector(`#${CSS.escape(hash)}`);
@@ -57,7 +61,7 @@ export function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string
         }}
         className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
       >
-        {html ? <Markdown html={html} /> : <p className="text-muted">Loading…</p>}
+        {html ? <Markdown html={html} /> : <p className="text-muted">{html === null ? "This page didn't load." : "Loading…"}</p>}
       </div>
     </aside>
   );
