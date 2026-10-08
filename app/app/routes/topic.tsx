@@ -14,6 +14,7 @@ import { PracticeRun } from "~/components/PracticeRun";
 import { RecallCard } from "~/components/RecallCard";
 import { Step } from "~/components/Step";
 import { LabPane, useLab } from "~/components/LabPane";
+import { ReferencePanel, referenceHref } from "~/components/ReferencePanel";
 
 async function load(params: Route.LoaderArgs["params"]) {
   const file = topicReadme(params.domain, params.topic);
@@ -95,6 +96,10 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   const [split, setSplit] = useState(50);
   const [popped, setPopped] = useState(false);
   const [wide, setWide] = useState(true);
+  // Reference pages opened from the lesson, the last one showing beside it.
+  const [refs, setRefs] = useState<string[]>([]);
+  useEffect(() => setRefs([]), [id, lesson.slug]);
+  const closeRefs = useCallback(() => setRefs([]), []);
   useEffect(() => {
     try {
       const saved = Number(localStorage.getItem("split") ?? NaN);
@@ -150,7 +155,17 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   };
 
   const body = (
-    <article key={`${id}/${lesson.slug}`} className="min-w-0">
+    <article
+      key={`${id}/${lesson.slug}`}
+      onClick={(e) => {
+        const href = referenceHref(e);
+        if (!href) return;
+        setRefs([href]);
+        // A hidden right side comes back for the reference, without saving that width.
+        if (split === 100) setSplit(50);
+      }}
+      className="min-w-0"
+    >
       {lesson.kind === "intro" && <Markdown html={exercise.introHtml} className="mb-10" />}
       {lesson.kind === "learn" && <Markdown html={learnHtml} className="mb-14" />}
       {exercise.sections.map((s) => {
@@ -252,14 +267,14 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
     </div>
   );
 
-  if (!exercise.lab) return page;
+  if (!exercise.lab && !refs.length) return page;
 
   // The lesson on the left and the lab on the right, each filling the screen beside the topic list
   // (17rem, from root.tsx, unless hidden) and scrolling on its own. Below lg the lab is the bottom part.
   // The divider between them drags; a side dragged to the edge is hidden but stays mounted, so the
   // terminal keeps its session. The lesson pane keeps main's padding, which the practice exam's sticky
   // clock bar relies on. While the terminal has a window of its own the lab pane hides.
-  const shown = popped ? 100 : split;
+  const shown = popped && !refs.length ? 100 : split;
   const tracks = `minmax(0,${shown}fr) minmax(0,${100 - shown}fr)`;
   const gone = "invisible overflow-hidden p-0!";
   return (
@@ -271,9 +286,12 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
       <div id="lesson" className={`min-h-0 overflow-y-auto px-4 py-8 sm:px-10 ${shown === 0 ? gone : ""}`}>{page}</div>
       <div className={`relative min-h-0 border-t border-line lg:border-l lg:border-t-0 ${shown === 100 ? "border-0" : ""}`}>
         <div className={`h-full ${shown === 100 ? gone : ""}`}>
-          <LabPane lab={lab} onPopOut={popOut} />
+          {exercise.lab && <LabPane lab={lab} onPopOut={popOut} />}
         </div>
-        {!popped && (
+        {refs.length > 0 && (
+          <ReferencePanel refs={refs} onOpen={(h) => setRefs([...refs, h])} onBack={() => setRefs(refs.slice(0, -1))} onClose={closeRefs} />
+        )}
+        {(!popped || refs.length > 0) && (
           <div
             role="separator"
             tabIndex={0}
