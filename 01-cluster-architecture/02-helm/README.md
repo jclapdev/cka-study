@@ -6,7 +6,7 @@ one unit. [How Helm works](../../learn/helm.md) explains what happens during an 
 
 <!-- lab: helm -->
 
-Every command runs on `controlplane`, reached with `ssh controlplane` from `base`.
+You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. Helm is installed on `controlplane`, and one release is already installed. Every command runs on `controlplane`.
 
 ## Objectives
 

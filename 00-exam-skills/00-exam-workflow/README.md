@@ -8,7 +8,7 @@ check live objects. [About the CKA](../../EXAM.md) covers the format and grading
 
 <!-- lab: cluster -->
 
-Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. Every command runs on `controlplane` unless a step says otherwise.
 
 ## Objectives
 

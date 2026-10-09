@@ -8,7 +8,7 @@ and [how the pod network works](../../learn/pod-network.md) explain the parts.
 
 <!-- lab: vms -->
 
-Every command runs on `controlplane`, reached with `ssh controlplane` from `base`, unless a step says otherwise.
+You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane`, `node01` and `node02`. Each has containerd, the kubelet, kubeadm and kubectl installed, but there is no cluster yet. Every command runs on `controlplane` unless a step says otherwise.
 
 ## Objectives
 
