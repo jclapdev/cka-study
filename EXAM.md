@@ -31,7 +31,7 @@ YAML comes from three places, fastest first.
 2. A snippet from a kubernetes.io page, found with the search box. Many pages have an example file with a copy button, or a ready-to-paste `cat <<EOF` block. Paste it, then change the names and values.
 3. `k explain <kind>.<field>`, when you know a field exists but not where it goes. `--recursive` prints the whole tree.
 
-The [kubectl](references/kubectl.md) page has the commands, and [Working with kubectl](00-exam-skills/00-exam-workflow/README.md) practises them.
+The [kubectl](references/kubectl.md) page has the commands.
 
 Sources: [Linux Foundation tips for the CKA](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad), [resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed), [killer.sh FAQ](https://killer.sh/faq) (partial credit), [a 2026 candidate's guide](https://github.com/techwithmohamed/CKA-Certified-Kubernetes-Administrator) (a new ssh session per task).
 

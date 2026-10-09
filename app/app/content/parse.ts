@@ -114,29 +114,41 @@ function recallKeys(md: string, nodes: RootContent[]) {
   return detailsBlocks(md, nodes).found.map((d) => ({ ...d, key: slugger.slug(d.summary) }));
 }
 
-function lessonsOf(md: string, sections: Raw[], learnTitle: LearnTitle): Lesson[] {
-  const out: Lesson[] = [{ slug: INTRO, title: "Introduction", kind: "intro", sections: [], stepKeys: [] }];
-  for (const f of pageLinks(md, "learn")) {
-    const name = f.slice("learn/".length, -3);
-    out.push({ slug: name, title: learnTitle(name), kind: "learn", sections: [], stepKeys: [] });
-  }
+/** Each Learn page the README links becomes a lesson just before the lesson that first links it. */
+function lessonsOf(md: string, intro: RootContent[], sections: Raw[], learnTitle: LearnTitle): Lesson[] {
+  const seen = new Set<string>();
+  const textOf = (nodes: RootContent[]) => (nodes.length ? md.slice(nodes[0].position!.start.offset, nodes.at(-1)!.position!.end.offset) : "");
+  const learnIn = (nodes: RootContent[]): Lesson[] =>
+    pageLinks(textOf(nodes), "learn")
+      .filter((f) => !seen.has(f) && seen.add(f))
+      .map((f) => f.slice("learn/".length, -3))
+      .map((name) => ({ slug: name, title: learnTitle(name), kind: "learn", sections: [], stepKeys: [] }));
+
+  const out: Lesson[] = [{ slug: INTRO, title: "Introduction", kind: "intro", sections: [], stepKeys: [] }, ...learnIn(intro)];
+  const trailing: Lesson[] = [];
   let taught = false;
   for (const s of sections) {
     const stepKeys =
       s.kind === "steps" ? s.nodes.flatMap((n) => (n.type === "list" ? orderedItems(n) : [])).map((_, i) => `${s.slug}#${i + 1}`) : [];
     if (s.kind === "plain" || (s.kind === "steps" && !stepKeys.length && !taught)) {
-      (taught ? out.at(-1)! : out[0]).sections.push(s.slug);
+      if (taught) {
+        out.at(-1)!.sections.push(s.slug);
+        trailing.push(...learnIn(s.nodes));
+      } else {
+        out[0].sections.push(s.slug);
+        out.push(...learnIn(s.nodes));
+      }
       continue;
     }
     taught = true;
-    out.push({ slug: s.slug, title: s.title, kind: s.kind, sections: [s.slug], stepKeys });
+    out.push(...learnIn(s.nodes), { slug: s.slug, title: s.title, kind: s.kind, sections: [s.slug], stepKeys });
   }
-  return out;
+  return [...out, ...trailing];
 }
 
 export function summarize(md: string, learnTitle: LearnTitle = (n) => n): Summary {
   const { title, intro, sections } = splitSections(md);
-  const lessons = lessonsOf(md, sections, learnTitle);
+  const lessons = lessonsOf(md, intro, sections, learnTitle);
   return {
     title,
     stepKeys: lessons.flatMap((l) => l.stepKeys),
@@ -297,7 +309,7 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
     introHtml: await render.nodes(intro),
     lab: labOf(intro),
     sections: out,
-    lessons: lessonsOf(md, sections, learnTitle),
+    lessons: lessonsOf(md, intro, sections, learnTitle),
   };
 }
 

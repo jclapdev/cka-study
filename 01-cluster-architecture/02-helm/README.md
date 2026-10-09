@@ -154,7 +154,7 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
    separated by commas:
 
    ```shell
-   kubectl get deploy,svc,secrets -n apps
+   k get deploy,svc,secrets -n apps
    ```
 
    The release made three objects:
@@ -216,7 +216,7 @@ same release.
 
    ```shell
    helm get values web -n apps
-   kubectl get deploy web-podinfo -n apps
+   k get deploy web-podinfo -n apps
    ```
 
    Only the new value is stored, and the Deployment has one pod:
@@ -296,7 +296,7 @@ same release.
    the first container's image:
 
    ```shell
-   kubectl get deploy web-podinfo -n apps -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
+   k get deploy web-podinfo -n apps -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
    ```
 
    The Deployment is back to revision 1's settings, 2 replicas of image 6.14.1:
@@ -347,19 +347,19 @@ installing anything.
    kind: Deployment
    ```
 
-   Applying this file with `kubectl apply -f` creates the objects but no release, so
+   Applying this file with `k apply -f` creates the objects but no release, so
    `helm list` would not show them.
 
 ## Uninstall
 
 1. Uninstall the release and check what is left. `helm uninstall web` deletes the release and
-   every object it created. `kubectl get ns apps` shows whether the namespace still exists:
+   every object it created. `k get ns apps` shows whether the namespace still exists:
 
    ```shell
    helm uninstall web -n apps
    helm list -n apps
-   kubectl get secrets -n apps
-   kubectl get ns apps
+   k get secrets -n apps
+   k get ns apps
    ```
 
    The release, its objects and its Secrets are gone, but the namespace is still `Active`:
@@ -571,7 +571,7 @@ On `controlplane`:
 
    ```shell
    helm list -A
-   kubectl get deploy shop-podinfo -n store -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
+   k get deploy shop-podinfo -n store -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
    ```
 
    ```

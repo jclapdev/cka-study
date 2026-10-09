@@ -3,9 +3,7 @@
 `kubeadm` turns machines that already have a [container runtime](../../references/workers.md#what-a-worker-runs) and a [kubelet](../../references/control-plane.md#components) into a working
 Kubernetes cluster. It generates the [certificates](../../references/certificates.md#client-and-serving-certificates), writes the [control plane](../../references/control-plane.md)'s [static pod](../../references/control-plane.md#static-pods)
 [manifests](../../references/kubectl.md#generating-yaml), and prints a command that joins other machines to what it built.
-[How a cluster works](../../learn/cluster-architecture.md), [how kubeadm builds a cluster](../../learn/kubeadm.md),
-[how etcd stores the cluster](../../learn/etcd.md), [how TLS secures the cluster](../../learn/tls.md),
-[how the pod network works](../../learn/pod-network.md) and [how a pod gets its own network](../../learn/network-namespaces.md) explain the parts.
+[How a cluster works](../../learn/cluster-architecture.md) and [how kubeadm builds a cluster](../../learn/kubeadm.md) explain the parts.
 
 <!-- lab: vms -->
 
@@ -41,11 +39,11 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
    once and systemd restarts it every 10 seconds. `sudo journalctl -u kubelet` shows the
    missing file.
 
-2. Try to talk to a cluster that does not exist yet. `kubectl get nodes` asks the cluster for
+2. Try to talk to a cluster that does not exist yet. `k get nodes` asks the cluster for
    its list of machines:
 
    ```shell
-   kubectl get nodes
+   k get nodes
    ```
 
    It ends with the connection being refused:
@@ -59,7 +57,7 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
 
 ## Initialise the control plane
 
-`kubeadm init` writes the control plane's address into the apiserver's certificate and into
+`kubeadm init` writes the control plane's address into the apiserver's [certificate](../../learn/tls.md) and into
 every kubeconfig it generates, and the workers are later told to trust that exact address. A
 wrong [address](../../references/kubeadm.md#the-advertise-address) is not fixable without `kubeadm reset`.
 
@@ -129,7 +127,8 @@ List the manifests `init` wrote. The folder belongs to root, so `ls` needs `sudo
 sudo ls /etc/kubernetes/manifests/
 ```
 
-There is one manifest for each control plane component:
+There is one manifest for each control plane component. `etcd.yaml` runs [etcd](../../references/control-plane.md#components), [the database
+that stores every object](../../learn/etcd.md):
 
 ```
 etcd.yaml
@@ -139,9 +138,9 @@ kube-scheduler.yaml
 ```
 
 The kubelet watches that directory and starts whatever it finds there, without asking an
-apiserver or a [scheduler](../../references/control-plane.md#components). That is how the control plane starts before there is a cluster to
+apiserver or a scheduler. That is how the control plane starts before there is a cluster to
 start it. Because these pods come from files, editing one restarts that component within
-seconds, and `kubectl delete pod` on one does nothing lasting, because the kubelet recreates it
+seconds, and `k delete pod` on one does nothing lasting, because the kubelet recreates it
 from the file ([static pods](../../references/control-plane.md#static-pods)).
 
 ## Point kubectl at the cluster
@@ -159,7 +158,7 @@ makes your own user and group its owner, so kubectl can read it without `sudo`:
 mkdir -p ~/.kube
 sudo cp /etc/kubernetes/admin.conf ~/.kube/config
 sudo chown "$(id -u):$(id -g)" ~/.kube/config
-kubectl get nodes
+k get nodes
 ```
 
 The node is `NotReady` until a pod network is installed.
@@ -171,7 +170,7 @@ The node is `NotReady` until a pod network is installed.
 
 ## Install a pod network
 
-Kubernetes needs a network plugin to give pods addresses, and kubeadm installs none. The
+Kubernetes needs a [network plugin](../../learn/pod-network.md) to [give pods addresses](../../learn/network-namespaces.md), and kubeadm installs none. The
 plugin uses one of [three address ranges](../../references/pod-network.md#three-cidrs-not-one) that must not overlap.
 
 ### Why is controlplane NotReady when all four control plane pods are running?
@@ -181,8 +180,8 @@ node's conditions, and `grep -A3 'Ready '` shows the `Ready` line and the 3 line
 `-n kube-system` lists the namespace where the cluster's own components run:
 
 ```shell
-kubectl describe node controlplane | grep -A3 'Ready '
-kubectl get pods -n kube-system
+k describe node controlplane | grep -A3 'Ready '
+k get pods -n kube-system
 sudo ls /etc/cni/net.d/
 ```
 
@@ -207,27 +206,27 @@ kube-scheduler-controlplane            0/1     Running   0          14s
 node `NotReady`. A `NotReady` node carries the [taint](../../references/taints.md) `node.kubernetes.io/not-ready:NoSchedule`,
 which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so both CoreDNS pods stay [`Pending`](../../references/pod.md#on-a-new-cluster).
 
-1. Install [Flannel](../../references/pod-network.md#plugins). It defaults to `10.244.0.0/16`, the CIDR you gave `init`. `kubectl apply -f`
+1. Install [Flannel](../../references/pod-network.md#plugins). It defaults to `10.244.0.0/16`, the CIDR you gave `init`. `k apply -f`
    reads a manifest from a URL as well as from a file. This one creates the `kube-flannel`
    namespace, the permissions Flannel needs, its settings, and the [DaemonSet](../../references/daemonsets.md) that runs one
    Flannel pod on every node:
 
    ```shell
-   kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+   k apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
    ```
 
 2. Watch the node change to Ready, which takes about 20 seconds, then stop the watch with
    `Ctrl-C`. `-w` keeps the command running and prints a new line each time a node changes:
 
    ```shell
-   kubectl get nodes -w
+   k get nodes -w
    ```
 
 3. Confirm what changed on disk and in `kube-system`:
 
    ```shell
    sudo ls /etc/cni/net.d/
-   kubectl get pods -n kube-system
+   k get pods -n kube-system
    ```
 
    `/etc/cni/net.d/` now has Flannel's file, and every pod is `Running` except the two `coredns` pods:
@@ -251,7 +250,7 @@ which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so b
 > The node goes `Ready` as soon as the file exists, even if the plugin is broken. If the pod
 > CIDR given to `init` does not match Flannel's `10.244.0.0/16`, or `init` was given none, the
 > node is still `Ready`, but the Flannel pod is in `CrashLoopBackOff` and CoreDNS stays in
-> `ContainerCreating`. `kubectl logs -n kube-flannel -l app=flannel` names the mismatch.
+> `ContainerCreating`. `k logs -n kube-flannel -l app=flannel` names the mismatch.
 
 ## Join the workers
 
@@ -284,7 +283,8 @@ create --print-join-command` prints a new one.
    the ones above, so paste yours. `kubeadm join 192.0.2.10:6443` contacts the apiserver at that
    address on port 6443. `--token` proves the node may join, and
    `--discovery-token-ca-cert-hash` is the fingerprint of the cluster's certificate authority,
-   which the node checks before trusting the apiserver. Go back to `base` first:
+   which the node checks before trusting the apiserver. Go back to `base` first, because `ssh`
+   from one cluster machine to another is refused:
 
    ```shell
    exit                         # back to base
@@ -303,7 +303,8 @@ create --print-join-command` prints a new one.
    Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
    ```
 
-3. Join `node02` the same way, with `ssh node02` from `base`.
+3. Join `node02` the same way, with `ssh node02` from `base`. To run several commands as root,
+   `sudo -i` opens a root shell, and `exit` leaves it before the next `exit` leaves the machine.
 
 Workers get no admin kubeconfig, so `kubectl` on `node01` fails with the same `localhost:8080`
 error. Run every `kubectl` command on `controlplane`.
@@ -315,7 +316,7 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
 1. List the nodes:
 
    ```shell
-   kubectl get nodes
+   k get nodes
    ```
 
    All three nodes are `Ready` and run the same kubelet version:
@@ -335,7 +336,7 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
 
    ```shell
    k label node node01 node02 node-role.kubernetes.io/worker=
-   kubectl get nodes
+   k get nodes
    ```
 
    `ROLES` now shows `worker` for both. The value after `=` is empty. The role name comes from the key.
@@ -346,7 +347,7 @@ List everything the cluster is running. `-A` lists every namespace, and `-o wide
 columns such as each pod's `IP` and `NODE`:
 
 ```shell
-kubectl get pods -A -o wide
+k get pods -A -o wide
 ```
 
 Each pod is listed with its namespace, its address and the node it runs on (some columns
@@ -434,7 +435,7 @@ Do it again without the steps, in **25 minutes**.
    </details>
 
 2. **Host `controlplane`, weight 12%.** Configure kubectl for your non-root user so that
-   `kubectl get nodes` works without `sudo` and without setting `KUBECONFIG`.
+   `k get nodes` works without `sudo` and without setting `KUBECONFIG`.
 
    <details><summary>Hint</summary>
 
@@ -618,7 +619,7 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
 1. All three nodes are Ready and the workers have the worker role:
 
    ```shell
-   kubectl get nodes
+   k get nodes
    ```
 
    ```
@@ -631,7 +632,7 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
 2. The pod CIDR is the one you asked for:
 
    ```shell
-   kubectl get node controlplane -o jsonpath='{.spec.podCIDR}{"\n"}'
+   k get node controlplane -o jsonpath='{.spec.podCIDR}{"\n"}'
    ```
 
    ```
@@ -663,7 +664,7 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
    plane pods:
 
    ```shell
-   kubectl get pods -n kube-system
+   k get pods -n kube-system
    ```
 
 ## Further reading
@@ -674,4 +675,4 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
   [kubeadm join](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-join/) are the
   full flag references for the two commands.
 * [Kubernetes Components](https://kubernetes.io/docs/concepts/overview/components/) names every
-  process in `kubectl get pods -A` and says what each one is for.
+  process in `k get pods -A` and says what each one is for.

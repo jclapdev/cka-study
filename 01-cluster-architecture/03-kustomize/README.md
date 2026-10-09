@@ -18,7 +18,7 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 * Generate a [ConfigMap](../../references/config.md) whose name changes with its contents, and watch the [Deployment](../../references/workloads.md) roll.
 * Apply and delete everything a kustomization produces with `-k`.
 
-Every YAML file in the steps comes from `kubectl create --dry-run` or from the allowed docs.
+Every YAML file in the steps comes from `k create --dry-run` or from the allowed docs.
 The Kustomize snippets are all on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can

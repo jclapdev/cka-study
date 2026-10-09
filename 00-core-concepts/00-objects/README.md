@@ -6,8 +6,6 @@ running with a [ReplicaSet](../../references/workloads.md#deployments-and-replic
 [namespaces](../../references/namespaces.md), and change objects with `kubectl create` and `kubectl apply`.
 [How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components) that act on it, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command sends.
-[How a pod gets its own network](../../learn/network-namespaces.md) explains where a pod's IP address comes from, and
-[how DNS works in the cluster](../../learn/dns.md) how a pod finds a Service by name.
 
 <!-- lab: cluster -->
 
@@ -39,12 +37,13 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    ```
 
    It prints `pod/web created`. The cluster has stored the pod, which does not mean it runs
-   yet.
+   yet. Wherever `kubectl` works, [`k`](../../references/kubectl.md#the-k-alias-and-short-names) is the same command with Tab completion: type `k get dep`
+   and press Tab, and it writes `deployments`.
 
 2. List the pods. `get pods` lists every pod in the namespace you are working in, `default`:
 
    ```shell
-   kubectl get pods
+   k get pods
    ```
 
    The first time, the image is still downloading:
@@ -63,7 +62,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
 3. See where it runs. `-o wide` adds more columns:
 
    ```shell
-   kubectl get pods -o wide
+   k get pods -o wide
    ```
 
    `IP` is the pod's own address, and `NODE` is the machine it runs on:
@@ -80,7 +79,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    `Events`, each thing the cluster did to it, oldest first:
 
    ```shell
-   kubectl describe pod web
+   k describe pod web
    ```
 
    The events at the bottom are the pod's life so far:
@@ -103,8 +102,8 @@ placed together on one [node](../../references/workers.md), a machine in the clu
 5. Delete the pod and list again. `delete pod web` deletes the pod by name:
 
    ```shell
-   kubectl delete pod web
-   kubectl get pods
+   k delete pod web
+   k get pods
    ```
 
    It prints `pod "web" deleted from default namespace`, then
@@ -152,7 +151,7 @@ docs have one for each common type, ready to copy.
    cluster:
 
    ```shell
-   kubectl create -f nginx.yaml
+   k create -f nginx.yaml
    ```
 
    It prints `pod/nginx created`.
@@ -162,7 +161,7 @@ docs have one for each common type, ready to copy.
    fields:
 
    ```shell
-   kubectl get pod nginx -o yaml | grep -E '^[a-z]'
+   k get pod nginx -o yaml | grep -E '^[a-z]'
    ```
 
    The cluster added a fifth field:
@@ -178,11 +177,40 @@ docs have one for each common type, ready to copy.
    `status` is what the cluster last saw, and the cluster writes it, never you. Once the pod
    runs, its `phase` is `Running` and `podIP` holds the pod's address.
 
-5. Delete the pod with the file. `delete -f nginx.yaml` deletes the objects the file
+5. Look up a field the docs' example leaves out. [`explain`](../../references/kubectl.md#kubectl-explain) prints the fields of any type
+   from the cluster's own schema. `pod.spec.containers.resources` is a path through the YAML:
+   the type, then each field below it, joined with dots. `| head -13` keeps the first 13 lines:
+
+   ```shell
+   k explain pod.spec.containers.resources | head -13
+   ```
+
+   `FIELD` gives the field's type in angle brackets, and `FIELDS` lists what goes under it:
+
+   ```
+   KIND:       Pod
+   VERSION:    v1
+
+   FIELD: resources <ResourceRequirements>
+
+
+   DESCRIPTION:
+       Compute Resources required by this container. Cannot be updated. More info:
+       https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+       ResourceRequirements describes the compute resource requirements.
+
+   FIELDS:
+     claims	<[]ResourceClaim>
+   ```
+
+   `DESCRIPTION` says what the field is for. `[]` in a type, as in `<[]ResourceClaim>`, means a
+   list. `--recursive` prints every field below the path at once, without descriptions.
+
+6. Delete the pod with the file. `delete -f nginx.yaml` deletes the objects the file
    describes:
 
    ```shell
-   kubectl delete -f nginx.yaml
+   k delete -f nginx.yaml
    ```
 
    It prints `pod "nginx" deleted from default namespace`.
@@ -240,9 +268,9 @@ key-value pair on an object, and creates new ones from its [pod template](../../
    `--show-labels` adds a column with each pod's labels:
 
    ```shell
-   kubectl apply -f frontend.yaml
-   kubectl get rs
-   kubectl get pods --show-labels
+   k apply -f frontend.yaml
+   k get rs
+   k get pods --show-labels
    ```
 
    `DESIRED` is the `replicas` you asked for, `CURRENT` is how many pods exist, and `READY` is
@@ -263,8 +291,8 @@ key-value pair on an object, and creates new ones from its [pod template](../../
 3. Delete one pod and list again. Use one of your pod names:
 
    ```shell
-   kubectl delete pod frontend-nkql9
-   kubectl get pods
+   k delete pod frontend-nkql9
+   k get pods
    ```
 
    A new pod has taken its place:
@@ -283,8 +311,8 @@ key-value pair on an object, and creates new ones from its [pod template](../../
    cluster:
 
    ```shell
-   kubectl scale rs frontend --replicas=5
-   kubectl get rs frontend
+   k scale rs frontend --replicas=5
+   k get rs frontend
    ```
 
    `DESIRED` and `CURRENT` are 5 straight away, and `READY` catches up as the new containers
@@ -298,8 +326,8 @@ key-value pair on an object, and creates new ones from its [pod template](../../
 5. Delete the ReplicaSet. `delete rs frontend` deletes it, and with it every pod it owns:
 
    ```shell
-   kubectl delete rs frontend
-   kubectl get pods
+   k delete rs frontend
+   k get pods
    ```
 
    After a few seconds, `get pods` prints `No resources found in default namespace.`
@@ -316,8 +344,8 @@ of creating ReplicaSets yourself.
    pods it keeps. `rollout status deploy/web` waits until all three are ready:
 
    ```shell
-   kubectl create deployment web --image=nginx:1.27 --replicas=3
-   kubectl rollout status deploy/web
+   k create deployment web --image=nginx:1.27 --replicas=3
+   k rollout status deploy/web
    ```
 
    It ends with `deployment "web" successfully rolled out`.
@@ -326,7 +354,7 @@ of creating ReplicaSets yourself.
    one command, separated by commas:
 
    ```shell
-   kubectl get deploy,rs,pods
+   k get deploy,rs,pods
    ```
 
    The names show the chain: the ReplicaSet is named after the Deployment, and each pod after
@@ -353,8 +381,8 @@ of creating ReplicaSets yourself.
    created it, and `grep` keeps that line. Use one of your pod names:
 
    ```shell
-   kubectl describe pod web-66d47686b4-7v5mz | grep 'Controlled By'
-   kubectl describe rs | grep 'Controlled By'
+   k describe pod web-66d47686b4-7v5mz | grep 'Controlled By'
+   k describe rs | grep 'Controlled By'
    ```
 
    The pod belongs to the ReplicaSet, and the ReplicaSet to the Deployment:
@@ -365,13 +393,13 @@ of creating ReplicaSets yourself.
    ```
 
 4. Change the image. `set image deploy/web nginx=nginx:1.28` sets the container named `nginx`
-   to the image `nginx:1.28`; `kubectl create deployment` named the container after its image.
+   to the image `nginx:1.28`; `k create deployment` named the container after its image.
    `rollout status` waits again, and `get rs` lists the ReplicaSets:
 
    ```shell
-   kubectl set image deploy/web nginx=nginx:1.28
-   kubectl rollout status deploy/web
-   kubectl get rs
+   k set image deploy/web nginx=nginx:1.28
+   k rollout status deploy/web
+   k get rs
    ```
 
    The Deployment made a second ReplicaSet for the new template and moved the pods across:
@@ -387,16 +415,16 @@ of creating ReplicaSets yourself.
 
 ## Give pods one address with a Service
 
-Each pod has its own IP, and a pod that replaces it gets a new one. A [Service](../../references/services.md) gives a set of
-pods one fixed IP and a DNS name, and picks its pods by label.
+Each pod has [its own IP](../../learn/network-namespaces.md), and a pod that replaces it gets a new one. A [Service](../../references/services.md) gives a set of
+pods one fixed IP and a [DNS name](../../learn/dns.md), and picks its pods by label.
 
 1. Expose the Deployment. `expose deployment web` creates a Service named `web` that selects
    the Deployment's pods by their label, `app: web`, and `--port=80` is the port it listens
    on. `get svc web` shows it, `svc` being short for `services`:
 
    ```shell
-   kubectl expose deployment web --port=80
-   kubectl get svc web
+   k expose deployment web --port=80
+   k get svc web
    ```
 
    `CLUSTER-IP` is the Service's fixed address:
@@ -414,8 +442,8 @@ pods one fixed IP and a DNS name, and picks its pods by label.
    shows the pods' IPs to compare:
 
    ```shell
-   kubectl get endpointslices -l kubernetes.io/service-name=web
-   kubectl get pods -o wide
+   k get endpointslices -l kubernetes.io/service-name=web
+   k get pods -o wide
    ```
 
    `ENDPOINTS` holds the same three addresses as the pods' `IP` column:
@@ -435,7 +463,7 @@ pods one fixed IP and a DNS name, and picks its pods by label.
    `web` and prints it without progress messages. `| grep title` keeps the page's title:
 
    ```shell
-   kubectl run tmp --rm -i --restart=Never --image=busybox:1.37 -- wget -qO- web | grep title
+   k run tmp --rm -i --restart=Never --image=busybox:1.37 -- wget -qO- web | grep title
    ```
 
    It prints `<title>Welcome to nginx!</title>`. [CoreDNS](../../references/pod-network.md#coredns), the cluster's DNS server, turned the name `web`
@@ -450,8 +478,8 @@ command named a namespace.
    `-n kube-system` asks about that namespace instead of `default`:
 
    ```shell
-   kubectl get ns
-   kubectl get pods -n kube-system
+   k get ns
+   k get pods -n kube-system
    ```
 
    `kube-system` holds the pods that make up the cluster itself:
@@ -485,9 +513,9 @@ command named a namespace.
    `get deploy -A` lists Deployments in every namespace:
 
    ```shell
-   kubectl create namespace dev
-   kubectl create deployment web --image=nginx:1.27 -n dev
-   kubectl get deploy -A
+   k create namespace dev
+   k create deployment web --image=nginx:1.27 -n dev
+   k get deploy -A
    ```
 
    `NAMESPACE` shows two Deployments named `web`, one in each namespace:
@@ -506,8 +534,8 @@ command named a namespace.
    `-n dev` starts the pod in `dev`, and `-T 3` makes `wget` give up after 3 seconds:
 
    ```shell
-   kubectl run tmp --rm -i --restart=Never -n dev --image=busybox:1.37 -- wget -qO- web.default | grep title
-   kubectl run tmp --rm -i --restart=Never -n dev --image=busybox:1.37 -- wget -qO- -T 3 web
+   k run tmp --rm -i --restart=Never -n dev --image=busybox:1.37 -- wget -qO- web.default | grep title
+   k run tmp --rm -i --restart=Never -n dev --image=busybox:1.37 -- wget -qO- -T 3 web
    ```
 
    The first prints the title. The second fails:
@@ -522,6 +550,34 @@ command named a namespace.
    Service `web`, so `bad address` means the name found no IP. `<service>.<namespace>` reaches
    one in another namespace. `terminated (Error)` means `wget` exited with an error.
 
+4. List which types live in a namespace, and their short names. `api-resources` prints every
+   type the cluster knows, one per line. `grep -wE` keeps only the lines that contain one of the
+   names between the `|` signs as a whole word, and `NAME` keeps the header line:
+
+   ```shell
+   k api-resources | grep -wE 'NAME|pods|deployments|services|configmaps|secrets|namespaces|serviceaccounts|persistentvolumeclaims|networkpolicies'
+   ```
+
+   `SHORTNAMES` is what you can type instead of the full name, and `NAMESPACED` says whether
+   the object lives in a namespace:
+
+   ```
+   NAME                                SHORTNAMES   APIVERSION                        NAMESPACED   KIND
+   configmaps                          cm           v1                                true         ConfigMap
+   namespaces                          ns           v1                                false        Namespace
+   persistentvolumeclaims              pvc          v1                                true         PersistentVolumeClaim
+   pods                                po           v1                                true         Pod
+   secrets                                          v1                                true         Secret
+   serviceaccounts                     sa           v1                                true         ServiceAccount
+   services                            svc          v1                                true         Service
+   deployments                         deploy       apps/v1                           true         Deployment
+   networkpolicies                     netpol       networking.k8s.io/v1              true         NetworkPolicy
+   ```
+
+   [Secrets](../../references/config.md#secrets) have no short name, and namespaces are the only type here that is not namespaced.
+   `APIVERSION` is what a manifest of that type puts in its `apiVersion` line, and `KIND` is
+   what it puts in `kind`.
+
 ## Create or apply
 
 `kubectl create` is [imperative](../../references/kubectl.md#generating-yaml): it makes the object you name, and fails if it exists.
@@ -531,7 +587,7 @@ not.
 1. Create the Deployment `web` in `default` again:
 
    ```shell
-   kubectl create deployment web --image=nginx:1.27
+   k create deployment web --image=nginx:1.27
    ```
 
    It fails with
@@ -541,9 +597,9 @@ not.
    the object instead of creating it, and `> api.yaml` writes that into the file `api.yaml`:
 
    ```shell
-   kubectl create deployment api --image=nginx:1.27 --dry-run=client -o yaml > api.yaml
-   kubectl apply -f api.yaml
-   kubectl apply -f api.yaml
+   k create deployment api --image=nginx:1.27 --dry-run=client -o yaml > api.yaml
+   k apply -f api.yaml
+   k apply -f api.yaml
    ```
 
    The first `apply` prints `deployment.apps/api created`, and the second
@@ -554,8 +610,8 @@ not.
 
    ```shell
    vim api.yaml
-   kubectl apply -f api.yaml
-   kubectl get deploy api
+   k apply -f api.yaml
+   k get deploy api
    ```
 
    It prints `deployment.apps/api configured`, and the Deployment now wants three pods:
@@ -570,7 +626,7 @@ not.
 4. Create from the same file. `create -f` fails for the same reason as in step 1:
 
    ```shell
-   kubectl create -f api.yaml
+   k create -f api.yaml
    ```
 
    It prints
@@ -581,7 +637,7 @@ not.
    field, and `\.` keeps each dot in the annotation's name from being read as a step down:
 
    ```shell
-   kubectl get deploy api -o jsonpath='{.metadata.annotations.kubectl\.kubernetes\.io/last-applied-configuration}'
+   k get deploy api -o jsonpath='{.metadata.annotations.kubectl\.kubernetes\.io/last-applied-configuration}'
    ```
 
    It is your file, written as JSON:
@@ -593,13 +649,42 @@ not.
    The next `apply` compares the file with this copy and with the live object, so a field you
    delete from the file is deleted from the object too.
 
-6. Delete the Deployment with the file:
+6. Start a pod, then try to change its command with `k edit`. `busybox` is a small image of
+   shell tools. Everything after `--` is passed to the container, here `sleep 3600`, which
+   keeps it running for an hour. `k edit` opens the live object in vim and sends your change
+   when you save:
 
    ```shell
-   kubectl delete -f api.yaml
+   k run tool --image=busybox:1.37 -- sleep 3600
+   k edit pod tool
    ```
 
-   It prints `deployment.apps "api" deleted from default namespace`.
+   In vim, change `"3600"` to `"7200"` under `args`, and `:wq`. The change is refused:
+
+   ```
+   error: pods "tool" is invalid
+   A copy of your changes has been stored to "/tmp/kubectl-edit-2739834084.yaml"
+   error: Edit cancelled, no valid changes were saved.
+   ```
+
+   Most of a running pod's spec cannot change. `k edit` keeps your edit in the file it names.
+
+7. Replace the pod from that file. `replace -f` replaces an object with the one in the file,
+   and `--force` does it by deleting the object and creating it again, which is the only way to
+   change a field that cannot be updated:
+
+   ```shell
+   k replace --force -f /tmp/kubectl-edit-2739834084.yaml
+   ```
+
+   It prints `pod "tool" deleted from default namespace` and then `pod/tool replaced`.
+
+8. Delete the pod, and the Deployment with its file:
+
+   ```shell
+   k delete pod tool
+   k delete -f api.yaml
+   ```
 
 ## Quiz
 
@@ -636,15 +721,33 @@ in `Controlled By`.
 `web.default`. A name without a namespace finds only Services in the pod's own namespace.
 </details>
 
-<details><summary>`kubectl create -f api.yaml` fails with `AlreadyExists`. Which command makes the cluster match the file?</summary>
+<details><summary>`k create -f api.yaml` fails with `AlreadyExists`. Which command makes the cluster match the file?</summary>
 
-`kubectl apply -f api.yaml`. It creates the object if it is missing and changes it if it
+`k apply -f api.yaml`. It creates the object if it is missing and changes it if it
 differs.
+</details>
+
+<details><summary>`k edit` on a pod fails with `is invalid`. What now?</summary>
+
+`k replace --force -f` the file whose name `k edit` printed. It deletes the pod and creates it
+from your edited copy.
+</details>
+
+<details><summary>Which command lists every type with its short name, and whether it lives in a namespace?</summary>
+
+`k api-resources`. `SHORTNAMES` has the short names, and `NAMESPACED` is `false` for types such
+as namespaces and nodes.
+</details>
+
+<details><summary>You know a field exists but not where it goes in the YAML. Which command shows it?</summary>
+
+`k explain <type>.<field>`, such as `k explain pod.spec.containers.resources`. `--recursive`
+prints the whole tree below it.
 </details>
 
 ## Practice
 
-Do it again without the steps, in **15 minutes**. `k` is `kubectl`, with Tab completion.
+Do it again without the steps, in **15 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `store`, and in it a pod `front`
    running `nginx:1.27`.
@@ -829,5 +932,5 @@ On `controlplane`:
   the four required fields and the difference between `spec` and `status`.
 * [Kubernetes object management](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/)
   compares imperative commands with `kubectl apply`.
-* [Working with kubectl](../../00-exam-skills/00-exam-workflow/README.md) is the next topic: the hosts, `k`, and the fastest ways to write
-  YAML.
+* [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is on
+  the allowed docs and lists more [imperative](../../references/kubectl.md#generating-yaml) commands and `jsonpath` examples.

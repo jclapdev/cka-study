@@ -14,7 +14,6 @@ describe("repo", () => {
     const domains = listDomains();
     expect(domains.map((d) => d.name)).toEqual([
       "Core Concepts",
-      "kubectl Essentials",
       "Cluster Architecture",
       "Workloads and Scheduling",
       "Services and Networking",
@@ -23,8 +22,7 @@ describe("repo", () => {
       "Mock Exams",
     ]);
     expect(domains[0].topics.map((t) => [t.name, t.id])).toEqual([["Kubernetes Objects", "00-core-concepts/00-objects"]]);
-    expect(domains[1].topics.map((t) => [t.name, t.id])).toEqual([["Working with kubectl", "00-exam-skills/00-exam-workflow"]]);
-    const arch = domains[2];
+    const arch = domains[1];
     expect(arch.weight).toBe(25);
     expect(arch.topics.filter((t) => t.written).map((t) => t.name)).toEqual(["kubeadm Installation", "RBAC", "Helm", "Kustomize", "CRDs and Operators"]);
     expect(domains.at(-1)!.topics).toEqual([]);
@@ -189,6 +187,15 @@ describe("lessons", () => {
     expect(titles).toContain("Point kubectl at the cluster");
     expect(titles).toContain("Check the control plane");
     expect(titles).not.toContain("Objectives");
+  });
+
+  it("puts each Learn page just before the lesson that first links it", () => {
+    const titles = summarize(readMarkdown(KUBEADM)!, learnTitle).lessons.map((l) => l.title);
+    const at = (t: string) => titles.indexOf(t);
+    expect(at(learnTitle("kubeadm"))).toBeLessThan(at("Check what is already running"));
+    expect(at(learnTitle("tls"))).toBe(at("Initialise the control plane") - 2);
+    expect(at(learnTitle("etcd"))).toBe(at("Initialise the control plane") - 1);
+    expect(at(learnTitle("network-namespaces"))).toBe(at("Install a pod network") - 1);
   });
 
   it("opens a reference from a Learn page as a page of its own", async () => {

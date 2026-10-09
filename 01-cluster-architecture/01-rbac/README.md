@@ -2,8 +2,7 @@
 
 Role-based access control ([RBAC](../../references/rbac.md)) decides which requests the [apiserver](../../references/control-plane.md#components) allows, by matching the
 identity behind a request against the rules that have been bound to it.
-[How access control works](../../learn/access-control.md) explains the model, and [how TLS secures the cluster](../../learn/tls.md) the
-[certificates](../../references/certificates.md#client-and-serving-certificates) that users sign in with.
+[How access control works](../../learn/access-control.md) explains the model.
 
 <!-- lab: cluster -->
 
@@ -23,11 +22,11 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 A [namespace](../../references/namespaces.md) is a named group of objects, and the boundary a Role and a RoleBinding apply
 within.
 
-1. Create two. `kubectl create namespace dev` makes a namespace named `dev`:
+1. Create two. `k create namespace dev` makes a namespace named `dev`:
 
    ```shell
-   kubectl create namespace dev
-   kubectl create namespace prod
+   k create namespace dev
+   k create namespace prod
    ```
 
 ## Find out why your kubectl can do anything
@@ -36,7 +35,7 @@ within.
    and groups the apiserver reads from them:
 
    ```shell
-   kubectl auth whoami
+   k auth whoami
    ```
 
    It shows the user name and the groups the cluster sees you as:
@@ -50,14 +49,15 @@ within.
    You are not a Kubernetes object. `kubernetes-admin` is a name asserted by the client
    [certificate](../../references/certificates.md) in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
    same certificate. Neither exists as a resource you could delete. [Client certificates](../../references/authentication.md#client-certificates)
-   explains how a certificate becomes a user and groups.
+   explains how a certificate becomes a user and groups, and [how TLS secures the cluster](../../learn/tls.md)
+   how the cluster signs one.
 
 2. Find the binding that gives that group its power. `get clusterrolebinding
    kubeadm:cluster-admins` fetches that one binding by name, and `-o wide` adds the `USERS`,
    `GROUPS` and `SERVICEACCOUNTS` columns:
 
    ```shell
-   kubectl get clusterrolebinding kubeadm:cluster-admins -o wide
+   k get clusterrolebinding kubeadm:cluster-admins -o wide
    ```
 
    `ROLE` is what the binding grants and `GROUPS` is who gets it:
@@ -80,17 +80,17 @@ credentials, so a cluster cannot create them. It can create a [ServiceAccount](.
    ServiceAccount named `deploy-bot` in the namespace `dev`:
 
    ```shell
-   kubectl create serviceaccount deploy-bot -n dev
+   k create serviceaccount deploy-bot -n dev
    ```
 
-2. Ask what it is allowed to do. `kubectl auth can-i` asks the apiserver's authoriser directly,
+2. Ask what it is allowed to do. `k auth can-i` asks the apiserver's authoriser directly,
    and `--as` impersonates without needing the subject's credentials
    ([impersonation](../../references/authentication.md#commands)). A ServiceAccount is named in full as
    `system:serviceaccount:<namespace>:<name>`. `list pods -n dev` is the request being asked
    about: the verb, the resource and the namespace:
 
    ```shell
-   kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
    The answer is `no`. The account exists and can authenticate, but it cannot do anything, because permissions in
@@ -100,7 +100,7 @@ credentials, so a cluster cannot create them. It can create a [ServiceAccount](.
 > [!note]
 > Bindings are not validated against their subjects. A binding that names a ServiceAccount
 > which does not exist is created without complaint and grants nothing, so a typo in the name
-> fails silently. Compare `kubectl get sa -n dev` against `kubectl describe rolebinding` when a
+> fails silently. Compare `k get sa -n dev` against `k describe rolebinding` when a
 > grant appears to do nothing at all.
 
 ## Write a Role
@@ -108,13 +108,13 @@ credentials, so a cluster cannot create them. It can create a [ServiceAccount](.
 A [Role](../../references/rbac.md#the-model) is a list of rules, each naming verbs and the resources those verbs apply to. It lives
 in one namespace and can only ever name resources in that namespace.
 
-1. Create the Role. `kubectl create role` writes the object without you writing YAML.
+1. Create the Role. `k create role` writes the object without you writing YAML.
    `pod-reader` is its name. `--verb=get,list,watch` lists the actions it allows, separated by
    commas, and `--resource=pods` is the type they apply to. `describe role` prints the rules:
 
    ```shell
-   kubectl create role pod-reader -n dev --verb=get,list,watch --resource=pods
-   kubectl describe role pod-reader -n dev
+   k create role pod-reader -n dev --verb=get,list,watch --resource=pods
+   k describe role pod-reader -n dev
    ```
 
    `PolicyRule` has one row per rule: the resource it covers and the verbs it allows on it:
@@ -130,14 +130,14 @@ in one namespace and can only ever name resources in that namespace.
    ```
 
    Note that `get`, `list` and `watch` are three separate verbs. Granting `get` does not let
-   anyone `list`: `get` fetches one named object, `list` enumerates them, and `kubectl get pods`
+   anyone `list`: `get` fetches one named object, `list` enumerates them, and `k get pods`
    with no name needs `list`.
 
 2. The Role names this exact verb on this exact resource. Ask again whether the answer has
    changed:
 
    ```shell
-   kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
    Still `no`. A Role is a definition attached to nobody. Nothing about creating it mentions
@@ -153,9 +153,9 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    the end of a line continues the command on the next line:
 
    ```shell
-   kubectl create rolebinding deploy-bot-reads-pods -n dev \
+   k create rolebinding deploy-bot-reads-pods -n dev \
      --role=pod-reader --serviceaccount=dev:deploy-bot
-   kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
    The answer is now `yes`.
@@ -164,7 +164,7 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    its subjects:
 
    ```shell
-   kubectl describe rolebinding deploy-bot-reads-pods -n dev
+   k describe rolebinding deploy-bot-reads-pods -n dev
    ```
 
    `Role` is what is granted and `Subjects` is who receives it:
@@ -188,7 +188,7 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
 3. Confirm the grant stops at the verbs the Role named:
 
    ```shell
-   kubectl auth can-i delete pods -n dev --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i delete pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
    The answer is `no`, because the Role names only `get`, `list` and `watch`.
@@ -198,7 +198,7 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
 1. Ask the same question in `prod`:
 
    ```shell
-   kubectl auth can-i list pods -n prod --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list pods -n prod --as=system:serviceaccount:dev:deploy-bot
    ```
 
    The answer is `no` again. Both halves are namespaced, and both are in `dev`: the Role can only describe `dev`
@@ -208,11 +208,11 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    [everywhere](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 2. A bare `no` hides which part of the rule failed. Impersonate a real request instead:
-   `kubectl get pods` with `--as` sends the request as `deploy-bot`, and prints the
+   `k get pods` with `--as` sends the request as `deploy-bot`, and prints the
    apiserver's full answer:
 
    ```shell
-   kubectl get pods -n prod --as=system:serviceaccount:dev:deploy-bot
+   k get pods -n prod --as=system:serviceaccount:dev:deploy-bot
    ```
 
    The request is refused:
@@ -227,7 +227,7 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
 > [!note]
 > The Forbidden message names the group the request needed. If it says `in API group "apps"`
 > and your hand-written Role has `apiGroups: [""]`, the rule matches nothing.
-> `kubectl create role --resource=deployments` fills in `apps` for you.
+> `k create role --resource=deployments` fills in `apps` for you.
 
 ## Reuse one definition in two namespaces
 
@@ -240,13 +240,13 @@ Role in each.
    `--clusterrole=configmap-reader` names a ClusterRole in place of a Role:
 
    ```shell
-   kubectl create clusterrole configmap-reader --verb=get,list --resource=configmaps
-   kubectl create rolebinding deploy-bot-reads-configmaps -n dev \
+   k create clusterrole configmap-reader --verb=get,list --resource=configmaps
+   k create rolebinding deploy-bot-reads-configmaps -n dev \
      --clusterrole=configmap-reader --serviceaccount=dev:deploy-bot
-   kubectl create rolebinding deploy-bot-reads-configmaps -n prod \
+   k create rolebinding deploy-bot-reads-configmaps -n prod \
      --clusterrole=configmap-reader --serviceaccount=dev:deploy-bot
-   kubectl auth can-i list configmaps -n dev --as=system:serviceaccount:dev:deploy-bot
-   kubectl auth can-i list configmaps -n prod --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list configmaps -n dev --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list configmaps -n prod --as=system:serviceaccount:dev:deploy-bot
    ```
 
    Both answers are `yes`.
@@ -255,7 +255,7 @@ Role in each.
    to its own namespace, which a third namespace shows:
 
    ```shell
-   kubectl auth can-i list configmaps -n kube-system --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list configmaps -n kube-system --as=system:serviceaccount:dev:deploy-bot
    ```
 
    The answer is `no`.
@@ -271,10 +271,10 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
 1. Try to grant access to them the way that has worked so far:
 
    ```shell
-   kubectl create clusterrole node-reader --verb=get,list --resource=nodes
-   kubectl create rolebinding deploy-bot-reads-nodes -n dev \
+   k create clusterrole node-reader --verb=get,list --resource=nodes
+   k create rolebinding deploy-bot-reads-nodes -n dev \
      --clusterrole=node-reader --serviceaccount=dev:deploy-bot
-   kubectl auth can-i list nodes --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list nodes --as=system:serviceaccount:dev:deploy-bot
    ```
 
    kubectl warns that nodes have no namespace, and the answer is `no`:
@@ -294,9 +294,9 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    takes the same flags as `create rolebinding`, with no `-n`:
 
    ```shell
-   kubectl create clusterrolebinding deploy-bot-reads-nodes \
+   k create clusterrolebinding deploy-bot-reads-nodes \
      --clusterrole=node-reader --serviceaccount=dev:deploy-bot
-   kubectl auth can-i list nodes --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i list nodes --as=system:serviceaccount:dev:deploy-bot
    ```
 
    The answer is now `yes`.
@@ -305,7 +305,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    in the namespace, in place of answering one question:
 
    ```shell
-   kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
+   k auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
    Each row is one resource or URL and the verbs allowed on it:
@@ -354,8 +354,8 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    not start with `system:`:
 
    ```shell
-   kubectl get clusterrole --no-headers | wc -l
-   kubectl get clusterrole --no-headers | grep -v '^system:'
+   k get clusterrole --no-headers | wc -l
+   k get clusterrole --no-headers | grep -v '^system:'
    ```
 
    The first line is the count, then every ClusterRole whose name does not start with
@@ -414,7 +414,7 @@ so a binding can reference a user that no one can create or delete.
 
 <details><summary>Fastest way to see everything a ServiceAccount can do in a namespace?</summary>
 
-`kubectl auth can-i --list -n <ns> --as=system:serviceaccount:<ns>:<name>`.
+`k auth can-i --list -n <ns> --as=system:serviceaccount:<ns>:<name>`.
 </details>
 
 <details><summary>Why does your own kubectl have full access?</summary>
@@ -552,6 +552,38 @@ k auth can-i list pods -n default --as=anyone --as-group=auditors
 `yes` in `web` and `no` in `default` confirm the binding works only in `web`.
 
 </details>
+
+## Check your work
+
+On `controlplane`:
+
+1. `ci` has the Deployment, Secret and PersistentVolume rules in `web`. `grep -v '\[/'` drops
+   the URL rows every subject gets:
+
+   ```shell
+   k auth can-i --list -n web --as=system:serviceaccount:web:ci | grep -v '\[/'
+   ```
+
+   ```
+   Resources                                       Non-Resource URLs                      Resource Names   Verbs
+   deployments.apps                                []                                     []               [create update delete]
+   selfsubjectreviews.authentication.k8s.io        []                                     []               [create]
+   selfsubjectaccessreviews.authorization.k8s.io   []                                     []               [create]
+   selfsubjectrulesreviews.authorization.k8s.io    []                                     []               [create]
+   secrets                                         []                                     []               [get list]
+   persistentvolumes                               []                                     []               [list]
+   ```
+
+2. `ci` cannot read Secrets in `kube-system`, and `auditors` can list pods in `web` but not in
+   `default`:
+
+   ```shell
+   k auth can-i list secrets -n kube-system --as=system:serviceaccount:web:ci
+   k auth can-i list pods -n web --as=anyone --as-group=auditors
+   k auth can-i list pods -n default --as=anyone --as-group=auditors
+   ```
+
+   The answers are `no`, `yes`, `no`.
 
 ## Further reading
 

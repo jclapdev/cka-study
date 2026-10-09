@@ -3,8 +3,7 @@
 A [CustomResourceDefinition](../../references/crds.md) (CRD) adds a new resource type to the [apiserver](../../references/control-plane.md#components), and an [operator](../../references/crds.md#operators) is a
 controller that watches objects of that type and does the work they describe. Installing an
 operator usually means installing its CRDs and its controller together, often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases).
-[How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model, and
-[how TLS secures the cluster](../../learn/tls.md) the [certificates](../../references/certificates.md#client-and-serving-certificates) that cert-manager signs.
+[How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 <!-- lab: crds -->
 
@@ -183,6 +182,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
 
 An [operator](../../references/crds.md#operators) is a controller for custom resources. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates](../../references/certificates.md): you
 create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets).
+[How TLS secures the cluster](../../learn/tls.md) explains what a certificate proves.
 
 1. Install cert-manager's Helm chart, with its CRDs.
    `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
