@@ -36,6 +36,12 @@ export function PracticeRun({
   const fetcher = useFetcher();
   const grading = useFetcher<Graded>();
   const [results, setResults] = useState<Results>({});
+  // True from Finish or Check again until that check returns, so no score shows before it.
+  const [pending, setPending] = useState(false);
+  const checkAll = () => {
+    setPending(true);
+    grading.submit({ intent: "grade" }, { method: "post" });
+  };
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [endedAt, setEndedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -57,6 +63,7 @@ export function PracticeRun({
     setEndedAt(null);
     setPassed([]);
     setResults({});
+    setPending(false);
     document.querySelector("article")?.scrollIntoView(); // the page, or its pane beside the terminal
   };
   const reset = () => {
@@ -74,10 +81,12 @@ export function PracticeRun({
     });
   // Finish checks every task; the learner marks tasks by hand only when there is no grader or it could not run.
   useEffect(() => {
-    if (grading.state === "idle" && grading.data) onResult(null, grading.data);
-  }, [grading.state, grading.data]);
+    if (grading.state !== "idle" || !pending) return;
+    if (grading.data) onResult(null, grading.data);
+    setPending(false);
+  }, [grading.state]);
   const graded = grader && practice.tasks.every((t) => typeof results[t.n] === "object");
-  const checking = grading.state !== "idle";
+  const checking = pending;
   const manual = !grader || (!checking && !!grading.data?.error);
   const scoreOf = (t: Task) => {
     const r = results[t.n];
@@ -148,7 +157,7 @@ export function PracticeRun({
             <button
               onClick={() => {
                 setEndedAt(Date.now());
-                if (grader) grading.submit({ intent: "grade" }, { method: "post" });
+                if (grader) checkAll();
               }}
               className="rounded bg-accent px-4 py-2 font-semibold text-paper">
               Finish
@@ -172,7 +181,7 @@ export function PracticeRun({
             <div className="flex flex-wrap items-center gap-4 rounded-md border border-missed px-5 py-3">
               <p className="text-missed">{grading.data.error}</p>
               <button
-                onClick={() => grading.submit({ intent: "grade" }, { method: "post" })}
+                onClick={checkAll}
                 className="ml-auto rounded border border-line px-3 py-1.5 text-sm font-semibold hover:border-accent"
               >
                 Check again
