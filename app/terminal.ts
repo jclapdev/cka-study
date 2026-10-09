@@ -1,3 +1,4 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -25,8 +26,11 @@ export function terminal(): Plugin {
       let shell: pty.IPty | null = null;
       // ponytail: raw tail, so a cut inside a color code can garble the first replayed line; use @xterm/addon-serialize if it shows.
       let out = "";
+      // The shell's command line in the lab, unique so `end` can find this shell and no other.
+      let tag = "";
       const start = () => {
-        const s = pty.spawn("docker", ["exec", "-it", "-e", "TERM=xterm-256color", "base", "bash", "-l"], { name: "xterm-256color", cols: 80, rows: 24, env: process.env as Record<string, string> });
+        tag = `bash -l -s cka-${Date.now()}`;
+        const s = pty.spawn("docker", ["exec", "-it", "-e", "TERM=xterm-256color", "base", ...tag.split(" ")], { name: "xterm-256color", cols: 80, rows: 24, env: process.env as Record<string, string> });
         shell = s;
         out = "";
         s.onData((d) => {
@@ -40,8 +44,16 @@ export function terminal(): Plugin {
           for (const c of clients) c.close(1000, String(exitCode));
         });
       };
+      // Stopping `docker exec` leaves its shell running in the lab, so end that shell there too.
+      const end = () => {
+        if (!shell) return;
+        const old = shell;
+        shell = null;
+        old.kill();
+        execFile("docker", ["exec", "base", "pkill", "-HUP", "-fx", tag], () => {});
+      };
 
-      server.httpServer?.on("close", () => shell?.kill());
+      server.httpServer?.on("close", end);
       server.httpServer?.on("upgrade", (req, socket, head) => {
         if (req.url !== "/terminal" && req.url !== "/terminal?new") return; // Vite's own hot-reload socket shares this server.
         // A shell on the lab: refuse pages from any other site, including one whose own name
@@ -50,9 +62,7 @@ export function terminal(): Plugin {
         if (req.headers.origin !== `http://${req.headers.host}` || (host !== "localhost" && host !== "127.0.0.1")) return socket.destroy();
         wss.handleUpgrade(req, socket, head, (ws) => {
           if (req.url === "/terminal?new" && shell) {
-            const old = shell;
-            shell = null;
-            old.kill();
+            end();
             for (const c of clients) c.send("\x1bc"); // Other windows clear and carry on in the fresh shell.
           }
           if (!shell) start();
