@@ -37,7 +37,7 @@ within.
    kubectl auth whoami
    ```
 
-   The output is similar to this:
+   It shows the user name and the groups the cluster sees you as:
 
    ```
    ATTRIBUTE                                           VALUE
@@ -56,7 +56,7 @@ within.
    kubectl get clusterrolebinding kubeadm:cluster-admins -o wide
    ```
 
-   The output is similar to this:
+   `ROLE` is what the binding grants and `GROUPS` is who gets it:
 
    ```
    NAME                     ROLE                        AGE     USERS   GROUPS                   SERVICEACCOUNTS
@@ -109,7 +109,7 @@ in one namespace and can only ever name resources in that namespace.
    kubectl describe role pod-reader -n dev
    ```
 
-   The output is similar to this:
+   `PolicyRule` has one row per rule: the resource it covers and the verbs it allows on it:
 
    ```
    Name:         pod-reader
@@ -156,7 +156,7 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    kubectl describe rolebinding deploy-bot-reads-pods -n dev
    ```
 
-   The output is similar to this:
+   `Role` is what is granted and `Subjects` is who receives it:
 
    ```
    Name:         deploy-bot-reads-pods
@@ -170,6 +170,9 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
      ----            ----        ---------
      ServiceAccount  deploy-bot  dev
    ```
+
+   The binding only points at the Role by name. Changing the Role's rules later changes what
+   `deploy-bot` can do, without touching the binding.
 
 3. Confirm the grant stops at the verbs the Role named:
 
@@ -199,7 +202,7 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    kubectl get pods -n prod --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
+   The request is refused:
 
    ```
    Error from server (Forbidden): pods is forbidden: User "system:serviceaccount:dev:deploy-bot" cannot list resource "pods" in API group "" in the namespace "prod"
@@ -259,7 +262,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    kubectl auth can-i list nodes --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
+   kubectl warns that nodes have no namespace, and the answer is `no`:
 
    ```
    Warning: resource 'nodes' is not namespace scoped
@@ -288,7 +291,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The output is similar to this:
+   Each row is one resource or URL and the verbs allowed on it:
 
    ```
    Resources                                       Non-Resource URLs                      Resource Names   Verbs
@@ -321,7 +324,9 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    ```
 
    The three rows you created are `pods`, `configmaps` and `nodes`. They come from four
-   bindings across two namespaces, collapsed into one list of what the subject can do.
+   bindings across two namespaces, collapsed into one list of what the subject can do. The
+   other rows are given to every signed-in user by built-in ClusterRoles: asking who you are
+   and what you can do, and reading the version and health URLs.
 
    Everything else in that table was there before you started, and every authenticated
    subject gets it. The three `self…reviews` rows come from `system:basic-user`, which lets a
@@ -336,7 +341,8 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    kubectl get clusterrole --no-headers | grep -v '^system:'
    ```
 
-   The output is similar to this:
+   The first line is the count, then every ClusterRole whose name does not start with
+   `system:`:
 
    ```
    73

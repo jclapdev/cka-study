@@ -6,7 +6,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)" || exit 2
 
-PATTERNS='in this lab|in the lab|the lab.s |this lab |grade the run|timed (task|run)|time pressure|the way a grader|192\.168\.104\.|john|terms-demo|arm64|not used by anything in this course'
+PATTERNS='in this lab|in the lab|the lab.s |this lab |grade the run|timed (task|run)|time pressure|the way a grader|192\.168\.104\.|john|terms-demo|arm64|not used by anything in this course|similar to this'
 
 files=$(ls README.md EXAM.md lab/README.md references/*.md learn/*.md [0-9][0-9]-*/[0-9][0-9]-*/README.md 2>/dev/null)
 if grep -n -i -E "$PATTERNS" $files; then found=1; else found=0; fi

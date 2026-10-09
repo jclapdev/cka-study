@@ -8,7 +8,7 @@
 
 ## <Example, named for what it shows, e.g. "Initial namespaces">
 
-<What it looks like on a cluster, as Kubernetes facts: "A new kubeadm cluster has…", "The output is similar to this:". Output is captured from the lab, but the page never says so.>
+<What it looks like on a cluster, as Kubernetes facts: "A new kubeadm cluster has…". Output is captured from the lab, but the page never says so.>
 
 ```
 <captured output>

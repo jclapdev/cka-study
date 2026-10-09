@@ -49,7 +49,7 @@ A topic with a lab shows the lab beside every lesson: a Start lab button, then t
 
 ## Gotchas
 
-- **Output blocks** are for output the reader has to read: an error to recognise, a table or YAML whose contents are the lesson, or a value a later step uses. Leave the block out when the command only creates or changes something (`created`, `configured`, `labeled`), when the next step checks the result, or for `ssh`, `exit` and `hostname`. Put a one-word or one-line result in the sentence instead: "The answer is `no`." Trim `created` lines from a block that stays.
+- **Output blocks** are for output the reader has to read: an error to recognise, a table or YAML whose contents are the lesson, or a value a later step uses. Leave the block out when the command only creates or changes something (`created`, `configured`, `labeled`), when the next step checks the result, or for `ssh`, `exit` and `hostname`. Put a one-word or one-line result in the sentence instead: "The answer is `no`." Trim `created` lines from a block that stays. The sentence before a block says what to look at in it ("`SHORTNAMES` is what you can type instead of the full name:"), never a stock line repeated before every block.
 - **Narration** is any sentence about the lesson, the reader, or how much something matters, instead of about Kubernetes. Delete it. These were all removed from the RBAC exercise:
   - Describing the lesson: "In this lesson, you will…", "Nothing here schedules a pod, so nothing waits."
   - Framing importance: "worth recognising on sight", "which is why it is worth reading rather than skimming", "the single most common reason…"

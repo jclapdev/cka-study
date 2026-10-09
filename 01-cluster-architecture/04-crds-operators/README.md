@@ -29,7 +29,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    k api-resources --api-group=apiextensions.k8s.io
    ```
 
-   The output is similar to this:
+   There are no CRDs yet, and `crd` and `crds` are the short names for the type itself:
 
    ```
    No resources found
@@ -56,7 +56,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    k api-resources --api-group=stable.example.com
    ```
 
-   The output is similar to this:
+   The CRD is listed, and its type `crontabs` has the short name `ct` from the file:
 
    ```
    NAME                          CREATED AT
@@ -74,7 +74,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    k explain crontab.spec
    ```
 
-   The output is similar to this:
+   The three fields under `spec` are the ones the CRD's schema defines:
 
    ```
    GROUP:      stable.example.com
@@ -126,7 +126,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    k apply -f bad.yaml
    ```
 
-   The output is similar to this:
+   The object is refused, and the message names the field and the type it should be:
 
    ```
    The CronTab "bad" is invalid: spec.replicas: Invalid value: "string": spec.replicas in body must be of type integer: "string"
@@ -147,11 +147,14 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    k apply -f bad.yaml
    ```
 
-   The output is similar to this:
+   The object is refused again, this time naming the field the schema does not have:
 
    ```
    Error from server (BadRequest): error when creating "bad.yaml": CronTab in version "v1" cannot be handled as a CronTab: strict decoding error: unknown field "spec.colour"
    ```
+
+   `kubectl` asks the apiserver to reject unknown fields, so a misspelt field is an error
+   instead of being dropped without a word.
 
 4. Delete the CRD, then list the objects again:
 
@@ -160,7 +163,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    k get ct
    ```
 
-   The output is similar to this:
+   The CRD is deleted, and `ct` is no longer a type the apiserver knows:
 
    ```
    customresourcedefinition.apiextensions.k8s.io "crontabs.stable.example.com" deleted
@@ -205,7 +208,7 @@ create a `Certificate` object, and its controller writes the key and certificate
    k get crd | grep cert-manager
    ```
 
-   The output is similar to this:
+   The operator runs as three pods, and it added six CRDs:
 
    ```
    NAME                                       READY   STATUS    RESTARTS   AGE
@@ -220,13 +223,16 @@ create a `Certificate` object, and its controller writes the key and certificate
    orders.acme.cert-manager.io           2026-09-28T00:16:50Z
    ```
 
+   `cert-manager` does the work, `cainjector` copies certificate data into other objects, and `webhook`
+   checks cert-manager objects before the apiserver stores them.
+
 3. List the new types in the `cert-manager.io` group:
 
    ```shell
    k api-resources --api-group=cert-manager.io
    ```
 
-   The output is similar to this:
+   Four of the six types are in this group; the other two are in `acme.cert-manager.io`:
 
    ```
    NAME                  SHORTNAMES   APIVERSION           NAMESPACED   KIND
@@ -251,7 +257,8 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    k explain certificate.spec | grep -- '-required-'
    ```
 
-   The output is similar to this:
+   The first five lines are the kinds of issuer, of which you set one. The last two are the
+   fields a Certificate must have:
 
    ```
      acme	<Object>
@@ -282,7 +289,7 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    k get issuer -n demo
    ```
 
-   The output is similar to this:
+   The Issuer is ready to sign certificates:
 
    ```
    NAME         READY   AGE
@@ -314,7 +321,7 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    k get secret demo-tls -n demo
    ```
 
-   The output is similar to this:
+   The Certificate is `True`, the request behind it was approved, and the Secret holds 3 keys:
 
    ```
    NAME                               READY   SECRET     AGE
@@ -335,13 +342,16 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    k get secret demo-tls -n demo -o jsonpath='{.data.tls\.crt}' | base64 -d | openssl x509 -noout -ext subjectAltName -enddate
    ```
 
-   The output is similar to this:
+   The certificate is for the DNS name the Certificate asked for:
 
    ```
    X509v3 Subject Alternative Name: critical
        DNS:demo.example.com
    notAfter=Dec 27 00:20:37 2026 GMT
    ```
+
+   `notAfter` is the expiry date. cert-manager renews the certificate before then without
+   being asked.
 
 5. Delete the Secret, and look again a few seconds later:
 
@@ -350,7 +360,7 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    k get secret demo-tls -n demo
    ```
 
-   The output is similar to this:
+   The Secret is back, a few seconds old:
 
    ```
    NAME       TYPE                DATA   AGE
@@ -367,11 +377,13 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    k apply -f cert.yaml
    ```
 
-   The output is similar to this:
+   The apiserver refuses it:
 
    ```
    The Certificate "nope" is invalid: spec.secretName: Required value
    ```
+
+   A field marked `-required-` in `k explain` has to be in the object, or nothing is created.
 
 ## Save answers to files
 
@@ -382,7 +394,7 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    cat crds.txt
    ```
 
-   The output is similar to this:
+   `-o name` prints each object as `<type>/<name>`, one per line:
 
    ```
    customresourcedefinition.apiextensions.k8s.io/certificaterequests.cert-manager.io
@@ -400,7 +412,7 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    head -9 subject.txt
    ```
 
-   The output is similar to this:
+   The file starts with the field's type and what it is for:
 
    ```
    GROUP:      cert-manager.io

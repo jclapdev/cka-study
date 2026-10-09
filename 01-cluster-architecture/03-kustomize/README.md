@@ -45,7 +45,7 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
    k kustomize base
    ```
 
-   The output is similar to this:
+   Kustomize looks for its file and stops:
 
    ```
    error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/home/candidate/web/base'
@@ -83,7 +83,7 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
    k apply -f base/
    ```
 
-   The output is similar to this:
+   The two manifests are created, and `kustomization.yaml` fails because it is not an object:
 
    ```
    deployment.apps/web created
@@ -118,7 +118,7 @@ which changes what the base produces. The base files are never edited.
    k kustomize prod | grep -E '^kind|^  name:'
    ```
 
-   The output is similar to this:
+   Both objects now start with `prod-`:
 
    ```
    kind: Service
@@ -126,6 +126,8 @@ which changes what the base produces. The base files are never edited.
    kind: Deployment
      name: prod-web
    ```
+
+   The files in `base` are unchanged. The prefix exists only in what Kustomize prints.
 
 2. Add a namespace, a label and a new image tag. Go to
    [Setting cross-cutting fields](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#setting-cross-cutting-fields)
@@ -158,7 +160,8 @@ which changes what the base produces. The base files are never edited.
    k kustomize prod
    ```
 
-   The output is similar to this:
+   Both objects carry the namespace `prod` and the label `env: prod`, and the Deployment runs
+   `nginx:1.28`:
 
    ```
    apiVersion: v1
@@ -217,7 +220,7 @@ which changes what the base produces. The base files are never edited.
    k apply -k prod
    ```
 
-   The output is similar to this:
+   Both objects are refused:
 
    ```
    Error from server (NotFound): error when creating "prod": namespaces "prod" not found
@@ -301,7 +304,8 @@ the fields to add or replace.
    k get deploy prod-web -n prod -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image} {.spec.template.spec.containers[0].resources.limits}{"\n"}'
    ```
 
-   The output is similar to this:
+   The live Deployment has every change the overlay made, the replica count, the image and the
+   memory limit:
 
    ```
    3 nginx:1.28 {"memory":"128Mi"}
@@ -313,7 +317,7 @@ the fields to add or replace.
    k get deploy,pods -n prod -l env=prod
    ```
 
-   The output is similar to this:
+   Only the Deployment is listed:
 
    ```
    NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
@@ -358,7 +362,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    k kustomize prod | grep web-config
    ```
 
-   The output is similar to this:
+   The name appears twice, on the ConfigMap and inside the Deployment:
 
    ```
      name: prod-web-config-f655md8fbd
@@ -385,7 +389,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    k diff -k prod | grep -E '^[-+] +name: prod-web-config'
    ```
 
-   The output is similar to this:
+   The `-` line is the name in use now, and the `+` lines are the new one:
 
    ```
    -            name: prod-web-config-f655md8fbd
@@ -405,7 +409,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    k get cm -n prod
    ```
 
-   The output is similar to this:
+   The pod prints the new value, and both ConfigMaps exist:
 
    ```
    hi

@@ -80,7 +80,8 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
    k api-resources | grep -wE 'NAME|pods|deployments|services|configmaps|secrets|namespaces|serviceaccounts|persistentvolumeclaims|networkpolicies'
    ```
 
-   The output is similar to this:
+   `SHORTNAMES` is what you can type instead of the full name, and `NAMESPACED` says whether
+   the object lives in a namespace:
 
    ```
    NAME                                SHORTNAMES   APIVERSION                        NAMESPACED   KIND
@@ -95,7 +96,7 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
    networkpolicies                     netpol       networking.k8s.io/v1              true         NetworkPolicy
    ```
 
-   Secrets have no short name.
+   Secrets have no short name, and namespaces are the only type here that is not namespaced.
 
 ## Generate YAML instead of typing it
 
@@ -108,7 +109,8 @@ Redirect it to a file to edit before applying.
    k run web --image=nginx:1.27 --dry-run=client -o yaml
    ```
 
-   The output is similar to this:
+   Every object has the same four top-level parts: `apiVersion` and `kind` say what it is,
+   `metadata` names it, and `spec` is what you asked for:
 
    ```
    apiVersion: v1
@@ -127,6 +129,11 @@ Redirect it to a file to edit before applying.
    status: {}
    ```
 
+   `run` named both the pod and its container `web`, and added `run: web` to the pod's
+   metadata. `dnsPolicy` and
+   `restartPolicy` are defaults you can delete, and `status: {}` is empty because nothing was
+   created.
+
 2. Write a Deployment to a file, then create a namespace and apply the file there:
 
    ```shell
@@ -143,7 +150,8 @@ Redirect it to a file to edit before applying.
    k expose deployment web -n drill --port=80 --dry-run=client -o yaml
    ```
 
-   The output is similar to this:
+   The Service sends traffic on `port` 80 to `targetPort` 80 on every pod its `selector`
+   matches:
 
    ```
    apiVersion: v1
@@ -164,8 +172,8 @@ Redirect it to a file to edit before applying.
      loadBalancer: {}
    ```
 
-   `expose` reads the Deployment's selector from the cluster, so the Deployment has to exist
-   first.
+   The selector `app: web` is the Deployment's pod label. `expose` reads it from the cluster,
+   so the Deployment has to exist first.
 
 4. Print a ConfigMap and a Secret:
 
@@ -174,7 +182,7 @@ Redirect it to a file to edit before applying.
    k create secret generic web-secret -n drill --from-literal=TOKEN=abc123 --dry-run=client -o yaml
    ```
 
-   The output is similar to this:
+   Both keep their values under `data`, one key per `--from-literal`:
 
    ```
    apiVersion: v1
@@ -250,7 +258,7 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
    k explain pod.spec.containers.resources | head -13
    ```
 
-   The output is similar to this:
+   `FIELD` gives the field's type in angle brackets, and `FIELDS` lists what goes under it:
 
    ```
    KIND:       Pod
@@ -274,7 +282,8 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
    k explain deploy.spec.strategy --recursive
    ```
 
-   The output is similar to this:
+   `--recursive` lists every field below `strategy`, and `enum` gives the only values `type`
+   accepts:
 
    ```
    GROUP:      apps
@@ -321,7 +330,7 @@ Common changes have [their own commands](../../references/kubectl.md#changing-li
    k edit pod tool -n drill
    ```
 
-   In vim, change `"3600"` to `"7200"` under `args`, and `:wq`. The output is similar to this:
+   In vim, change `"3600"` to `"7200"` under `args`, and `:wq`. The change is refused:
 
    ```
    error: pods "tool" is invalid
@@ -348,7 +357,8 @@ Only the cluster's final state is graded, so [read back](../../references/kubect
    k describe deploy web -n drill | grep -E '^Replicas|Image'
    ```
 
-   The output is similar to this:
+   The first line is the `jsonpath` output, the replica count then the image. The other two
+   are the same values from `describe`:
 
    ```
    3 nginx:1.28

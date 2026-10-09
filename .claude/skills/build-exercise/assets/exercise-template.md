@@ -22,7 +22,7 @@ A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
    ```
 
    <Only when the reader has to read the output:>
-   The output is similar to this:
+   <One sentence on what to look at in this output, ending with a colon.>
 
    ```
    <trimmed output, captured from the lab>

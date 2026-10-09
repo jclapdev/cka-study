@@ -31,7 +31,7 @@ charts and their versions.
    helm list -A
    ```
 
-   The output is similar to this:
+   Each row is one installed release, with the chart and revision it is on:
 
    ```
    NAME  	NAMESPACE	REVISION	UPDATED                               	STATUS  	CHART         	APP VERSION
@@ -58,7 +58,7 @@ charts and their versions.
    helm search repo podinfo --versions | head -4
    ```
 
-   The output is similar to this:
+   The first search shows only the newest version; `--versions` lists the older ones too:
 
    ```
    NAME           	CHART VERSION	APP VERSION	DESCRIPTION
@@ -83,7 +83,7 @@ chart.
    helm show values podinfo/podinfo | head -20
    ```
 
-   The output is similar to this:
+   These are the chart's defaults, the settings a release gets when you change nothing:
 
    ```
    # Default values for podinfo.
@@ -131,7 +131,7 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
    helm list
    ```
 
-   The output is similar to this:
+   The first list has `web`; the second has only its header line:
 
    ```
    NAME	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART         	APP VERSION
@@ -148,7 +148,7 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
    kubectl get deploy,svc,secrets -n apps
    ```
 
-   The output is similar to this:
+   The release made three objects:
 
    ```
    NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
@@ -172,7 +172,7 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
    helm get values web -n apps
    ```
 
-   The output is similar to this:
+   The release remembers the one value you set:
 
    ```
    USER-SUPPLIED VALUES:
@@ -207,7 +207,7 @@ same release.
    kubectl get deploy web-podinfo -n apps
    ```
 
-   The output is similar to this:
+   Only the new value is stored, and the Deployment has one pod:
 
    ```
    USER-SUPPLIED VALUES:
@@ -229,7 +229,7 @@ same release.
    helm get values web -n apps
    ```
 
-   The output is similar to this:
+   Both values are stored now:
 
    ```
    USER-SUPPLIED VALUES:
@@ -248,7 +248,7 @@ same release.
    helm history web -n apps
    ```
 
-   The output is similar to this:
+   Each install or upgrade added a revision, with the chart version it used:
 
    ```
    REVISION	UPDATED                 	STATUS    	CHART         	APP VERSION	DESCRIPTION
@@ -266,7 +266,7 @@ same release.
    helm history web -n apps
    ```
 
-   The output is similar to this:
+   There is a new revision at the bottom, described as `Rollback to 1`:
 
    ```
    REVISION	UPDATED                 	STATUS    	CHART         	APP VERSION	DESCRIPTION
@@ -285,11 +285,13 @@ same release.
    kubectl get deploy web-podinfo -n apps -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
    ```
 
-   The output is similar to this:
+   The Deployment is back to revision 1's settings, 2 replicas of image 6.14.1:
 
    ```
    2 ghcr.io/stefanprodan/podinfo:6.14.1
    ```
+
+   The `ui.message` from revision 2 is gone too, because revision 1 never had it.
 
 ## Render without installing
 
@@ -303,7 +305,7 @@ installing anything.
    grep '^kind:' web.yaml
    ```
 
-   The output is similar to this:
+   The file holds one object per `kind:` line:
 
    ```
    kind: Service
@@ -322,7 +324,7 @@ installing anything.
    helm template web podinfo/podinfo --version 6.15.0 -n apps --set replicaCount=2 --skip-tests | grep '^kind:'
    ```
 
-   The output is similar to this:
+   Only the Service and the Deployment are left:
 
    ```
    kind: Service
@@ -343,7 +345,7 @@ installing anything.
    kubectl get ns apps
    ```
 
-   The output is similar to this:
+   The release, its objects and its Secrets are gone, but the namespace is still `Active`:
 
    ```
    release "web" uninstalled

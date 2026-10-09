@@ -26,3 +26,15 @@ Fix these in order before building more topics. Compared with KodeKloud's CKA co
 - [x] 11. Apply 1–9 to the 6 finished topics, their Learn pages and their references.
 - [x] 12. Update the `build-exercise` skill and `CLAUDE.md` so new topics come out this way.
 - [ ] 13. Build the remaining 22 topics, then the mock exams.
+
+## Missing, compared with KodeKloud
+
+Quoted from KodeKloud's CKA course on notes.kodekloud.com: the lessons "Pods with YAML" and "Solution Pods optional", and the course's lesson list.
+
+- [ ] 14. Explain every output. KodeKloud follows each output with what it means: "The READY column uses an X/Y format, where X represents the number of containers ready, and Y is the total containers in the pod."
+- [ ] 15. Explain each part before the command. "Pods with YAML" says "Every Kubernetes definition file must include the following four fields:" and gives each its own paragraph, such as "This field indicates the version of the Kubernetes API you are using.", before running `kubectl create -f pod-definition.yaml`. Our steps say "Print a Pod:" and run it, because the `build-exercise` skill says "Explanations belong on Learn and reference pages, not in steps."
+- [ ] 16. Teach the objects before the topic that uses them. KodeKloud's Core Concepts section has "Pods", "Pods with YAML", "ReplicaSets", "Deployments", "Services", "Namespaces", "Imperative vs Declarative" and "Kubectl Apply Command". Our first topic, Working with kubectl, creates Deployments, Services, ConfigMaps, Secrets and a NetworkPolicy with at most one line on each.
+- [ ] 17. Background lessons. KodeKloud has "ETCD for Beginners", "Docker vs ContainerD", "TLS Basics", "Prerequisite DNS", "Prerequisite Network Namespaces", "Prerequisite Switching Routing Gateways CNI in kubernetes" and "Storage in Docker". We have no Learn page on etcd, TLS, DNS, network namespaces or storage.
+- [ ] 18. Explained solutions. KodeKloud's solutions say what each result shows: "The above confirms that the image used in the pod is busybox." and "All listed pods are running on the controlplane node." Our Practice solutions are commands only.
+- [ ] 19. Hints. KodeKloud has "The hints and solutions panel, visible with each question". Our Practice tasks have a solution and no hint.
+- [ ] 20. Marked as you go. On KodeKloud "each question is marked as you progress." Ours checks only after **Finish**, and the learner marks the passed tasks by hand before **Save score**.

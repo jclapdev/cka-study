@@ -29,7 +29,7 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
    systemctl status kubelet
    ```
 
-   The line to read is similar to this:
+   The `Active` line shows the kubelet failing and being restarted:
 
    ```
    Active: activating (auto-restart) (Result: exit-code)
@@ -45,7 +45,7 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
    kubectl get nodes
    ```
 
-   The last line of the output is similar to this:
+   It ends with the connection being refused:
 
    ```
    The connection to the server localhost:8080 was refused - did you specify the right host or port?
@@ -76,7 +76,8 @@ wrong [address](../../references/kubeadm.md#the-advertise-address) is not fixabl
    sudo kubeadm init --apiserver-advertise-address "$CP_IP" --pod-network-cidr 10.244.0.0/16
    ```
 
-   It prints 84 lines over about 90 seconds. The last lines are similar to this:
+   It prints 84 lines over about 90 seconds. The last lines tell you the three steps left: set
+   up a kubeconfig, install a pod network, and join the workers:
 
    ```
    Your Kubernetes control-plane has initialized successfully!
@@ -118,7 +119,7 @@ List the manifests `init` wrote:
 sudo ls /etc/kubernetes/manifests/
 ```
 
-The output is similar to this:
+There is one manifest for each control plane component:
 
 ```
 etcd.yaml
@@ -171,7 +172,7 @@ kubectl get pods -n kube-system
 sudo ls /etc/cni/net.d/
 ```
 
-The output is similar to this:
+The node is `NotReady`, both `coredns` pods are `Pending`, and `/etc/cni/net.d/` prints nothing:
 
 ```
   Ready            False   Sun, 27 Sep 2026 17:14:37 -0400   Sun, 27 Sep 2026 17:14:34 -0400   KubeletNotReady              container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized
@@ -212,7 +213,7 @@ which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so b
    kubectl get pods -n kube-system
    ```
 
-   The output is similar to this:
+   `/etc/cni/net.d/` now has Flannel's file, and every pod is `Running` except the two `coredns` pods:
 
    ```
    10-flannel.conflist
@@ -247,7 +248,8 @@ create --print-join-command` prints a new one.
    sudo kubeadm token create --print-join-command
    ```
 
-   The output is similar to this:
+   The token from `init` expires in 23 hours (`TTL`), and the new join command carries a new
+   token but the same hash:
 
    ```
    TOKEN                     TTL         EXPIRES                USAGES                   DESCRIPTION                                                EXTRA GROUPS
@@ -269,7 +271,7 @@ create --print-join-command` prints a new one.
    exit
    ```
 
-   The last lines are similar to this:
+   The node confirms it has a certificate from the cluster:
 
    ```
    This node has joined the cluster:
@@ -294,7 +296,7 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
    kubectl get nodes
    ```
 
-   The output is similar to this:
+   All three nodes are `Ready` and run the same kubelet version:
 
    ```
    NAME           STATUS   ROLES           AGE   VERSION
@@ -323,7 +325,8 @@ List everything the cluster is running:
 kubectl get pods -A -o wide
 ```
 
-The output is similar to this, with some columns removed:
+The control plane pods use the node's own address as their `IP`, and CoreDNS has an address
+from the pod network, `10.244.0.0/16` (some columns removed here):
 
 ```
 NAMESPACE      NAME                                   STATUS            IP              NODE
