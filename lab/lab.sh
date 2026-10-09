@@ -34,10 +34,28 @@ saved() {
 
 # Recreates the machines from a copy. Whatever is on them is thrown away.
 up() {
+  local since; since=$(date -u +%FT%TZ)
   COPY=$1 docker compose up -d --no-build --pull never --force-recreate "${NODES[@]}" base
   for n in "${NODES[@]}"; do docker exec "$n" systemctl is-system-running --wait >/dev/null || true; done
-  docker exec -u ubuntu -w /home/ubuntu controlplane bash -c 'test -f ~/.kube/config || exit 0
-    timeout 180 bash -c "until kubectl get --raw /readyz >/dev/null 2>&1; do sleep 2; done"' || echo "the API server did not come back within 3 minutes"
+  # A restored cluster first shows the node and pod statuses it was saved with, so wait until
+  # the controllers, every node and every pod have reported since the start.
+  docker exec -i -u ubuntu -w /home/ubuntu controlplane bash -s "$since" <<'READY' || echo "the cluster was not ready within 5 minutes"
+test -f ~/.kube/config || exit 0
+since=${1:0:19}
+fresh() { [[ ! "${1:0:19}" < "$since" ]]; }
+ready() {
+  kubectl get --raw /readyz >/dev/null 2>&1 || return 1
+  for l in kube-controller-manager kube-scheduler; do
+    fresh "$(kubectl get lease "$l" -n kube-system -o jsonpath='{.spec.renewTime}')" || return 1
+  done
+  kubectl get nodes -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Ready")].status} {.status.conditions[?(@.type=="Ready")].lastHeartbeatTime}{"\n"}{end}' |
+    while read -r s t; do [ "$s" = True ] && fresh "$t" || exit 1; done || return 1
+  kubectl get pods -A -o jsonpath='{range .items[*]}{.status.phase} {.status.conditions[?(@.type=="Ready")].status} {.status.conditions[?(@.type=="Ready")].lastTransitionTime}{"\n"}{end}' |
+    while read -r p s t; do [ "$p" = Succeeded ] || { [ "$s" = True ] && fresh "$t"; } || exit 1; done
+}
+for _ in $(seq 150); do ready && exit 0; sleep 2; done
+exit 1
+READY
 }
 
 # Leaves the machines running <lab>, setting it up and saving it first if needed.
