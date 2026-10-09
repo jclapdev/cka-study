@@ -25,7 +25,7 @@ A [chart](../../references/helm.md#charts-repositories-and-releases) is a packag
 charts and their versions.
 
 1. Check that Helm reaches the cluster. It reads the same kubeconfig as `kubectl`
-   ([kubeconfig](../../references/kubeconfig.md)):
+   ([kubeconfig](../../references/kubeconfig.md)). `helm list` prints the releases installed in a namespace:
 
    ```shell
    helm list -A
@@ -41,7 +41,9 @@ charts and their versions.
    `-A` means all namespaces, as it does for `kubectl`. One release, `legacy`, is already
    installed.
 
-2. Add a repository under a local name and download its index:
+2. Add a repository under a local name and download its index. `helm repo add podinfo
+   <url>` saves the repository's address under the name `podinfo`, and `helm repo update`
+   downloads the list of charts and versions from every repository added:
 
    ```shell
    helm repo add podinfo https://stefanprodan.github.io/podinfo
@@ -51,7 +53,9 @@ charts and their versions.
    `podinfo` is now a name on this machine only. Charts in the repository are referred to as
    `podinfo/<chart>`.
 
-3. Search the repository, then list every version of the chart:
+3. Search the repository, then list every version of the chart. `helm search repo podinfo`
+   looks through the downloaded lists for charts named or described with `podinfo`, and
+   `| head -4` keeps the header and the three newest versions:
 
    ```shell
    helm search repo podinfo
@@ -77,7 +81,8 @@ charts and their versions.
 A chart's templates read settings from its [values](../../references/helm.md#values), and a default for each value ships in the
 chart.
 
-1. Print the defaults:
+1. Print the defaults. `helm show values` prints the chart's `values.yaml` file, and
+   `| head -20` keeps its first 20 lines:
 
    ```shell
    helm show values podinfo/podinfo | head -20
@@ -115,7 +120,10 @@ chart.
 
 A [release](../../references/helm.md#charts-repositories-and-releases) is one installed copy of a chart, with its own name, in one namespace.
 
-1. Install version 6.14.1 as the release `web` in a new namespace `apps`, with 2 replicas:
+1. Install version 6.14.1 as the release `web` in a new namespace `apps`, with 2 replicas.
+   `helm install` takes the release name, `web`, then the chart, `podinfo/podinfo`.
+   `--version 6.14.1` pins the chart version, `-n apps` is the namespace, `--create-namespace`
+   creates it if it does not exist, and `--set replicaCount=2` overrides one value:
 
    ```shell
    helm install web podinfo/podinfo --version 6.14.1 -n apps --create-namespace --set replicaCount=2
@@ -124,7 +132,7 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
    Without `--create-namespace`, the install fails with
    `Error: INSTALLATION FAILED: create: failed to create: namespaces "apps" not found`.
 
-2. List releases in the namespace, then without one:
+2. List releases in the namespace `apps`, then without `-n`:
 
    ```shell
    helm list -n apps
@@ -142,7 +150,8 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
    A release lives in a [namespace](../../references/namespaces.md), and `helm` without `-n` looks only in the kubeconfig's
    current namespace, `default` here, so the second list is empty.
 
-3. See what the chart created:
+3. See what the chart created. `get deploy,svc,secrets` lists three types in one command,
+   separated by commas:
 
    ```shell
    kubectl get deploy,svc,secrets -n apps
@@ -166,7 +175,8 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is one in
    used. Helm runs only as a command-line tool, and these Secrets are the only place a release
    [is stored](../../references/helm.md#revisions-and-where-releases-are-stored).
 
-4. Read back the values the release was installed with:
+4. Read back the values the release was installed with. `helm get values` prints the values
+   stored with a release:
 
    ```shell
    helm get values web -n apps
@@ -194,7 +204,9 @@ same release.
      message: hello from helm
    ```
 
-   Then upgrade to version 6.15.0 with it:
+   Then upgrade to version 6.15.0 with it. `helm upgrade` takes the same release name and
+   chart as `install`, and `-f web-values.yaml` reads values from the file, where `--set`
+   takes one on the command line:
 
    ```shell
    helm upgrade web podinfo/podinfo --version 6.15.0 -n apps -f web-values.yaml
@@ -242,7 +254,7 @@ same release.
 
 ## Roll back
 
-1. List the revisions:
+1. List the revisions. `helm history` prints every revision of a release, oldest first:
 
    ```shell
    helm history web -n apps
@@ -259,7 +271,8 @@ same release.
 
    One revision is `deployed`, and every earlier one is `superseded`.
 
-2. Roll back to revision 1 and list again:
+2. Roll back to revision 1 and list again. `helm rollback web 1` takes the release name, then
+   the revision to go back to:
 
    ```shell
    helm rollback web 1 -n apps
@@ -279,7 +292,8 @@ same release.
    A rollback does not remove [revisions](../../references/helm.md#revisions-and-where-releases-are-stored) 2 and 3. It writes revision 4 with the chart and
    values of revision 1.
 
-3. Confirm the cluster matches revision 1:
+3. Confirm the cluster matches revision 1. `-o jsonpath` prints only the replica count and
+   the first container's image:
 
    ```shell
    kubectl get deploy web-podinfo -n apps -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
@@ -298,7 +312,9 @@ same release.
 [`helm template`](../../references/helm.md#rendering-without-installing) renders a chart's manifests on the local machine and prints them, without
 installing anything.
 
-1. Render version 6.15.0 to a file and list the kinds in it:
+1. Render version 6.15.0 to a file and list the kinds in it. `helm template` takes the same
+   release name, chart and flags as `helm install`. `> web.yaml` writes the result to a file,
+   and `grep '^kind:'` prints the lines that start with `kind:`:
 
    ```shell
    helm template web podinfo/podinfo --version 6.15.0 -n apps --set replicaCount=2 > web.yaml
@@ -318,7 +334,7 @@ installing anything.
    The three [Pods](../../references/pod.md) come from the chart's `templates/tests/` folder. They run only when someone
    runs `helm test`, and `--skip-tests` leaves them out of the file.
 
-2. Render again without them:
+2. Render again without them, using `--skip-tests`:
 
    ```shell
    helm template web podinfo/podinfo --version 6.15.0 -n apps --set replicaCount=2 --skip-tests | grep '^kind:'
@@ -336,7 +352,8 @@ installing anything.
 
 ## Uninstall
 
-1. Uninstall the release and check what is left:
+1. Uninstall the release and check what is left. `helm uninstall web` deletes the release and
+   every object it created. `kubectl get ns apps` shows whether the namespace still exists:
 
    ```shell
    helm uninstall web -n apps

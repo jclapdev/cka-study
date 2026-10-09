@@ -23,7 +23,8 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 
 The machines have the Kubernetes tools installed but [no cluster](../../references/workers.md#the-kubelet-before-init-or-join).
 
-1. Check the state of the kubelet:
+1. Check the state of the kubelet, the agent on every node that starts the pods the cluster
+   gives it. `systemctl status` shows whether a service that systemd runs is up, and why not:
 
    ```shell
    systemctl status kubelet
@@ -39,7 +40,8 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
    once and systemd restarts it every 10 seconds. `sudo journalctl -u kubelet` shows the
    missing file.
 
-2. Try to talk to a cluster that does not exist yet:
+2. Try to talk to a cluster that does not exist yet. `kubectl get nodes` asks the cluster for
+   its list of machines:
 
    ```shell
    kubectl get nodes
@@ -60,7 +62,11 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
 every kubeconfig it generates, and the workers are later told to trust that exact address. A
 wrong [address](../../references/kubeadm.md#the-advertise-address) is not fixable without `kubeadm reset`.
 
-1. Get `controlplane`'s address and keep it in a variable:
+1. Get `controlplane`'s address and keep it in a variable. `ip route get 1.1.1.1` asks which
+   route the machine would use to reach an address outside its own network, and prints a line
+   such as `1.1.1.1 via 192.0.2.1 dev eth0 src 192.0.2.10`. `awk '{print $7; exit}'` prints the
+   seventh word of that line, the address after `src`. `CP_IP=$(...)` stores the result in the
+   shell variable `CP_IP`, and `echo` prints it:
 
    ```shell
    CP_IP=$(ip route get 1.1.1.1 | awk '{print $7; exit}'); echo "$CP_IP"
@@ -70,7 +76,10 @@ wrong [address](../../references/kubeadm.md#the-advertise-address) is not fixabl
    machine uses to reach other networks, which on a machine with more than one address is the
    one to advertise.
 
-2. Initialise the cluster:
+2. Initialise the cluster. `sudo` is needed because `init` writes under `/etc/kubernetes`
+   and starts services. `--apiserver-advertise-address` is the address the apiserver tells
+   the other nodes to use. `--pod-network-cidr 10.244.0.0/16` is the range pod addresses come
+   from, which the pod network installed later hands out:
 
    ```shell
    sudo kubeadm init --apiserver-advertise-address "$CP_IP" --pod-network-cidr 10.244.0.0/16
@@ -113,7 +122,7 @@ wrong [address](../../references/kubeadm.md#the-advertise-address) is not fixabl
 
 ### If pods are created through the apiserver, how did the apiserver pod start?
 
-List the manifests `init` wrote:
+List the manifests `init` wrote. The folder belongs to root, so `ls` needs `sudo`:
 
 ```shell
 sudo ls /etc/kubernetes/manifests/
@@ -141,7 +150,9 @@ mode `600`, and kubectl looks in `~/.kube/config`. Without the `chown`, the copy
 root-owned and kubectl fails with `permission denied`. [On a kubeadm cluster](../../references/kubeconfig.md#on-a-kubeadm-cluster)
 lists every kubeconfig `init` writes.
 
-Copy the admin kubeconfig into your home directory:
+Copy the admin kubeconfig into your home directory. `mkdir -p` creates `~/.kube` and does
+nothing if it exists. `sudo cp` copies the root-owned file, and `sudo chown "$(id -u):$(id -g)"`
+makes your own user and group its owner, so kubectl can read it without `sudo`:
 
 ```shell
 mkdir -p ~/.kube
@@ -164,7 +175,9 @@ plugin uses one of [three address ranges](../../references/pod-network.md#three-
 
 ### Why is controlplane NotReady when all four control plane pods are running?
 
-Check the node, the pods, and the [CNI](../../references/pod-network.md) configuration directory:
+Check the node, the pods, and the [CNI](../../references/pod-network.md) configuration directory. `describe node` prints the
+node's conditions, and `grep -A3 'Ready '` shows the `Ready` line and the 3 lines after it.
+`-n kube-system` lists the namespace where the cluster's own components run:
 
 ```shell
 kubectl describe node controlplane | grep -A3 'Ready '
@@ -193,14 +206,17 @@ kube-scheduler-controlplane            0/1     Running   0          14s
 node `NotReady`. A `NotReady` node carries the [taint](../../references/taints.md) `node.kubernetes.io/not-ready:NoSchedule`,
 which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so both CoreDNS pods stay [`Pending`](../../references/pod.md#on-a-new-cluster).
 
-1. Install [Flannel](../../references/pod-network.md#plugins). It defaults to `10.244.0.0/16`, the CIDR you gave `init`:
+1. Install [Flannel](../../references/pod-network.md#plugins). It defaults to `10.244.0.0/16`, the CIDR you gave `init`. `kubectl apply -f`
+   reads a manifest from a URL as well as from a file. This one creates the `kube-flannel`
+   namespace, the permissions Flannel needs, its settings, and the [DaemonSet](../../references/daemonsets.md) that runs one
+   Flannel pod on every node:
 
    ```shell
    kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
    ```
 
 2. Watch the node change to Ready, which takes about 20 seconds, then stop the watch with
-   `Ctrl-C`:
+   `Ctrl-C`. `-w` keeps the command running and prints a new line each time a node changes:
 
    ```shell
    kubectl get nodes -w
@@ -241,7 +257,9 @@ which [CoreDNS](../../references/pod-network.md#coredns) does not tolerate, so b
 The [join line](../../references/workers.md#joining) printed by `init` contains a token that expires after 24 hours. `kubeadm token
 create --print-join-command` prints a new one.
 
-1. On `controlplane`, list the existing token and print a fresh join command:
+1. On `controlplane`, list the existing token and print a fresh join command.
+   `kubeadm token list` shows the tokens a new node can use to join. `token create` makes a
+   new one, and `--print-join-command` prints the whole `kubeadm join` line that uses it:
 
    ```shell
    sudo kubeadm token list
@@ -262,7 +280,10 @@ create --print-join-command` prints a new one.
    [Joining a node](../../learn/kubeadm.md#joining-a-node) walks through the sequence.
 
 2. Copy the command you just printed, then run it on `node01`. Your token and hash differ from
-   the ones above, so paste yours. Go back to `base` first:
+   the ones above, so paste yours. `kubeadm join 192.0.2.10:6443` contacts the apiserver at that
+   address on port 6443. `--token` proves the node may join, and
+   `--discovery-token-ca-cert-hash` is the fingerprint of the cluster's certificate authority,
+   which the node checks before trusting the apiserver. Go back to `base` first:
 
    ```shell
    exit                         # back to base
@@ -308,7 +329,8 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
    The ROLES column is built from [labels named `node-role.kubernetes.io/<role>`](../../references/workers.md#roles). kubeadm sets
    that label on `controlplane` and none on the workers.
 
-2. Add the worker label to both:
+2. Add the worker label to both. `label node node01 node02` labels both nodes in one
+   command, and `node-role.kubernetes.io/worker=` is the key with an empty value:
 
    ```shell
    k label node node01 node02 node-role.kubernetes.io/worker=
@@ -319,14 +341,15 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
 
 ## Check the control plane
 
-List everything the cluster is running:
+List everything the cluster is running. `-A` lists every namespace, and `-o wide` adds
+columns such as each pod's `IP` and `NODE`:
 
 ```shell
 kubectl get pods -A -o wide
 ```
 
-The control plane pods use the node's own address as their `IP`, and CoreDNS has an address
-from the pod network, `10.244.0.0/16` (some columns removed here):
+Each pod is listed with its namespace, its address and the node it runs on (some columns
+removed here):
 
 ```
 NAMESPACE      NAME                                   STATUS            IP              NODE

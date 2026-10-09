@@ -22,7 +22,7 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 A [namespace](../../references/namespaces.md) is a named group of objects, and the boundary a Role and a RoleBinding apply
 within.
 
-1. Create two:
+1. Create two. `kubectl create namespace dev` makes a namespace named `dev`:
 
    ```shell
    kubectl create namespace dev
@@ -31,7 +31,8 @@ within.
 
 ## Find out why your kubectl can do anything
 
-1. Ask the apiserver who you are:
+1. Ask the apiserver who you are. `auth whoami` sends your credentials and prints the user
+   and groups the apiserver reads from them:
 
    ```shell
    kubectl auth whoami
@@ -50,7 +51,9 @@ within.
    same certificate. Neither exists as a resource you could delete. [Client certificates](../../references/authentication.md#client-certificates)
    explains how a certificate becomes a user and groups.
 
-2. Find the binding that gives that group its power:
+2. Find the binding that gives that group its power. `get clusterrolebinding
+   kubeadm:cluster-admins` fetches that one binding by name, and `-o wide` adds the `USERS`,
+   `GROUPS` and `SERVICEACCOUNTS` columns:
 
    ```shell
    kubectl get clusterrolebinding kubeadm:cluster-admins -o wide
@@ -72,7 +75,8 @@ within.
 A ServiceAccount is the one subject kind that exists as an object. Users and groups come from
 credentials, so a cluster cannot create them. It can create a [ServiceAccount](../../references/service-accounts.md#the-model).
 
-1. Create the account in `dev`:
+1. Create the account in `dev`. `create serviceaccount deploy-bot -n dev` makes a
+   ServiceAccount named `deploy-bot` in the namespace `dev`:
 
    ```shell
    kubectl create serviceaccount deploy-bot -n dev
@@ -81,7 +85,8 @@ credentials, so a cluster cannot create them. It can create a [ServiceAccount](.
 2. Ask what it is allowed to do. `kubectl auth can-i` asks the apiserver's authoriser directly,
    and `--as` impersonates without needing the subject's credentials
    ([impersonation](../../references/authentication.md#commands)). A ServiceAccount is named in full as
-   `system:serviceaccount:<namespace>:<name>`:
+   `system:serviceaccount:<namespace>:<name>`. `list pods -n dev` is the request being asked
+   about: the verb, the resource and the namespace:
 
    ```shell
    kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
@@ -102,7 +107,9 @@ credentials, so a cluster cannot create them. It can create a [ServiceAccount](.
 A [Role](../../references/rbac.md#the-model) is a list of rules, each naming verbs and the resources those verbs apply to. It lives
 in one namespace and can only ever name resources in that namespace.
 
-1. Create the Role. `kubectl create role` writes the object without you writing YAML:
+1. Create the Role. `kubectl create role` writes the object without you writing YAML.
+   `pod-reader` is its name. `--verb=get,list,watch` lists the actions it allows, separated by
+   commas, and `--resource=pods` is the type they apply to. `describe role` prints the rules:
 
    ```shell
    kubectl create role pod-reader -n dev --verb=get,list,watch --resource=pods
@@ -140,7 +147,9 @@ in one namespace and can only ever name resources in that namespace.
 
 A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one role and the subjects that get it.
 
-1. Create the binding and ask again:
+1. Create the binding and ask again. `--role=pod-reader` is the Role it grants, and
+   `--serviceaccount=dev:deploy-bot` is who gets it, written `<namespace>:<name>`. The `\` at
+   the end of a line continues the command on the next line:
 
    ```shell
    kubectl create rolebinding deploy-bot-reads-pods -n dev \
@@ -150,7 +159,8 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
 
    The answer is now `yes`.
 
-2. Read back what you just made:
+2. Read back what you just made. `describe rolebinding` prints the Role a binding grants and
+   its subjects:
 
    ```shell
    kubectl describe rolebinding deploy-bot-reads-pods -n dev
@@ -197,6 +207,8 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    [everywhere](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
 2. A bare `no` hides which part of the rule failed. Impersonate a real request instead:
+   `kubectl get pods` with `--as` sends the request as `deploy-bot`, and prints the
+   apiserver's full answer:
 
    ```shell
    kubectl get pods -n prod --as=system:serviceaccount:dev:deploy-bot
@@ -222,7 +234,9 @@ A ClusterRole is a definition with no namespace, and a RoleBinding is allowed to
 So a [ClusterRole](../../references/rbac.md#the-model) can be written once and bound in as many namespaces as needed, instead of a
 Role in each.
 
-1. Write the definition once and bind it twice:
+1. Write the definition once and bind it twice. `create clusterrole` takes the same
+   `--verb` and `--resource` flags as `create role`, with no `-n`. In a RoleBinding,
+   `--clusterrole=configmap-reader` names a ClusterRole in place of a Role:
 
    ```shell
    kubectl create clusterrole configmap-reader --verb=get,list --resource=configmaps
@@ -275,7 +289,8 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    namespace, and a cluster-scoped resource has no namespace to be scoped into. The binding is
    legal and does nothing.
 
-2. The only binding without a namespace is a ClusterRoleBinding:
+2. The only binding without a namespace is a ClusterRoleBinding. `create clusterrolebinding`
+   takes the same flags as `create rolebinding`, with no `-n`:
 
    ```shell
    kubectl create clusterrolebinding deploy-bot-reads-nodes \
@@ -285,7 +300,8 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
 
    The answer is now `yes`.
 
-3. Read back everything the account accumulated:
+3. Read back everything the account accumulated. `--list` prints every rule the subject has
+   in the namespace, in place of answering one question:
 
    ```shell
    kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
@@ -324,9 +340,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    ```
 
    The three rows you created are `pods`, `configmaps` and `nodes`. They come from four
-   bindings across two namespaces, collapsed into one list of what the subject can do. The
-   other rows are given to every signed-in user by built-in ClusterRoles: asking who you are
-   and what you can do, and reading the version and health URLs.
+   bindings across two namespaces, collapsed into one list of what the subject can do.
 
    Everything else in that table was there before you started, and every authenticated
    subject gets it. The three `self…reviews` rows come from `system:basic-user`, which lets a
@@ -334,7 +348,9 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    from `system:discovery`, and the `/healthz`, `/livez`, `/readyz` and `/version` rows from
    `system:public-info-viewer`. These paths are [non-resource URLs](../../references/rbac.md#built-in-roles).
 
-4. See how much of this the cluster already came with:
+4. See how much of this the cluster already came with. `--no-headers` drops the header
+   line, `wc -l` counts the lines left, and `grep -v '^system:'` keeps only the lines that do
+   not start with `system:`:
 
    ```shell
    kubectl get clusterrole --no-headers | wc -l

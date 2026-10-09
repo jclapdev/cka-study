@@ -24,7 +24,7 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 
 You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` into](../../references/kubectl.md#hosts-and-ssh).
 
-1. Try `kubectl` on `base`:
+1. Try `kubectl` on `base`. `kubectl get nodes` asks the cluster for its list of machines:
 
    ```shell
    kubectl get nodes
@@ -32,7 +32,8 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
 
    It fails with `Command 'kubectl' not found`, because `base` has no Kubernetes tools.
 
-2. Go to `node01`, become root, and try again:
+2. Go to `node01`, become root, and try again. `ssh node01` opens a shell on the worker
+   `node01`, and `sudo -i` turns it into a shell for the `root` user:
 
    ```shell
    ssh node01
@@ -41,10 +42,12 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
    ```
 
    This time `kubectl` exists but fails with `localhost:8080 was refused`, because `node01` has
-   no [kubeconfig](../../references/kubeconfig.md). A task that says to work on `node01` means files and services on that machine,
-   not the cluster.
+   no [kubeconfig](../../references/kubeconfig.md), the file that tells `kubectl` where the cluster is and who you are. A task that says to work on
+   `node01` means files and services on that machine, not the cluster.
 
-3. Read the node's [container runtime](../../references/workers.md#what-a-worker-runs) version, then go back to `base`:
+3. Read the node's [container runtime](../../references/workers.md#what-a-worker-runs) version, then go back to `base`. containerd is the program
+   that starts and stops the containers on this machine, and `--version` prints its version
+   and nothing else:
 
    ```shell
    containerd --version
@@ -55,7 +58,8 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
    The first `exit` leaves root, and the second leaves `node01`. `ssh node02` from `node01`
    is nested ssh, which the CKA does not support.
 
-4. Go to `controlplane`, where the rest of the steps run:
+4. Go to `controlplane`, where the rest of the steps run. It is the machine that runs the
+   cluster's [control plane](../../references/control-plane.md), and its kubeconfig lets `kubectl` work there:
 
    ```shell
    ssh controlplane
@@ -65,16 +69,20 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
 
 [`k`](../../references/kubectl.md#the-k-alias-and-short-names) is `kubectl` with bash completion, on every host a task names.
 
-1. List the nodes with `k` and the short name `no`:
+1. List the nodes with `k` and the short name `no`. `get` lists every object of the type you
+   name, and `no` is short for `nodes`:
 
    ```shell
    k get no
    ```
 
-   Type `k get dep` and press Tab: completion writes `deployments`. It completes object names
-   and `-n` namespaces too.
+   Each node is listed with its `STATUS`, which is `Ready` when it can run pods. Type
+   `k get dep` and press Tab: completion writes `deployments`. It completes object names and
+   `-n` namespaces too.
 
-2. List the short names of the types used most:
+2. List the short names of the types used most. `api-resources` prints every type the cluster
+   knows, one per line. `grep -wE` keeps only the lines that contain one of the names between
+   the `|` signs as a whole word, and `NAME` keeps the header line:
 
    ```shell
    k api-resources | grep -wE 'NAME|pods|deployments|services|configmaps|secrets|namespaces|serviceaccounts|persistentvolumeclaims|networkpolicies'
@@ -97,13 +105,18 @@ You start on `base`, which has no `kubectl`. Each task names the [host to `ssh` 
    ```
 
    Secrets have no short name, and namespaces are the only type here that is not namespaced.
+   `APIVERSION` is what a manifest of that type puts in its `apiVersion` line, and `KIND` is
+   what it puts in `kind`.
 
 ## Generate YAML instead of typing it
 
 [`--dry-run=client -o yaml`](../../references/kubectl.md#generating-yaml) prints the object a command would create, without creating it.
 Redirect it to a file to edit before applying.
 
-1. Print a Pod:
+1. Print a Pod, the smallest thing Kubernetes runs: one or more containers started together
+   on one node. `k run web` makes a pod named `web`. `--image=nginx:1.27` is the container
+   image to run, version `1.27` of `nginx`. `--dry-run=client` builds the object inside
+   `kubectl` without sending it to the cluster, and `-o yaml` prints it as YAML:
 
    ```shell
    k run web --image=nginx:1.27 --dry-run=client -o yaml
@@ -129,12 +142,17 @@ Redirect it to a file to edit before applying.
    status: {}
    ```
 
+   `containers` is a list, and each `-` starts one container with its `image` and `name`.
    `run` named both the pod and its container `web`, and added `run: web` to the pod's
-   metadata. `dnsPolicy` and
-   `restartPolicy` are defaults you can delete, and `status: {}` is empty because nothing was
-   created.
+   metadata. `dnsPolicy` and `restartPolicy` are defaults you can delete, and `status: {}` is
+   empty because nothing was created.
 
-2. Write a Deployment to a file, then create a namespace and apply the file there:
+2. Write a Deployment to a file, then create a namespace and apply the file there. A
+   Deployment keeps a set number of identical pods running and replaces them when you change
+   it. `--replicas=2` asks for two pods, and `> web.yaml` writes the printed YAML into the file
+   `web.yaml` instead of the screen. A namespace is a named group of objects, and
+   `k create namespace drill` makes one called `drill`. `apply -f web.yaml` creates what the
+   file describes, or updates it if it exists, and `-n drill` puts it in `drill`:
 
    ```shell
    k create deployment web --image=nginx:1.27 --replicas=2 --dry-run=client -o yaml > web.yaml
@@ -144,7 +162,9 @@ Redirect it to a file to edit before applying.
 
    `web.yaml` has the pod [labels](../../references/labels.md) `app: web` and a container named `nginx`, after the image.
 
-3. Print the Service that would expose it:
+3. Print the Service that would expose it. A Service gives a set of pods one stable address.
+   `expose deployment web` makes a Service for the pods of the Deployment `web`, and
+   `--port=80` is the port the Service listens on:
 
    ```shell
    k expose deployment web -n drill --port=80 --dry-run=client -o yaml
@@ -173,9 +193,12 @@ Redirect it to a file to edit before applying.
    ```
 
    The selector `app: web` is the Deployment's pod label. `expose` reads it from the cluster,
-   so the Deployment has to exist first.
+   so the Deployment has to exist first. With no `--target-port`, the pods' port is the same as
+   the Service's.
 
-4. Print a ConfigMap and a Secret:
+4. Print a ConfigMap and a Secret. Both hold settings for pods to read as key-value pairs; a
+   Secret is for passwords and tokens. `generic` is the kind of Secret made from plain values,
+   and `--from-literal=MODE=fast` adds the key `MODE` with the value `fast`:
 
    ```shell
    k create configmap web-config -n drill --from-literal=MODE=fast --dry-run=client -o yaml
@@ -201,8 +224,8 @@ Redirect it to a file to edit before applying.
      namespace: drill
    ```
 
-   The Secret's value is base64-encoded for you. Written by hand as `TOKEN: abc123` under
-   `data`, it is rejected with `illegal base64 data at input byte 4`.
+   The Secret's value is base64-encoded for you: `YWJjMTIz` is `abc123`. Written by hand as
+   `TOKEN: abc123` under `data`, it is rejected with `illegal base64 data at input byte 4`.
 
 ## Copy a manifest from the docs
 
@@ -215,7 +238,8 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
    [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/#default-deny-all-ingress-traffic),
    and find the example file under "Default deny all ingress traffic". Click its copy button.
 
-2. Open a new file in vim and paste without re-indenting:
+2. Open a new file in vim and paste without re-indenting. `vim deny.yaml` opens the file
+   `deny.yaml`, creating it when you save:
 
    ```shell
    vim deny.yaml
@@ -236,8 +260,10 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
      - Ingress
    ```
 
-   Without `:set paste`, vim can indent each pasted line one step further than the one above
-   it, and the YAML no longer parses. [vim for YAML](../../references/kubectl.md#vim-for-yaml) has the other keys.
+   `podSelector: {}` selects every pod in the namespace. `policyTypes: [Ingress]` with no
+   `ingress` rules allows no incoming traffic at all, so the policy denies all of it. Without
+   `:set paste`, vim can indent each pasted line one step further than the one above it, and
+   the YAML no longer parses. [vim for YAML](../../references/kubectl.md#vim-for-yaml) has the other keys.
 
 3. Apply it to `drill`:
 
@@ -252,7 +278,9 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
 
 [`kubectl explain`](../../references/kubectl.md#kubectl-explain) prints the fields of any type, from the cluster's own schema.
 
-1. Show one field and what it holds:
+1. Show one field and what it holds. `pod.spec.containers.resources` is a path through the
+   YAML: the type, then each field below it, joined with dots. `| head -13` keeps the first 13
+   lines:
 
    ```shell
    k explain pod.spec.containers.resources | head -13
@@ -276,7 +304,11 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
      claims	<[]ResourceClaim>
    ```
 
-2. Show a whole subtree at once:
+   `DESCRIPTION` says what the field is for. `[]` in a type, as in `<[]ResourceClaim>`, means a
+   list.
+
+2. Show a whole subtree at once. `deploy.spec.strategy` is the setting for how a Deployment
+   replaces its pods, and `--recursive` prints every field below it, without descriptions:
 
    ```shell
    k explain deploy.spec.strategy --recursive
@@ -312,7 +344,11 @@ request for one. The docs have [one for each](../../references/kubectl.md#snippe
 
 Common changes have [their own commands](../../references/kubectl.md#changing-live-objects), which are faster than editing YAML.
 
-1. Change the image, the replica count and a label:
+1. Change the image, the replica count and a label. `deploy/web` names the Deployment `web` as
+   type and name together. `set image` takes the container's name, `nginx`, then `=` and the
+   new image. `scale --replicas=3` changes how many pods the Deployment keeps. `label` adds the
+   label `tier=frontend` to the Deployment itself. `rollout status` waits until the new pods
+   have replaced the old ones, and prints each stage:
 
    ```shell
    k set image deploy/web nginx=nginx:1.28 -n drill
@@ -321,9 +357,13 @@ Common changes have [their own commands](../../references/kubectl.md#changing-li
    k rollout status deploy/web -n drill
    ```
 
-   `set image` takes the container's name, `nginx`, then the new image.
+   It ends with `deployment "web" successfully rolled out`. A new image changes the pods, so
+   the Deployment replaces them; a new replica count adds pods without replacing any.
 
-2. Start a pod, then try to change its command with `k edit`:
+2. Start a pod, then try to change its command with `k edit`. `busybox` is a small image of
+   shell tools. Everything after `--` is passed to the container, here `sleep 3600`, which
+   keeps it running for an hour. `k edit` opens the live object in vim and sends your change
+   when you save:
 
    ```shell
    k run tool --image=busybox:1.37 -n drill -- sleep 3600
@@ -340,17 +380,25 @@ Common changes have [their own commands](../../references/kubectl.md#changing-li
 
    Most of a running pod's spec cannot change. `k edit` keeps your edit in the file it names.
 
-3. Delete the pod and create it again from that file:
+3. Delete the pod and create it again from that file. `replace -f` replaces an object with the
+   one in the file, and `--force` does it by deleting the object and creating it again, which
+   is the only way to change a field that cannot be updated:
 
    ```shell
    k replace --force -f /tmp/kubectl-edit-2739834084.yaml
    ```
 
+   It prints `pod "tool" deleted from drill namespace` and then `pod/tool replaced`.
+
 ## Check the result
 
 Only the cluster's final state is graded, so [read back](../../references/kubectl.md#checking-your-work) the exact value a task asked for.
 
-1. Print two fields with `jsonpath`, and the same from `describe`:
+1. Print two fields with `jsonpath`, and the same from `describe`. `-o jsonpath` prints only
+   the fields you name: `{.spec.replicas}` is `replicas` under `spec`, `containers[0]` is the
+   first container in the list, and `{"\n"}` ends the line. `describe` prints a readable
+   summary, and `grep -E '^Replicas|Image'` keeps the lines that start with `Replicas` or
+   contain `Image`:
 
    ```shell
    k get deploy web -n drill -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
@@ -365,6 +413,9 @@ Only the cluster's final state is graded, so [read back](../../references/kubect
    Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
        Image:         nginx:1.28
    ```
+
+   `desired` is the replica count you set and `available` is how many pods are ready, so
+   `3 available` and `0 unavailable` mean the change is complete.
 
 ## Quiz
 

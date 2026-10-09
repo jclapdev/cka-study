@@ -28,7 +28,10 @@ found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` b
 
 A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordinary manifests with a `kustomization.yaml` that lists them.
 
-1. Make the folder and generate a Deployment and a [Service](../../references/services.md) into it:
+1. Make the folder and generate a Deployment and a [Service](../../references/services.md) into it. `mkdir -p ~/web/base` creates
+   `base` and its parent `web`, and `cd ~/web` moves into it. `create service clusterip web`
+   makes a Service named `web` that is reachable only inside the cluster, and `--tcp=80:80` is
+   the Service's port, then the pods' port:
 
    ```shell
    mkdir -p ~/web/base && cd ~/web
@@ -39,7 +42,8 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
    The Deployment labels its pods `app: web`, which is the selector [`k create service`](../../references/kubectl.md#generating-yaml) writes
    for a Service named `web`.
 
-2. Ask Kustomize to build the folder:
+2. Ask Kustomize to build the folder. `k kustomize base` reads the kustomization in `base`
+   and prints the manifests it produces:
 
    ```shell
    k kustomize base
@@ -67,7 +71,9 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
    EOF
    ```
 
-   The docs' file names match the ones you generated, so nothing needs changing.
+   `cat <<EOF > base/kustomization.yaml` writes every line up to `EOF` into the file.
+   `resources` lists the manifest files the kustomization includes. The docs' file names match
+   the ones you generated, so nothing needs changing.
 
 4. Build again:
 
@@ -94,7 +100,8 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
    `-f` reads every file in the folder as a manifest, including `kustomization.yaml`, and
    ignores what it says. [`-k`](../../references/kustomize.md#-f-and--k) is the flag that runs Kustomize.
 
-6. Remove the two objects `-f` created:
+6. Remove the two objects `-f` created. `delete -f` deletes the objects a file describes, and
+   takes one `-f` per file:
 
    ```shell
    k delete -f base/deployment.yaml -f base/service.yaml
@@ -127,7 +134,10 @@ which changes what the base produces. The base files are never edited.
      name: prod-web
    ```
 
-   The files in `base` are unchanged. The prefix exists only in what Kustomize prints.
+   `- ../base` under `resources` includes the base folder's kustomization, and
+   `namePrefix: prod-` puts `prod-` in front of every name. `grep -E '^kind|^  name:'` keeps the
+   `kind` lines and each object's own `name`. The files in `base` are unchanged. The prefix
+   exists only in what Kustomize prints.
 
 2. Add a namespace, a label and a new image tag. Go to
    [Setting cross-cutting fields](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#setting-cross-cutting-fields)
@@ -150,7 +160,9 @@ which changes what the base produces. The base files are never edited.
      newTag: "1.28"
    ```
 
-   The docs' `labels` example also has `includeSelectors: true`. Leave it out: it would also
+   `namespace: prod` puts every object in `prod`. `labels` with `pairs` adds `env: prod` to
+   every object. `images` finds every container whose image is `nginx` and sets its tag to
+   `newTag`, `1.28`. The docs' `labels` example also has `includeSelectors: true`. Leave it out: it would also
    change the Deployment's selector, which cannot change once the Deployment exists
    ([labels](../../references/kustomize.md#labels)).
 
@@ -214,7 +226,8 @@ which changes what the base produces. The base files are never edited.
    object's own labels only, not into the selector or the [pod template](../../references/workloads.md#the-pod-template).
    [What an overlay can set](../../references/kustomize.md#what-an-overlay-can-set) lists the other fields.
 
-4. Apply the overlay:
+4. Apply the overlay. `apply -k prod` builds the kustomization in `prod` and applies the
+   result, as `apply -f` does with a file:
 
    ```shell
    k apply -k prod
@@ -273,10 +286,12 @@ the fields to add or replace.
                memory: 128Mi
    ```
 
-   A patch uses the base's name, `web`, not `prod-web`. The container is matched by its `name`.
+   `increase_replicas.yaml` sets `replicas` to 3. `set_memory.yaml` sets a memory limit of
+   128 mebibytes on the container, the most memory it may use. A patch uses the base's name,
+   `web`, not `prod-web`. The container is matched by its `name`.
 
-2. In `vim prod/kustomization.yaml`, add the `patches` list from the same docs block. The file
-   now reads:
+2. In `vim prod/kustomization.yaml`, add the `patches` list from the same docs block. Each
+   `path` names one patch file. The file now reads:
 
    ```yaml
    resources:
@@ -295,7 +310,8 @@ the fields to add or replace.
      - path: set_memory.yaml
    ```
 
-3. Apply the overlay and check the Deployment:
+3. Apply the overlay and check the Deployment. `-o jsonpath` prints the replica count, the
+   image and the memory limit, the three things the overlay changed:
 
    ```shell
    cd ~/web
@@ -311,7 +327,8 @@ the fields to add or replace.
    3 nginx:1.28 {"memory":"128Mi"}
    ```
 
-4. Select by the label the overlay added:
+4. Select by the label the overlay added. `-l env=prod` lists only the objects that carry the
+   label `env: prod`:
 
    ```shell
    k get deploy,pods -n prod -l env=prod
@@ -336,7 +353,8 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    [configMapGenerator](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#configmapgenerator)
    section uses `literals`. Its block would overwrite the whole `kustomization.yaml`, so don't
    paste it into the terminal. Copy only its four `configMapGenerator` lines into the end of
-   `vim base/kustomization.yaml`, and change the name and the value:
+   `vim base/kustomization.yaml`, and change the name and the value. `literals` lists the
+   ConfigMap's keys as `KEY=value`:
 
    ```yaml
    configMapGenerator:
@@ -348,7 +366,9 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
 2. Load it into the container. On
    [Configure a Pod to Use a ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#configure-all-key-value-pairs-in-a-configmap-as-container-environment-variables),
    the example file has an `envFrom` block. Copy it into `vim base/deployment.yaml`, below
-   `resources: {}` and at the same indent, and change the name:
+   `resources: {}` and at the same indent, and change the name. `envFrom` with
+   `configMapRef` turns every key in the ConfigMap into an environment variable in the
+   container:
 
    ```yaml
            envFrom:
@@ -356,7 +376,8 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
                name: web-config
    ```
 
-3. Build the overlay and find the ConfigMap's name:
+3. Build the overlay and find the ConfigMap's name. `grep web-config` keeps every line that
+   mentions it:
 
    ```shell
    k kustomize prod | grep web-config
@@ -372,7 +393,9 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    The ConfigMap is `prod-web-config-f655md8fbd`, and the Deployment's reference to
    `web-config` was rewritten to the same name.
 
-4. Apply it and read the variable in a pod:
+4. Apply it and read the variable in a pod. `k exec deploy/prod-web` runs a command in one of
+   the Deployment's pods, and everything after `--` is that command. `printenv GREETING`
+   prints the variable's value:
 
    ```shell
    k apply -k prod
@@ -383,7 +406,9 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    The pod prints `hello`.
 
 5. In `vim base/kustomization.yaml`, change `GREETING=hello` to `GREETING=hi`. Then see what
-   would change in the cluster:
+   would change in the cluster. `k diff -k prod` compares what the kustomization produces with
+   what is in the cluster, and prints removed lines with `-` and new lines with `+`. The `grep`
+   keeps the ConfigMap's name lines:
 
    ```shell
    k diff -k prod | grep -E '^[-+] +name: prod-web-config'
@@ -424,7 +449,8 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
 
 ## Delete everything
 
-1. Delete what the overlay produces:
+1. Delete what the overlay produces. `delete -k prod` builds the kustomization and deletes
+   each object it produces:
 
    ```shell
    k delete -k prod

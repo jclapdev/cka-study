@@ -22,7 +22,8 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 
 A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cluster-scoped type `customresourcedefinitions`.
 
-1. List the CRDs, and the type that holds them:
+1. List the CRDs, and the type that holds them. `k get crd` lists the CRDs, and
+   `api-resources --api-group=apiextensions.k8s.io` lists only the types in that [API group](../../references/api-groups.md):
 
    ```shell
    k get crd
@@ -48,7 +49,8 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    group `stable.example.com`, the kind `CronTab`, the short name `ct`, and three fields under
    `spec`: `cronSpec` and `image` as strings, `replicas` as an integer.
 
-2. Apply it and look for the new type:
+2. Apply it and look for the new type. `--api-group=stable.example.com` lists only the types
+   in the CRD's group:
 
    ```shell
    k apply -f resourcedefinition.yaml
@@ -68,7 +70,8 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    The CRD's name is `<plural>.<group>`. The new type is namespaced because the CRD says
    [`scope: Namespaced`](../../references/crds.md#the-parts-of-a-crd).
 
-3. Read the new type's fields:
+3. Read the new type's fields. `k explain crontab.spec` works for the new type as for a
+   built-in one:
 
    ```shell
    k explain crontab.spec
@@ -104,7 +107,8 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
 
 1. On the same page, copy the `CronTab` object under
    [Create custom objects](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-custom-objects)
-   into `vim my-crontab.yaml`, then apply it and list it by both names:
+   into `vim my-crontab.yaml`, then apply it and list it by both names. `k get crontab` uses
+   the type's name, and `k get ct` its short name:
 
    ```shell
    k apply -f my-crontab.yaml
@@ -156,7 +160,8 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    `kubectl` asks the apiserver to reject unknown fields, so a misspelt field is an error
    instead of being dropped without a word.
 
-4. Delete the CRD, then list the objects again:
+4. Delete the CRD, then list the objects again. `crontabs.stable.example.com` is the CRD's
+   name:
 
    ```shell
    k delete crd crontabs.stable.example.com
@@ -178,13 +183,16 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
 An [operator](../../references/crds.md#operators) is a controller for custom resources. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates](../../references/certificates.md): you
 create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets).
 
-1. Install cert-manager's Helm chart, with its CRDs:
+1. Install cert-manager's Helm chart, with its CRDs.
+   `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
+   so there is no `helm repo add` first. `--version v1.21.2` pins the chart version, and
+   `--set crds.enabled=true` sets one value:
 
    ```shell
    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
    ```
 
-   The output starts like this:
+   `STATUS: deployed` and `REVISION: 1` show the release is installed:
 
    ```
    Pulled: quay.io/jetstack/charts/cert-manager:v1.21.2
@@ -200,7 +208,10 @@ create a `Certificate` object, and its controller writes the key and certificate
    `crds.enabled=true` makes the chart install the CRDs as normal objects. Without it, this
    chart installs [no CRDs](../../references/crds.md#crds-from-helm-charts).
 
-2. Wait for the controller, then list what the chart added:
+2. Wait for the controller, then list what the chart added. `k wait
+   --for=condition=Available deploy --all` waits until every [Deployment](../../references/workloads.md) in the namespace
+   reports `Available`, for at most `--timeout=180s`. `grep cert-manager` keeps the CRDs with
+   `cert-manager` in their name:
 
    ```shell
    k wait --for=condition=Available deploy --all -n cert-manager --timeout=180s
@@ -226,7 +237,7 @@ create a `Certificate` object, and its controller writes the key and certificate
    `cert-manager` does the work, `cainjector` copies certificate data into other objects, and `webhook`
    checks cert-manager objects before the apiserver stores them.
 
-3. List the new types in the `cert-manager.io` group:
+3. List the new types in the `cert-manager.io` group, with `--api-group`:
 
    ```shell
    k api-resources --api-group=cert-manager.io
@@ -250,7 +261,10 @@ create a `Certificate` object, and its controller writes the key and certificate
 No `kubectl create` command and no kubernetes.io page writes a cert-manager object. `k explain`
 reads the fields from the CRD's schema, and marks the [required ones](../../references/kubectl.md#kubectl-explain).
 
-1. Find what an Issuer can be, and what a [Certificate](../../references/crds.md#operators) needs:
+1. Find what an Issuer can be, and what a [Certificate](../../references/crds.md#operators) needs. `grep -E '^  [a-zA-Z]'` keeps the
+   lines indented by exactly two spaces, which are the fields directly under `spec`.
+   `grep -- '-required-'` keeps the lines marked `-required-`, and `--` stops `grep` from
+   reading `-required-` as an option:
 
    ```shell
    k explain issuer.spec | grep -E '^  [a-zA-Z]'
@@ -271,7 +285,8 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    ```
 
 2. Create a namespace, then write the smallest Issuer that works, a self-signed one, in
-   `vim issuer.yaml`:
+   `vim issuer.yaml`. `selfSigned: {}` picks the kind of issuer that signs each certificate
+   with the certificate's own key, and it needs no settings:
 
    ```yaml
    apiVersion: cert-manager.io/v1
@@ -299,7 +314,9 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    `apiVersion` and `kind` come from `k api-resources`. `READY True` is the operator's report,
    written into the object's `status`.
 
-3. Write a Certificate with the two required fields and a DNS name, in `vim cert.yaml`:
+3. Write a Certificate with the two required fields and a DNS name, in `vim cert.yaml`.
+   `secretName` is the Secret to write the certificate into, `dnsNames` lists the names it is
+   valid for, and `issuerRef` names the Issuer that signs it:
 
    ```yaml
    apiVersion: cert-manager.io/v1
@@ -336,7 +353,11 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    You created one object. The controller created the CertificateRequest and the Secret, as
    its [ServiceAccount](../../references/service-accounts.md).
 
-4. Read the certificate the Secret holds:
+4. Read the certificate the Secret holds. `{.data.tls\.crt}` is the key `tls.crt` under
+   `data`; the `\.` keeps the dot in the key's name from being read as a step down. Secret
+   values are base64-encoded, so `base64 -d` decodes it. `openssl x509 -noout` reads a
+   certificate without printing it, `-ext subjectAltName` prints the names it is valid for, and
+   `-enddate` prints when it expires:
 
    ```shell
    k get secret demo-tls -n demo -o jsonpath='{.data.tls\.crt}' | base64 -d | openssl x509 -noout -ext subjectAltName -enddate
@@ -353,7 +374,8 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    `notAfter` is the expiry date. cert-manager renews the certificate before then without
    being asked.
 
-5. Delete the Secret, and look again a few seconds later:
+5. Delete the Secret, and look again a few seconds later. `delete secret demo-tls` deletes it
+   by name:
 
    ```shell
    k delete secret demo-tls -n demo
@@ -387,7 +409,8 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
 
 ## Save answers to files
 
-1. Write the names of cert-manager's CRDs to a file:
+1. Write the names of cert-manager's CRDs to a file. `> crds.txt` writes the output to the
+   file instead of the screen, and `cat crds.txt` prints the file:
 
    ```shell
    k get crd -o name | grep cert-manager > crds.txt
@@ -405,7 +428,8 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    customresourcedefinition.apiextensions.k8s.io/orders.acme.cert-manager.io
    ```
 
-2. Write the documentation of one field to a file:
+2. Write the documentation of one field to a file. `head -9` prints the file's first 9
+   lines:
 
    ```shell
    k explain certificate.spec.subject > subject.txt

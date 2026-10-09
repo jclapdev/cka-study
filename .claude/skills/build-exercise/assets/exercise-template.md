@@ -15,7 +15,9 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 <At most one or two sentences on what the concept is, with the link on the term itself:
 A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
 
-1. <Instruction>:
+1. <Instruction, then what the command does and why. Then each part the lesson has not
+   explained yet: "`-n drill` runs it in the namespace `drill`. `--replicas=2` asks for two
+   pods.">:
 
    ```shell
    <command>
@@ -28,8 +30,8 @@ A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
    <trimmed output, captured from the lab>
    ```
 
-   <One sentence on what to notice, with a link on the first mention of any new term in this
-   lesson. A one-line result goes here instead of in an output block.>
+   <What the output shows and what it means, with a link on the first mention of any new term
+   in this lesson. A one-line result goes here instead of in an output block.>
 
 2. <Instruction for a manifest kubectl can write>:
 
