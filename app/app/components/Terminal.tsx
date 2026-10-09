@@ -24,7 +24,7 @@ export function Terminal({ onReset, onPopOut }: { onReset: () => void; onPopOut?
       term.loadAddon(fit);
       term.open(ref.current);
 
-      const ws = new WebSocket(`ws://${location.host}/terminal`);
+      const ws = new WebSocket(`ws://${location.host}/terminal${session ? "?new" : ""}`);
       const send = (m: object) => ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(m));
       // A hidden lab pane is a sliver; fitting to it would squeeze the shell to two columns.
       const resize = () => {
