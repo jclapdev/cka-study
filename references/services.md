@@ -64,6 +64,7 @@ kubectl get svc,endpointslices
 | Symptom | Cause |
 | --- | --- |
 | `ENDPOINTS` is empty, and a client gets `wget: can't connect to remote host (10.106.236.200): Connection refused` | The selector matches no ready pods. Compare the Service's selector with `kubectl get pods --show-labels`. |
+| `wget: bad address 'web'` from a pod | No Service `web` exists in the pod's own namespace. A name without a namespace finds only those; use `web.<namespace>` for one in another namespace ([namespaces of Services](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services)). |
 | Connections time out or are refused on the right IP | `targetPort` doesn't match the port the container listens on. |
 | `EXTERNAL-IP` stays `<pending>` | The Service is a LoadBalancer and no cloud provider exists to give it an address. |
 

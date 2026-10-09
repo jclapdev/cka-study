@@ -13,6 +13,7 @@ describe("repo", () => {
   it("names every domain and topic from the README table", () => {
     const domains = listDomains();
     expect(domains.map((d) => d.name)).toEqual([
+      "Core Concepts",
       "kubectl Essentials",
       "Cluster Architecture",
       "Workloads and Scheduling",
@@ -21,8 +22,9 @@ describe("repo", () => {
       "Troubleshooting",
       "Mock Exams",
     ]);
-    expect(domains[0].topics.map((t) => [t.name, t.id])).toEqual([["Working with kubectl", "00-exam-skills/00-exam-workflow"]]);
-    const arch = domains[1];
+    expect(domains[0].topics.map((t) => [t.name, t.id])).toEqual([["Kubernetes Objects", "00-core-concepts/00-objects"]]);
+    expect(domains[1].topics.map((t) => [t.name, t.id])).toEqual([["Working with kubectl", "00-exam-skills/00-exam-workflow"]]);
+    const arch = domains[2];
     expect(arch.weight).toBe(25);
     expect(arch.topics.filter((t) => t.written).map((t) => t.name)).toEqual(["kubeadm Installation", "RBAC", "Helm", "Kustomize", "CRDs and Operators"]);
     expect(domains.at(-1)!.topics).toEqual([]);

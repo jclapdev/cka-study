@@ -4,7 +4,7 @@ The facts, commands and errors for each concept the topics use.
 
 | Page | Covers |
 | --- | --- |
-| [kubectl](kubectl.md) | hosts and ssh, `k` and short names, generating YAML, docs snippets, vim for YAML, `explain`, changing and checking live objects |
+| [kubectl](kubectl.md) | hosts and ssh, `k` and short names, generating YAML, the four fields of a manifest, create and apply, docs snippets, vim for YAML, `explain`, changing and checking live objects |
 | [kubeadm](kubeadm.md) | what `init` does phase by phase, the advertise address, tokens, `reset`, preflight failures |
 | [Control plane](control-plane.md) | apiserver, etcd, controller-manager, scheduler, static pods, the control plane taint |
 | [Workers](workers.md) | kubelet, containerd/CRI, the kubelet before a cluster exists, joining, node conditions, role labels |

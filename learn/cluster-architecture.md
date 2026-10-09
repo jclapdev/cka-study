@@ -73,6 +73,17 @@ The file is the source of truth for a static pod. Editing it restarts the compon
 
 A pod is one or more containers that share an IP address and can share storage. It is the smallest thing the scheduler places, and it stays on its node for life. A pod that seems to have moved is a new pod made by a controller. You rarely create pods directly. A Deployment keeps a number of identical pods running, and a DaemonSet keeps one pod on every node, which is how node agents such as kube-proxy and the pod network's agent are installed.
 
+A Deployment does not create pods itself. It creates a ReplicaSet, whose controller keeps the number of pods matching its label selector equal to `replicas`, and it creates a new ReplicaSet each time the pod template changes ([Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [how a ReplicaSet works](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#how-a-replicaset-works)). A Service finds the same pods by their labels and gives them one address ([Service](https://kubernetes.io/docs/concepts/services-networking/service/)).
+
+```mermaid
+flowchart LR
+  D[Deployment web] -->|creates| R[ReplicaSet web-66d47686b4]
+  R -->|creates| P1[pod web-66d47686b4-7v5mz]
+  R -->|creates| P2[pod web-66d47686b4-p7pql]
+  S[Service web<br/>selector app=web] -.->|sends traffic to| P1
+  S -.->|sends traffic to| P2
+```
+
 Namespaces divide one cluster into named groups of objects, and labels tag objects so other objects can select them, such as a Service choosing its pods.
 
 The facts for each part are on the reference pages: [control plane](../references/control-plane.md), [workers](../references/workers.md), [pods](../references/pod.md), [DaemonSets](../references/daemonsets.md), [namespaces](../references/namespaces.md) and [labels](../references/labels.md).

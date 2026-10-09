@@ -40,6 +40,8 @@ Every type lives at a path under an API group and version, such as `/apis/apps/v
 | Imperative object configuration | `kubectl create -f web.yaml`, `kubectl replace -f web.yaml` | Working from a file you keep. |
 | Declarative object configuration | `kubectl apply -f web.yaml` | Files that you edit and apply again and again. |
 
+`apply` remembers each file it applied in an annotation on the object, `kubectl.kubernetes.io/last-applied-configuration`, and compares the next file with it, so it can tell a field you deleted from one you never set ([how apply calculates differences](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/#how-apply-calculates-differences-and-merges-changes)).
+
 The commands combine. `kubectl create … --dry-run=client -o yaml` builds an object on your machine without sending it and prints it as YAML, so you get a correct file to edit before you apply it.
 
 The shortcuts and checks are on the [kubectl reference page](../references/kubectl.md), and the kubeconfig details on the [kubeconfig reference page](../references/kubeconfig.md).

@@ -77,6 +77,7 @@ ConfigMap	references/config.md
 Secret	references/config.md#secrets
 manifest	references/kubectl.md#generating-yaml
 imperative	references/kubectl.md#generating-yaml
+declarative	references/kubectl.md#create-and-apply
 jsonpath	references/kubectl.md#checking-your-work
 # Topics not built yet: each page defines the term where it first appears.
 NetworkPolicy	inline
@@ -133,6 +134,7 @@ Bases	known
 Overlays	known
 Management	known
 Objects	known
+Concepts	known
 Using	known
 Setting	known
 Customizing	known

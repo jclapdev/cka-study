@@ -56,6 +56,25 @@ What `kubectl create` fills in by itself:
 - `k create deployment` [labels](labels.md) the pods `app: <name>` and names the container after the image, such as `nginx` for `nginx:1.27`. `k create service clusterip <name>` selects `app: <name>`, so the two match when the names match.
 - `k create secret generic` base64-encodes each value. Written by hand under `data`, a plain value is rejected with `illegal base64 data`.
 
+## Create and apply
+
+Every manifest sets four fields: `apiVersion`, the version of the Kubernetes API the type belongs to; `kind`, the type; `metadata`, the name and other data that identify the object; and `spec`, the state you want ([required fields](https://kubernetes.io/docs/concepts/overview/working-with-objects/#required-fields)). The cluster adds a fifth, `status`, with what it last saw ([object spec and status](https://kubernetes.io/docs/concepts/overview/working-with-objects/#object-spec-and-status)).
+
+`kubectl create` is imperative: it makes the object and fails if one of that name exists. A declarative command, `kubectl apply`, makes the cluster match the file, creating the object if it is missing and changing it if it differs ([management techniques](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/#management-techniques)).
+
+| Command | Object missing | Object exists, same as the file | Object exists, different |
+| --- | --- | --- | --- |
+| `k create -f api.yaml` | `deployment.apps/api created` | `AlreadyExists` error | `AlreadyExists` error |
+| `k apply -f api.yaml` | `deployment.apps/api created` | `deployment.apps/api unchanged` | `deployment.apps/api configured` |
+
+`apply` stores the file it was given, as JSON, in the annotation `kubectl.kubernetes.io/last-applied-configuration` on the object. The next `apply` compares the file with that copy and with the live object, so a field deleted from the file is deleted from the object ([how apply calculates differences](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/#how-apply-calculates-differences-and-merges-changes)).
+
+```bash
+k apply -f api.yaml                 # create or update
+k diff -f api.yaml                  # what apply would change; prints nothing when it matches
+k delete -f api.yaml                # delete what the file describes
+```
+
 ## Snippets from the docs
 
 No `kubectl create` command writes these four kinds, so copy them from the docs instead. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The Quick Reference box is the part of a CKA task that links the documentation for the tools that task needs. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
@@ -127,6 +146,7 @@ jsonpath is a way to pick fields out of an object's JSON, such as `{.spec.replic
 | Symptom | Cause |
 | --- | --- |
 | `The connection to the server localhost:8080 was refused` | `kubectl` on a host without a kubeconfig. Run it on the host the task names for cluster work. |
+| `Error from server (AlreadyExists): error when creating "api.yaml": deployments.apps "api" already exists` | `k create -f` on an object that exists. `k apply -f` changes it instead. |
 | `Command 'kubectl' not found` or `k: command not found` | You are still on `base`. `ssh` to the host the task names first. |
 | `Error from server (NotFound): deployments.apps "web" not found` from `k expose … --dry-run=client` | `expose` reads the object from the cluster. Create it first, or use `k create service`. |
 | `Secret in version "v1" cannot be handled as a Secret: illegal base64 data at input byte 4` | A plain value under a Secret's `data`. Use `k create secret generic --from-literal`, or put it under `stringData`. |

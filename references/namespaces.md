@@ -50,6 +50,7 @@ kubectl config set-context --current --namespace=dev  # make dev the default for
 | Symptom | Cause |
 | --- | --- |
 | `No resources found in default namespace.` | The objects are in another namespace. Add `-n <ns>` or `-A`. |
+| `Error from server (Forbidden): pods "front" is forbidden: error looking up service account store/default: serviceaccount "default" not found` | The pod was created less than a second after its namespace, before the namespace's `default` ServiceAccount existed. Run the command again. |
 | `kubectl auth can-i` prints `Warning: resource 'nodes' is not namespace scoped` | The question is about a cluster-scoped type, so any namespace in it, or in a RoleBinding for it, has no effect. |
 
 ## Docs

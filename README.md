@@ -21,6 +21,7 @@ The Practice sections match the real CKA:
 
 | Domain | Topic | Status |
 | --- | --- | --- |
+| Core Concepts | [Kubernetes Objects](00-core-concepts/00-objects/README.md) | ready |
 | kubectl Essentials | [Working with kubectl](00-exam-skills/00-exam-workflow/README.md) | ready |
 | Cluster Architecture (25%) | [kubeadm Installation](01-cluster-architecture/00-kubeadm-install/README.md) | ready |
 | | [RBAC](01-cluster-architecture/01-rbac/README.md) | ready |

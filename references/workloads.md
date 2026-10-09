@@ -18,7 +18,9 @@ pod/web-66d47686b4-wgsjk   1/1     Running   0          15s   10.244.1.2   node0
 pod/web-66d47686b4-z9t5h   1/1     Running   0          15s   10.244.2.2   node02   <none>           <none>
 ```
 
-Deleting one of these pods makes the ReplicaSet create a new one with a new name within seconds. To remove the pods for good, delete or scale the Deployment.
+Deleting one of these pods makes the ReplicaSet create a new one with a new name within seconds. To remove the pods for good, delete or scale the Deployment. `kubectl describe` shows each object's owner as `Controlled By: ReplicaSet/web-66d47686b4` on a pod and `Controlled By: Deployment/web` on the ReplicaSet.
+
+A ReplicaSet can be created on its own from a [manifest](kubectl.md#generating-yaml), since no `kubectl create` command writes one. The docs recommend a Deployment instead, because a Deployment can also replace its pods with a new version ([Deployment (recommended)](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#deployment-recommended)).
 
 ## The pod template
 
