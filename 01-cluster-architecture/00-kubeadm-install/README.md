@@ -425,16 +425,60 @@ Do it again without the steps, in **25 minutes**.
 
 1. **Host `controlplane`, weight 19%.** Initialise a control plane with pod network CIDR
    `10.244.0.0/16`. The API server must advertise `controlplane`'s own IPv4 address.
+
+   <details><summary>Hint</summary>
+
+   `kubeadm init` takes `--pod-network-cidr` and `--apiserver-advertise-address`. `ip route get
+   1.1.1.1` shows the address `controlplane` sends from.
+
+   </details>
+
 2. **Host `controlplane`, weight 12%.** Configure kubectl for your non-root user so that
    `kubectl get nodes` works without `sudo` and without setting `KUBECONFIG`.
+
+   <details><summary>Hint</summary>
+
+   `kubectl` reads `~/.kube/config`. `init` prints the three commands that copy `admin.conf`
+   there.
+
+   </details>
+
 3. **Host `controlplane`, weight 19%.** Install a CNI plugin that matches the pod CIDR, so that
    `controlplane` is `Ready` and CoreDNS is running.
+
+   <details><summary>Hint</summary>
+
+   Flannel's manifest uses `10.244.0.0/16`.
+
+   </details>
+
 4. **Hosts `controlplane`, `node01`, `node02`, weight 25%.** Join `node01` and `node02` as
    workers. Both must be `Ready`.
+
+   <details><summary>Hint</summary>
+
+   `kubeadm token create --print-join-command` prints a join command. Run it with `sudo` on each
+   worker, reached from `base`.
+
+   </details>
+
 5. **Host `controlplane`, weight 12%.** Label both workers with `node-role.kubernetes.io/worker=`.
+
+   <details><summary>Hint</summary>
+
+   `k label node` takes several node names. A key ending in `=` sets an empty value.
+
+   </details>
+
 6. **Host `controlplane`, weight 13%.** Make sure `kube-apiserver`, `kube-controller-manager`,
    `kube-scheduler` and `etcd` are `Running`, and no pod in `kube-system` is in
    `CrashLoopBackOff`.
+
+   <details><summary>Hint</summary>
+
+   `k get pods -n kube-system` lists them. The control plane pods end in `-controlplane`.
+
+   </details>
 
 <details><summary>Solution</summary>
 

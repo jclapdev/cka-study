@@ -196,6 +196,12 @@ function Tasks({ tasks, passed, onToggle }: { tasks: Task[]; passed?: number[]; 
             <span className="ml-auto font-semibold">{t.weight}%</span>
           </div>
           <Markdown html={t.html} />
+          {t.hintHtml && (
+            <details className="mt-3 rounded border border-line">
+              <summary className="cursor-pointer px-3 py-1.5 text-sm font-semibold">Hint</summary>
+              <Markdown html={t.hintHtml} className="border-t border-line px-3 py-2" />
+            </details>
+          )}
         </li>
       ))}
     </ol>

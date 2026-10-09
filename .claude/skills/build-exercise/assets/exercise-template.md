@@ -82,7 +82,20 @@ Do it again without the steps, in **<N> minutes**.
 
 1. **Host `controlplane`, weight <N>%.** <Task in exam wording, no steps. Name any file the
    exam would hand over, such as `/opt/course/1/kustomization.yaml`, placed by `setup.sh`.>
+
+   <details><summary>Hint</summary>
+
+   <The command, flag or docs search that starts the task, or its trap. Not the answer.>
+
+   </details>
+
 2. **Host `node01`, weight <N>%.** `ssh node01` first. <Task.>
+
+   <details><summary>Hint</summary>
+
+   <Hint.>
+
+   </details>
 
 <details><summary>Solution</summary>
 

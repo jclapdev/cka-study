@@ -512,15 +512,45 @@ Do it again without the steps, in **15 minutes**.
 
 1. **Host `controlplane`, weight 25%.** In `~/shop/base`, create a kustomization with a
    Deployment `shop` running `nginx:1.27`, and a [ClusterIP](../../references/services.md#service-types) Service `shop` on port 80 for it.
+
+   <details><summary>Hint</summary>
+
+   `k create deployment` and `k create service clusterip` with `--dry-run=client -o yaml` write
+   the two files. The kustomization lists them under `resources`.
+
+   </details>
+
 2. **Host `controlplane`, weight 30%.** In `~/shop/staging`, create an overlay of that base that
    puts everything in the namespace `staging`, which does not exist yet, prefixes every name
    with `staging-`, runs `nginx:1.28` and 2 replicas. Apply it.
+
+   <details><summary>Hint</summary>
+
+   `namespace:` only sets the field on each object, so the overlay also needs a Namespace
+   manifest. `namePrefix`, `images` and a patch do the rest.
+
+   </details>
+
 3. **Host `controlplane`, weight 25%.** The kustomization in `/opt/course/3/overlay` should
    deploy `tools-api` with 2 replicas into the namespace `tools`, but it fails to apply. Fix it
    without changing anything in `/opt/course/3/base`, and apply it.
+
+   <details><summary>Hint</summary>
+
+   `k kustomize /opt/course/3/overlay` prints the error without applying anything.
+
+   </details>
+
 4. **Host `controlplane`, weight 20%.** In the `staging` overlay, generate a ConfigMap
    `shop-settings` with `MODE=staging` and load it into the `shop` container as environment
    variables. Apply it.
+
+   <details><summary>Hint</summary>
+
+   `configMapGenerator` makes the ConfigMap, and a patch with `envFrom` loads it. The container
+   is called `nginx`, after its image.
+
+   </details>
 
 <details><summary>Solution</summary>
 

@@ -430,16 +430,52 @@ Do it again without the steps, in **15 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in
    it.
+
+   <details><summary>Hint</summary>
+
+   `k create serviceaccount` takes `-n`.
+
+   </details>
+
 2. **Host `controlplane`, weight 25%.** Create a Role `deployer` in `web` that allows only
    `create`, `update` and `delete` on [Deployments](../../references/workloads.md), and bind it to `ci` with a RoleBinding
    `ci-deployer`.
+
+   <details><summary>Hint</summary>
+
+   `k create role` takes `--verb` and `--resource`. `k create rolebinding` names a ServiceAccount
+   as `<namespace>:<name>`.
+
+   </details>
+
 3. **Host `controlplane`, weight 20%.** Create one ClusterRole `secret-reader` that allows `get`
    and `list` on [Secrets](../../references/config.md#secrets). Use it so that `ci` can read Secrets in `web` and `default` but not in
    any other namespace. Name each binding `ci-secret-reader`.
+
+   <details><summary>Hint</summary>
+
+   A RoleBinding can grant a ClusterRole in its own namespace only. A ClusterRoleBinding would
+   grant it in every namespace.
+
+   </details>
+
 4. **Host `controlplane`, weight 20%.** Allow `ci` to `list` PersistentVolumes, with a
    ClusterRole `pv-lister` and a ClusterRoleBinding `ci-pv-lister`.
+
+   <details><summary>Hint</summary>
+
+   PersistentVolumes have no namespace, so a RoleBinding cannot grant them.
+
+   </details>
+
 5. **Host `controlplane`, weight 20%.** Give the group `auditors` the built-in `view` role in
    `web` only, with a RoleBinding `auditors-view`.
+
+   <details><summary>Hint</summary>
+
+   `view` is a ClusterRole. `k create rolebinding` takes `--clusterrole` and `--group`.
+
+   </details>
 
 <details><summary>Solution</summary>
 

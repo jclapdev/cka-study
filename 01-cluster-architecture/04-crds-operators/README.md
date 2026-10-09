@@ -494,17 +494,53 @@ Do it again without the steps, in **18 minutes**.
 1. **Host `controlplane`, weight 15%.** Install cert-manager with Helm from the chart
    `oci://quay.io/jetstack/charts/cert-manager`, version `v1.21.2`, as the release
    `cert-manager` in the namespace `cert-manager`, including its CRDs (value `crds.enabled=true`).
+
+   <details><summary>Hint</summary>
+
+   `helm install` takes the `oci://` address directly, with no `helm repo add`.
+
+   </details>
+
 2. **Host `controlplane`, weight 15%.** Write the names of all CRDs that cert-manager installed,
    and no others, to `/opt/course/2/crds.txt`.
+
+   <details><summary>Hint</summary>
+
+   Every cert-manager CRD has `cert-manager` in its name.
+
+   </details>
+
 3. **Host `controlplane`, weight 15%.** Using `kubectl`, write the documentation of the `subject`
    field of a cert-manager `Certificate`'s `spec` to `/opt/course/3/subject.txt`.
+
+   <details><summary>Hint</summary>
+
+   `k explain` reads a CRD's schema, as it does for a built-in type.
+
+   </details>
+
 4. **Host `controlplane`, weight 30%.** In a new namespace `web`, create a self-signed Issuer
    `self`, and a Certificate `web-cert` for the DNS name `web.example.com`, stored in the Secret
    `web-tls`. The Certificate must be Ready.
+
+   <details><summary>Hint</summary>
+
+   Wait for the cert-manager Deployments first, or its webhook refuses the objects. `k explain
+   certificate.spec` lists the Certificate's fields.
+
+   </details>
+
 5. **Host `controlplane`, weight 25%.** Create a CRD for a namespaced kind `Backup` in the group
    `stable.example.com`, version `v1`, plural `backups`, short name `bk`, with two `spec`
    fields: `schedule`, a string, and `retentionDays`, an integer. Then create a `Backup` named
    `nightly` in `default` with `schedule` `0 2 * * *` and `retentionDays` 7.
+
+   <details><summary>Hint</summary>
+
+   Search the docs for CustomResourceDefinition and copy the `CronTab` example. The CRD's name
+   must be `<plural>.<group>`.
+
+   </details>
 
 <details><summary>Solution</summary>
 

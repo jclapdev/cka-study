@@ -65,7 +65,10 @@ describe("parse", () => {
     expect(practice.tasks).toHaveLength(6);
     expect(practice.tasks.reduce((a, t) => a + t.weight, 0)).toBe(100);
     expect(practice.tasks[3].hosts).toEqual(["controlplane", "node01", "node02"]);
+    expect(practice.tasks.every((t) => t.hintHtml && !t.html.includes("Hint"))).toBe(true);
+    expect(practice.tasks[2].hintHtml).toContain("Flannel");
     expect(practice.solutionHtml).toContain("Calico</a> defaults");
+    expect(practice.solutionHtml).not.toContain("Hint");
     const check = ex.sections.find((s) => s.slug === "check-your-work");
     expect(check?.kind).toBe("plain");
   });

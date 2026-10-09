@@ -17,7 +17,7 @@ import { INTRO } from "./links";
 export type Step = { key: string; label: number; html: string };
 export type Block = { html: string } | { steps: Step[] };
 export type RecallItem = { key: string; question: string; answerHtml: string };
-export type Task = { n: number; hosts: string[]; weight: number; html: string };
+export type Task = { n: number; hosts: string[]; weight: number; html: string; hintHtml: string };
 
 export type Section =
   | { kind: "steps"; slug: string; title: string; blocks: Block[] }
@@ -278,7 +278,7 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
       const timed = (n: RootContent) => /(\d+)\s*minutes/.test(toString(n));
       const budget = introNodes.map((n) => toString(n)).join(" ").match(/(\d+)\s*minutes/);
       const tasks: Task[] = [];
-      for (const [i, item] of (list?.children ?? []).entries()) tasks.push(await task(item, i + 1, render.nodes));
+      for (const [i, item] of (list?.children ?? []).entries()) tasks.push(await task(md, item, i + 1, render));
       out.push({
         kind: "practice",
         ...base,
@@ -301,12 +301,16 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
   };
 }
 
-/** Reads "**Host `x`, weight 19%.**" off the front of a task and renders the rest. */
-async function task(item: ListItem, n: number, render: (c: RootContent[]) => Promise<string>): Promise<Task> {
-  const [first, ...others] = item.children;
+type Render = ReturnType<typeof renderer>;
+
+/** Reads "**Host `x`, weight 19%.**" off the front of a task, lifts out its Hint, and renders the rest. */
+async function task(md: string, item: ListItem, n: number, render: Render): Promise<Task> {
+  const { found, rest } = detailsBlocks(md, item.children as RootContent[]);
+  const hint = found.find((d) => d.summary === "Hint");
+  const [first, ...others] = rest as ListItem["children"];
   let hosts: string[] = [];
   let weight = 0;
-  let children = item.children as RootContent[];
+  let children = rest;
   if (first?.type === "paragraph" && first.children[0]?.type === "strong") {
     const m = toString(first.children[0]).match(/^Hosts?\s+(.+?),\s*weight\s+(\d+)%/i);
     if (m) {
@@ -318,7 +322,7 @@ async function task(item: ListItem, n: number, render: (c: RootContent[]) => Pro
       children = [para, ...others];
     }
   }
-  return { n, hosts, weight, html: await render(children) };
+  return { n, hosts, weight, html: await render.nodes(children), hintHtml: hint ? await render.markdown(hint.body) : "" };
 }
 
 /** A page without its `# title` line, for showing under a heading of its own. */

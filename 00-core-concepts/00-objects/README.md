@@ -648,14 +648,50 @@ Do it again without the steps, in **15 minutes**. `k` is `kubectl`, with Tab com
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `store`, and in it a pod `front`
    running `nginx:1.27`.
+
+   <details><summary>Hint</summary>
+
+   `k run` creates a pod. Without `-n store` it lands in `default`.
+
+   </details>
+
 2. **Host `controlplane`, weight 25%.** In `store`, create a ReplicaSet `cache` that keeps 2 pods
    running `nginx:1.27`, labelled `app=cache`.
+
+   <details><summary>Hint</summary>
+
+   No `k create` command writes a ReplicaSet. Search the docs for ReplicaSet and copy
+   `controllers/frontend.yaml`. The selector and the pod template's labels must match.
+
+   </details>
+
 3. **Host `controlplane`, weight 20%.** In `store`, create a Deployment `api` running `nginx:1.27`
    with 3 replicas.
+
+   <details><summary>Hint</summary>
+
+   `k create deployment` takes `--replicas`.
+
+   </details>
+
 4. **Host `controlplane`, weight 20%.** In `store`, create a Service `api` on port 80 for the pods
    of `api`.
+
+   <details><summary>Hint</summary>
+
+   `k expose deployment` uses the Deployment's pod label as the Service's selector.
+
+   </details>
+
 5. **Host `controlplane`, weight 20%.** Write the Deployment `api` to `~/api.yaml`, change it to 4
    replicas in the file, and apply the file.
+
+   <details><summary>Hint</summary>
+
+   `k create deployment` with `--dry-run=client -o yaml` writes the file without creating
+   anything. `k apply -f` changes the Deployment that already exists.
+
+   </details>
 
 <details><summary>Solution</summary>
 

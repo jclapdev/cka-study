@@ -459,15 +459,59 @@ Do it again without the steps, in **12 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `shop`, and in it a Deployment `api`
    running `nginx:1.27` with 2 replicas.
+
+   <details><summary>Hint</summary>
+
+   `k create deployment` takes `--replicas` and `-n`.
+
+   </details>
+
 2. **Host `controlplane`, weight 15%.** Expose `api` inside the cluster as a Service `api` on port
    80.
+
+   <details><summary>Hint</summary>
+
+   `k expose deployment` uses the Deployment's pod label as the Service's selector. It needs `-n
+   shop` too.
+
+   </details>
+
 3. **Host `controlplane`, weight 20%.** In `shop`, create a ConfigMap `api-config` with
    `MODE=fast` and a Secret `api-secret` with `TOKEN=abc123`.
+
+   <details><summary>Hint</summary>
+
+   `k create configmap` and `k create secret generic` both take `--from-literal`.
+
+   </details>
+
 4. **Host `controlplane`, weight 20%.** In `shop`, create a NetworkPolicy `deny-in` that denies
    all ingress traffic to every pod in the namespace.
+
+   <details><summary>Hint</summary>
+
+   No `k create` command writes a NetworkPolicy. Search the docs for "Default deny all ingress
+   traffic".
+
+   </details>
+
 5. **Host `node01`, weight 15%.** Write the output of `containerd --version` on `node01` to
    `/opt/course/5/runtime.txt` on `node01`.
+
+   <details><summary>Hint</summary>
+
+   Reach `node01` from `base`. `/opt` belongs to root, so `sudo -i` first.
+
+   </details>
+
 6. **Host `controlplane`, weight 15%.** Change `api` to run `nginx:1.28` with 3 replicas.
+
+   <details><summary>Hint</summary>
+
+   `k set image` changes the image and `k scale` the replicas. The container is called `nginx`,
+   after its image.
+
+   </details>
 
 <details><summary>Solution</summary>
 

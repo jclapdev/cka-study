@@ -427,15 +427,51 @@ Do it again without the steps, in **15 minutes**.
    `https://stefanprodan.github.io/podinfo` under the name `podinfo`. Install the chart
    `podinfo/podinfo` at chart version `6.14.1` as the release `shop` in the namespace `store`,
    which does not exist yet, with 3 replicas.
+
+   <details><summary>Hint</summary>
+
+   `helm install` takes `--version`, `--create-namespace` and `--set`. `helm show values` names
+   the value that sets the replicas.
+
+   </details>
+
 2. **Host `controlplane`, weight 25%.** Upgrade `shop` to chart version `6.15.0` and set
    `ui.message` to `sale`. The release must keep 3 replicas.
+
+   <details><summary>Hint</summary>
+
+   Without `--reuse-values`, `helm upgrade` starts again from the chart's defaults.
+
+   </details>
+
 3. **Host `controlplane`, weight 20%.** Roll `shop` back to the revision that ran chart
    version `6.14.1`.
+
+   <details><summary>Hint</summary>
+
+   `helm history` shows which revision ran which chart version.
+
+   </details>
+
 4. **Host `controlplane`, weight 20%.** Write the manifests that chart version `6.15.0` of
    `podinfo/podinfo` would create for a release `preview` in `store` to `~/preview.yaml`,
    without the chart's test pods. Do not install it.
+
+   <details><summary>Hint</summary>
+
+   `helm template` takes the same arguments as `helm install` and prints the manifests. `helm
+   template --help` lists the flag that leaves out tests.
+
+   </details>
+
 5. **Host `controlplane`, weight 15%.** A release of chart version `6.14.0` of [podinfo](../../references/helm.md#podinfo) is
    installed somewhere in the cluster. Uninstall it, and leave its namespace in place.
+
+   <details><summary>Hint</summary>
+
+   `helm list -A` lists releases in every namespace.
+
+   </details>
 
 <details><summary>Solution</summary>
 
