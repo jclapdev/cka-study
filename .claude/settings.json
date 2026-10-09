@@ -27,6 +27,12 @@
             "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/cka-rules.py",
             "args": [],
             "if": "Bash(git mv *)"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/cka-rules.py",
+            "args": [],
+            "if": "Bash(git *)"
           }
         ]
       },
@@ -85,6 +91,18 @@
             "continueOnBlock": true,
             "if": "Write(**/README.md)",
             "prompt": "$ARGUMENTS\n\nAbove is the hook input for an edit to a CKA study app.\n\nIf tool_input.file_path is lab/README.md, the root README.md, or neither a README.md inside a numbered topic folder nor a file under app/app/, respond {\"ok\": true}. Code that only runs the lab (server files, lab scripts) is also ok.\n\nOtherwise judge only the text this edit added (tool_input.new_string, or tool_input.content for a new file) that a learner will read. The rule: the app and lessons never describe how the lab is built or run. Not allowed: a lab's name (cluster, vms, helm, kustomize, crds) used as a lab name, a list of machines or lab status, lab IP addresses, Docker or containers as the thing the lab runs on, saved copies or snapshots, text from the author's side such as 'this exercise names no lab', and words invented while building such as 'starting state', 'Recall', 'timed run' or 'ticks'. Allowed: Kubernetes facts (containers in pods, systemd running the kubelet, container runtimes), host names a task uses, the hidden <!-- lab: name --> comment, and an error that tells the learner what to do.\n\nRespond {\"ok\": true} if the added text follows the rule, else {\"ok\": false, \"reason\": \"...\"} quoting each offending phrase and saying what a course site like KodeKloud would show instead."
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "cold-reader",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/cka-rules.py",
+            "args": []
           }
         ]
       }

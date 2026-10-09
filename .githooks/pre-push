@@ -1,0 +1,4 @@
+#!/bin/sh
+# Refuses to push a changed learner page that hasn't passed the cold-reader agent.
+# Enabled once per checkout: git config core.hooksPath .githooks
+exec python3 "$(git rev-parse --show-toplevel)/.claude/hooks/cka-rules.py" prepush

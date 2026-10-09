@@ -9,3 +9,6 @@ app/data/
 
 # Local secrets, if any are ever added
 .env
+
+# Cold-reader stamps, written by the reviewer's stop hook
+.claude/state/

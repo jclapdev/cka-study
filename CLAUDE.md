@@ -24,3 +24,7 @@ Write the app's text and the pages it shows the way a course site such as KodeKl
 ## App
 
 Run `cd app && pnpm test` after changing the app or the README format it reads.
+
+## Cold-reader
+
+Before pushing a changed topic README, Learn page, reference page, `EXAM.md`, `lab/README.md` or `README.md`, run the `cold-reader` agent on those pages, fix what it finds, and run it again until each page is clear. Git refuses the push otherwise (`.githooks/pre-push`, enabled once per checkout with `git config core.hooksPath .githooks`).

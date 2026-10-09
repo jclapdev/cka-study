@@ -8,8 +8,14 @@
 - PostToolUse Edit|Write on the build-exercise skill: a changed standard is applied to the
   pages already written, in the same task.
 - Stop: a reply that reports `result:` is held back until the work is in the user's
-  checkout on main, pushed, and any app change has been seen in a browser on port 5199.
+  checkout on main, pushed, any app change has been seen in a browser on port 5199, and
+  every changed learner page has passed the cold-reader.
+- SubagentStop (cold-reader): stamps each page the reviewer read in full and found clear.
+- `cka-rules.py prepush` (from .githooks/pre-push): git refuses to push a changed learner
+  page without a current stamp, however the push was started.
+- PreToolUse guards: the stamp file can't be written, and the git hook can't be skipped.
 """
+import datetime
 import json
 import os
 import re
@@ -19,8 +25,11 @@ import sys
 
 CHECKOUT = "/Users/john/projects/cka-prep"
 APP_URL = "5199"
+STAMPS = os.environ.get("CKA_STAMPS", f"{CHECKOUT}/.claude/state/cold-read.json")
 FOLDER = re.compile(r"^\d\d-[^/]+(/\d\d-[^/]+)?$")
 SKILL_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|lab/labs/.+)$")
+LEARNER_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|EXAM\.md|README\.md|lab/README\.md)$")
+GATE_FILES = re.compile(r"(^|/)(\.githooks/|\.claude/hooks/|\.claude/settings[^/]*\.json$)")
 
 
 def repo_path(cwd, path):
@@ -48,6 +57,7 @@ def folder_guard(data):
     if hits:
         decide("ask", "These are topic folders, the list of exercises still to build: "
                + ", ".join(hits) + ". Removing or renaming one needs the user's yes.")
+        return True
 
 
 def skill_loaded(transcript):
@@ -59,10 +69,25 @@ def skill_loaded(transcript):
 
 
 def skill_gate(data):
-    rel = repo_path(data["cwd"], data["tool_input"].get("file_path", ""))
-    if rel and SKILL_PAGES.match(rel) and not skill_loaded(data["transcript_path"]):
+    path = data["tool_input"].get("file_path", "")
+    rel = repo_path(data["cwd"], path)
+    if "/.claude/state/" in path:
+        decide("deny", "The cold-reader stamps are written only by the reviewer's stop hook.")
+    elif rel and GATE_FILES.search(rel):
+        decide("ask", f"{rel} is part of the gate that checks Claude's work. Changing it needs the user's yes.")
+    elif rel and SKILL_PAGES.match(rel) and not skill_loaded(data["transcript_path"]):
         decide("deny", f"{rel} is written with the build-exercise skill. Load it with the "
                "Skill tool first, then make this edit following it.")
+
+
+def push_guard(data):
+    """The pre-push hook and the stamps are the gate, so Claude can't switch either off."""
+    cmd = data["tool_input"].get("command", "")
+    if "--no-verify" in cmd or re.search(r"core\.hooksPath(?!\s+\.githooks\b)", cmd):
+        decide("deny", "The git hooks check every push. --no-verify and changing core.hooksPath "
+               "are for the user to run in their own terminal.")
+    elif ".claude/state" in cmd or "cold-read.json" in cmd:
+        decide("deny", "The cold-reader stamps are written only by the reviewer's stop hook.")
 
 
 def standards_sweep(data):
@@ -75,7 +100,7 @@ def standards_sweep(data):
             "with it in this same task, without asking."}}))
 
 
-def tool_calls(transcript):
+def tool_calls(transcript, with_time=False):
     for line in open(transcript):
         try:
             entry = json.loads(line)
@@ -83,18 +108,30 @@ def tool_calls(transcript):
             continue
         content = entry.get("message", {}).get("content")
         if entry.get("type") == "assistant" and isinstance(content, list):
-            yield from (c for c in content if c.get("type") == "tool_use")
+            for c in content:
+                if c.get("type") == "tool_use":
+                    yield (c, entry.get("timestamp", "")) if with_time else c
+
+
+APP_SOURCE = re.compile(r"app/app/[\w/.-]+\.(tsx?|css)")
+READ_ONLY = re.compile(r"^\s*(cd [^;&]+&&\s*)?(grep|rg|cat|ls|head|tail|wc|sed -n|git (diff|log|status|show))\b")
 
 
 def browser_check(data):
-    """App edited, but no browser visit to the running app since the last app edit."""
+    """App edited, but no browser visit to the running app since the last app edit.
+
+    ponytail: an edit counts when the call names an app source file (Edit/Write paths, a Write
+    of an edits file, a Bash command), so an edit script that never names its files is missed.
+    """
     seen = None
     for call in tool_calls(data["transcript_path"]):
-        path = call["input"].get("file_path", "")
-        if call["name"] in ("Edit", "Write", "MultiEdit") and "/app/" in path:
+        name, args = call["name"], json.dumps(call["input"])
+        if name in ("Edit", "Write", "MultiEdit") and "/app/" in call["input"].get("file_path", "") \
+                or name in ("Write", "Bash") and APP_SOURCE.search(args) \
+                and not (name == "Bash" and READ_ONLY.match(call["input"].get("command", ""))):
             seen = False
-        elif seen is False and re.search("browser|chrome", call["name"], re.I) \
-                and APP_URL in json.dumps(call["input"]):
+        elif seen is False and APP_URL in args and (re.search("browser|chrome", name, re.I)
+                                                    or name == "Bash" and re.search(r"\bnode\b|playwright", args)):
             seen = True
     if seen is False:
         return (f"The app changed this session but hasn't been clicked through in a browser "
@@ -120,25 +157,109 @@ def main_check():
                 "visible in the running app: " + "; ".join(problems) + ".")
 
 
-def done_gate(data):
-    if data.get("stop_hook_active") or not re.search(r"^result:", data.get("last_assistant_message", ""), re.M):
+def load_stamps():
+    try:
+        return json.load(open(STAMPS))
+    except (OSError, ValueError):
+        return {}
+
+
+def blob(path):
+    return subprocess.run(["git", "hash-object", path], capture_output=True, text=True).stdout.strip()
+
+
+def epoch(timestamp):
+    try:
+        return datetime.datetime.fromisoformat(timestamp.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return 0
+
+
+def stamp(data):
+    """The cold-reader finished: stamp each learner page it read, has no finding on, and that
+    hasn't changed since it was read. No verdict line, no stamps."""
+    message = data.get("last_assistant_message", "")
+    if not re.search(r"^VERDICT: (clear|\d+ findings?)\s*$", message.strip().splitlines()[-1] if message.strip() else ""):
         return
-    reasons = [r for r in (browser_check(data), main_check()) if r]
+    flagged = set(re.findall(r"^FINDING (\S+?):\d+ \| failure [1-5] \| \"", message, re.M))
+    read = {}
+    for call, ts in tool_calls(data["agent_transcript_path"], with_time=True):
+        path = call["input"].get("file_path", "")
+        if call["name"] == "Read" and "offset" not in call["input"] and "limit" not in call["input"]:
+            read[path] = epoch(ts)
+    stamps = load_stamps()
+    for path, read_at in read.items():
+        rel = repo_path(data["cwd"], path)
+        if rel and LEARNER_PAGES.match(rel) and rel not in flagged and os.path.exists(path) \
+                and os.path.getmtime(path) <= read_at + 1:
+            stamps[rel] = blob(path)
+    os.makedirs(os.path.dirname(STAMPS), exist_ok=True)
+    json.dump(stamps, open(STAMPS, "w"), indent=1, sort_keys=True)
+
+
+def unreviewed(pages_with_blobs):
+    stamps = load_stamps()
+    return [rel for rel, b in pages_with_blobs if stamps.get(rel) != b]
+
+
+def prepush():
+    """Run by .githooks/pre-push with git's '<local ref> <local sha> <remote ref> <remote sha>' lines."""
+    zero = "0" * 40
+    missing = set()
+    for line in sys.stdin:
+        local_ref, local_sha, _, remote_sha = line.split()
+        if local_sha == zero:
+            continue  # deleting a branch
+        base = remote_sha if remote_sha != zero else "origin/main"
+        changed = subprocess.run(["git", "diff", "--name-only", "--diff-filter=d", f"{base}..{local_sha}"],
+                                 capture_output=True, text=True).stdout.split()
+        pages = [(p, subprocess.run(["git", "rev-parse", f"{local_sha}:{p}"], capture_output=True, text=True).stdout.strip())
+                 for p in changed if LEARNER_PAGES.match(p)]
+        missing.update(unreviewed(pages))
+    if missing:
+        print("These learner pages changed but haven't passed the cold-reader:\n  " + "\n  ".join(sorted(missing))
+              + "\nRun the cold-reader agent on them, fix what it finds, and push again.", file=sys.stderr)
+        sys.exit(1)
+
+
+def review_check(data):
+    """Learner pages that differ from origin/main in the working copy and aren't stamped."""
+    root = subprocess.run(["git", "-C", data["cwd"], "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
+    if not root:
+        return
+    changed = subprocess.run(["git", "-C", root, "diff", "--name-only", "--diff-filter=d", "origin/main"],
+                             capture_output=True, text=True).stdout.split()
+    pages = [(p, blob(os.path.join(root, p))) for p in changed if LEARNER_PAGES.match(p)]
+    missing = unreviewed(pages)
+    if missing:
+        return ("These learner pages haven't passed the cold-reader since they last changed: "
+                + ", ".join(missing) + ". Run the cold-reader agent on them and fix what it finds.")
+
+
+def done_gate(data):
+    # No stop_hook_active early return: Claude Code ends the turn after eight blocks in a row.
+    if not re.search(r"^result:", data.get("last_assistant_message", ""), re.M):
+        return
+    reasons = [r for r in (review_check(data), browser_check(data), main_check()) if r]
     if reasons:
         print(json.dumps({"decision": "block", "reason": "\n".join(reasons)}))
 
 
 def main():
+    if sys.argv[1:] == ["prepush"]:
+        return prepush()
     data = json.load(sys.stdin)
     event, tool = data["hook_event_name"], data.get("tool_name")
     if event == "PreToolUse" and tool == "Bash":
-        folder_guard(data)
+        folder_guard(data) or push_guard(data)
     elif event == "PreToolUse":
         skill_gate(data)
     elif event == "PostToolUse":
         standards_sweep(data)
     elif event == "Stop":
         done_gate(data)
+    elif event == "SubagentStop" and data.get("agent_type") == "cold-reader":
+        stamp(data)
 
 
 if __name__ == "__main__":
