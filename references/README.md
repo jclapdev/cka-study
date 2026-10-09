@@ -9,7 +9,7 @@ The facts, commands and errors for each concept the topics use.
 | [Control plane](control-plane.md) | apiserver, etcd, controller-manager, scheduler, static pods, the control plane taint |
 | [Workers](workers.md) | kubelet, containerd/CRI, the kubelet before a cluster exists, joining, node conditions, role labels |
 | [Pod](pod.md) | pods, phases, reading `Pending` vs `CrashLoopBackOff` |
-| [Pod network](pod-network.md) | pod/service/node CIDRs, CNI plugins, host-network pods, CoreDNS |
+| [Pod network](pod-network.md) | pod/service/node CIDRs, CNI plugins, host-network pods, network namespaces, veth pairs and the bridge on a node, CoreDNS and a pod's resolv.conf |
 | [DaemonSets](daemonsets.md) | one pod per node, kube-proxy and the CNI agent, taints |
 | [Labels](labels.md) | keys and values, adding and removing, selectors, node role labels |
 | [kubeconfig](kubeconfig.md) | clusters/users/contexts, resolution order, kubeadm's kubeconfigs |

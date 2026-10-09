@@ -135,6 +135,12 @@ Overlays	known
 Management	known
 Objects	known
 Concepts	known
+UDP	known
+Corefile	references/pod-network.md#coredns
+NXDOMAIN	references/pod-network.md#coredns
+VXLAN	references/pod-network.md#network-namespaces-on-a-node
+network namespace	references/pod-network.md#network-namespaces-on-a-node
+veth	references/pod-network.md#network-namespaces-on-a-node
 Using	known
 Setting	known
 Customizing	known

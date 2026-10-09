@@ -6,6 +6,8 @@ running with a [ReplicaSet](../../references/workloads.md#deployments-and-replic
 [namespaces](../../references/namespaces.md), and change objects with `kubectl create` and `kubectl apply`.
 [How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components) that act on it, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command sends.
+[How a pod gets its own network](../../learn/network-namespaces.md) explains where a pod's IP address comes from, and
+[how DNS works in the cluster](../../learn/dns.md) how a pod finds a Service by name.
 
 <!-- lab: cluster -->
 

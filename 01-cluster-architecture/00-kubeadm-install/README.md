@@ -1,10 +1,11 @@
 # kubeadm Installation
 
 `kubeadm` turns machines that already have a [container runtime](../../references/workers.md#what-a-worker-runs) and a [kubelet](../../references/control-plane.md#components) into a working
-Kubernetes cluster. It generates the [certificates](../../references/certificates.md), writes the [control plane](../../references/control-plane.md)'s [static pod](../../references/control-plane.md#static-pods)
+Kubernetes cluster. It generates the [certificates](../../references/certificates.md#client-and-serving-certificates), writes the [control plane](../../references/control-plane.md)'s [static pod](../../references/control-plane.md#static-pods)
 [manifests](../../references/kubectl.md#generating-yaml), and prints a command that joins other machines to what it built.
-[How a cluster works](../../learn/cluster-architecture.md), [how kubeadm builds a cluster](../../learn/kubeadm.md)
-and [how the pod network works](../../learn/pod-network.md) explain the parts.
+[How a cluster works](../../learn/cluster-architecture.md), [how kubeadm builds a cluster](../../learn/kubeadm.md),
+[how etcd stores the cluster](../../learn/etcd.md), [how TLS secures the cluster](../../learn/tls.md),
+[how the pod network works](../../learn/pod-network.md) and [how a pod gets its own network](../../learn/network-namespaces.md) explain the parts.
 
 <!-- lab: vms -->
 

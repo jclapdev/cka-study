@@ -1,6 +1,6 @@
 # Pod
 
-A pod is the smallest thing Kubernetes schedules: one or more containers that share a network namespace (same IP, same localhost, same port space) and can share volumes. Containers are never scheduled individually.
+A pod is the smallest thing Kubernetes schedules: one or more containers that share a [network namespace](pod-network.md#network-namespaces-on-a-node) (same IP, same localhost, same port space) and can share volumes. Containers are never scheduled individually.
 
 A pod is bound to one node for life. It is never moved. A pod that seems to have moved is a new pod, created by a [controller](control-plane.md#components) such as a [Deployment](workloads.md) or a [DaemonSet](daemonsets.md) after the old one died.
 
