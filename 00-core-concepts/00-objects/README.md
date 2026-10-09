@@ -659,18 +659,32 @@ Do it again without the steps, in **15 minutes**. `k` is `kubectl`, with Tab com
 
 <details><summary>Solution</summary>
 
-Tasks 1, 3 and 4:
+Every task runs on `controlplane`, so `ssh` there once from `base`.
+
+**Task 1.** Create the namespace, then the pod in it. `-n store` puts the pod in `store`, and
+without it the pod would land in `default`:
 
 ```shell
 ssh controlplane
 k create ns store
-k create deployment api --image=nginx:1.27 --replicas=3 -n store
-k expose deployment api --port=80 -n store
 k run front --image=nginx:1.27 -n store
+k get pod front -n store
 ```
 
-Task 2. Copy `controllers/frontend.yaml` from the ReplicaSet page into `vim cache.yaml` with
-`:set paste`, and change the name, the replicas, the labels and the container:
+`1/1` and `Running` show the pod's one container started:
+
+```
+NAME    READY   STATUS    RESTARTS   AGE
+front   1/1     Running   0          13s
+```
+
+If `k run` fails with `serviceaccount "default" not found`, the namespace is less than a second
+old and has no `default` [ServiceAccount](../../references/service-accounts.md) yet. Run it again.
+
+**Task 2.** No `k create` command writes a ReplicaSet, so copy `controllers/frontend.yaml` from
+the ReplicaSet page into `vim cache.yaml` with `:set paste`. Change the name, the replicas, the
+container, and both labels to `app: cache`, since the selector and the pod template's labels
+must match. Delete the ReplicaSet's own labels, which the task does not ask for:
 
 ```yaml
 apiVersion: apps/v1
@@ -694,18 +708,63 @@ spec:
 
 ```shell
 k apply -f cache.yaml -n store
+k get rs cache -n store
 ```
 
-Task 5. Write the file, change `replicas: 3` to `replicas: 4` in vim, and apply it:
+`DESIRED` 2 and `READY` 2 confirm the ReplicaSet created both pods from the template:
+
+```
+NAME    DESIRED   CURRENT   READY   AGE
+cache   2         2         2       8s
+```
+
+**Task 3.** `--replicas=3` sets the pod count when the Deployment is created:
+
+```shell
+k create deployment api --image=nginx:1.27 --replicas=3 -n store
+k get deploy api -n store
+```
+
+`3/3` means all three pods are ready:
+
+```
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+api    3/3     3            3           21s
+```
+
+**Task 4.** `expose` reads the Deployment's pod label, `app: api`, and uses it as the Service's
+selector. The EndpointSlice shows which pods the Service found:
+
+```shell
+k expose deployment api --port=80 -n store
+k get endpointslices -n store -l kubernetes.io/service-name=api
+```
+
+Three addresses under `ENDPOINTS` confirm the selector matches the three `api` pods:
+
+```
+NAME        ADDRESSTYPE   PORTS   ENDPOINTS                          AGE
+api-zsffj   IPv4          80      10.244.2.2,10.244.1.2,10.244.1.3   21s
+```
+
+**Task 5.** `--dry-run=client -o yaml` writes the Deployment as it was created, with `-n store`
+recorded as `namespace: store`. In vim, change `replicas: 3` to `replicas: 4`, then apply:
 
 ```shell
 k create deployment api --image=nginx:1.27 --replicas=3 -n store --dry-run=client -o yaml > ~/api.yaml
 vim ~/api.yaml
 k apply -f ~/api.yaml
+k get deploy api -n store
 ```
 
-`apply` warns that `api` is missing the `last-applied-configuration` annotation, because
-`create` made it, then adds the annotation and changes the replicas.
+`apply` first warns that `api` is missing the `last-applied-configuration` annotation, because
+`create` made it, and says it will be patched automatically. It then prints
+`deployment.apps/api configured`, and the Deployment runs four pods:
+
+```
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+api    4/4     4            4           23s
+```
 
 </details>
 

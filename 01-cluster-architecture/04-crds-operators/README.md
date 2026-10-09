@@ -508,16 +508,60 @@ Do it again without the steps, in **18 minutes**.
 
 <details><summary>Solution</summary>
 
-Tasks 1 to 3:
+Every task runs on `controlplane`.
+
+**Task 1.** The chart is in a container registry, so its `oci://` address goes straight to
+`helm install` with no `helm repo add`. `--set crds.enabled=true` makes the chart install its
+CRDs:
 
 ```shell
 ssh controlplane
 helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
-k get crd -o name | grep cert-manager > /opt/course/2/crds.txt
-k explain certificate.spec.subject > /opt/course/3/subject.txt
 ```
 
-Task 4. Wait for cert-manager, then write both objects in `vim web.yaml`:
+`STATUS: deployed` and `REVISION: 1` confirm the install.
+
+**Task 2.** Every cert-manager CRD has `cert-manager` in its name, so `grep` keeps exactly those:
+
+```shell
+k get crd -o name | grep cert-manager > /opt/course/2/crds.txt
+cat /opt/course/2/crds.txt
+```
+
+The file holds six names, two of them in the `acme` subgroup:
+
+```
+customresourcedefinition.apiextensions.k8s.io/certificaterequests.cert-manager.io
+customresourcedefinition.apiextensions.k8s.io/certificates.cert-manager.io
+customresourcedefinition.apiextensions.k8s.io/challenges.acme.cert-manager.io
+customresourcedefinition.apiextensions.k8s.io/clusterissuers.cert-manager.io
+customresourcedefinition.apiextensions.k8s.io/issuers.cert-manager.io
+customresourcedefinition.apiextensions.k8s.io/orders.acme.cert-manager.io
+```
+
+**Task 3.** `k explain` reads the CRD's schema, as it does for a built-in type:
+
+```shell
+k explain certificate.spec.subject > /opt/course/3/subject.txt
+head -8 /opt/course/3/subject.txt
+```
+
+The file starts with the group, kind and field, which confirms it documents the right field:
+
+```
+GROUP:      cert-manager.io
+KIND:       Certificate
+VERSION:    v1
+
+FIELD: subject <Object>
+
+
+DESCRIPTION:
+```
+
+**Task 4.** cert-manager's webhook checks every cert-manager object before the apiserver stores
+it, so wait for its Deployments first. Then write both objects in `vim web.yaml`. `selfSigned: {}` needs no
+settings, and the Certificate's `issuerRef` names the Issuer:
 
 ```shell
 k wait --for=condition=Available deploy --all -n cert-manager --timeout=180s
@@ -549,10 +593,22 @@ spec:
 
 ```shell
 k apply -f web.yaml
+k get issuer,certificate -n web
 ```
 
-Task 5. Paste the docs' `CronTab` CRD into `vim backup-crd.yaml`, and change the name, the two
-fields and the names:
+`READY` `True` on both, a few seconds later, means cert-manager signed the certificate and wrote
+it to `web-tls`:
+
+```
+NAME                          READY   AGE
+issuer.cert-manager.io/self   True    8s
+
+NAME                                   READY   SECRET    AGE
+certificate.cert-manager.io/web-cert   True    web-tls   8s
+```
+
+**Task 5.** Paste the docs' `CronTab` CRD into `vim backup-crd.yaml`, and change the group, the
+two fields and the names. The CRD's own name must be `<plural>.<group>`:
 
 ```yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -585,7 +641,8 @@ spec:
     - bk
 ```
 
-Paste the docs' `CronTab` object into `vim nightly.yaml` the same way:
+Paste the docs' `CronTab` object into `vim nightly.yaml` the same way. `apiVersion` is the CRD's
+group and version:
 
 ```yaml
 apiVersion: stable.example.com/v1
@@ -600,7 +657,11 @@ spec:
 ```shell
 k apply -f backup-crd.yaml
 k apply -f nightly.yaml
+k get bk nightly -o jsonpath='{.spec.schedule} {.spec.retentionDays}{"\n"}'
 ```
+
+`k get bk` works because of the short name, and `0 2 * * * 7` confirms both fields were stored
+with their values.
 
 </details>
 

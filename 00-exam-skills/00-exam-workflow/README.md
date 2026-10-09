@@ -471,7 +471,9 @@ Do it again without the steps, in **12 minutes**.
 
 <details><summary>Solution</summary>
 
-Tasks 1 to 3:
+**Tasks 1 to 3.** Each object has a `k create` command, so no YAML is needed. `k expose` reads
+the Deployment's pod label, `app: api`, for the Service's selector, so the Deployment has to
+exist first:
 
 ```shell
 ssh controlplane
@@ -480,10 +482,32 @@ k create deployment api --image=nginx:1.27 --replicas=2 -n shop
 k expose deployment api -n shop --port=80
 k create configmap api-config -n shop --from-literal=MODE=fast
 k create secret generic api-secret -n shop --from-literal=TOKEN=abc123
+k get deploy,svc,cm,secret -n shop
 ```
 
-Task 4. Copy "Default deny all ingress traffic" from the Network Policies page into
-`vim deny.yaml` with `:set paste`, and change the name:
+The Deployment shows `2/2`, the Service has a `CLUSTER-IP` on `80/TCP`, and the ConfigMap and the
+Secret each hold one key under `DATA`:
+
+```
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/api   2/2     2            2           2s
+
+NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/api   ClusterIP   10.106.82.170   <none>        80/TCP    2s
+
+NAME                         DATA   AGE
+configmap/api-config         1      2s
+configmap/kube-root-ca.crt   1      2s
+
+NAME                TYPE     DATA   AGE
+secret/api-secret   Opaque   1      2s
+```
+
+`kube-root-ca.crt` is in every namespace from the start, and holds the cluster's [CA certificate](../../references/certificates.md).
+
+**Task 4.** No `k create` command writes a NetworkPolicy. Copy "Default deny all ingress
+traffic" from the Network Policies page into `vim deny.yaml` with `:set paste`, and change the
+name:
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -498,9 +522,19 @@ spec:
 
 ```shell
 k apply -f deny.yaml -n shop
+k get netpol -n shop
 ```
 
-Task 5. Go back to `base` first. `/opt` needs root:
+`POD-SELECTOR` `<none>` is how `kubectl` shows `podSelector: {}`, which selects every pod in the
+namespace:
+
+```
+NAME      POD-SELECTOR   AGE
+deny-in   <none>         0s
+```
+
+**Task 5.** The file is on `node01`, so go back to `base` and `ssh` there. `/opt` belongs to
+root, so `sudo -i` first:
 
 ```shell
 exit          # back to base
@@ -508,17 +542,29 @@ ssh node01
 sudo -i
 mkdir -p /opt/course/5
 containerd --version > /opt/course/5/runtime.txt
+cat /opt/course/5/runtime.txt
 exit
 exit
 ```
 
-Task 6:
+`cat` prints the version line, which confirms the file holds the output and not an error:
+
+```
+containerd github.com/containerd/containerd/v2 2.2.1
+```
+
+**Task 6.** A new image starts a [rollout](../../references/workloads.md#rollouts), and `rollout status` waits until it ends. `jsonpath`
+reads back the two values the task asked for:
 
 ```shell
 ssh controlplane
 k set image deploy/api nginx=nginx:1.28 -n shop
 k scale deploy api --replicas=3 -n shop
+k rollout status deploy/api -n shop
+k get deploy api -n shop -o jsonpath='{.spec.template.spec.containers[0].image} {.status.readyReplicas}{"\n"}'
 ```
+
+`nginx:1.28 3` is the new image and three ready pods.
 
 </details>
 

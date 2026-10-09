@@ -438,40 +438,132 @@ Do it again without the steps, in **25 minutes**.
 
 <details><summary>Solution</summary>
 
+**Task 1.** `ip route get 1.1.1.1` asks which of the machine's addresses it would send from to
+reach an outside address, and `awk '{print $7; exit}'` prints that address, the seventh word of
+the first line. `--apiserver-advertise-address` puts it in the apiserver's certificate, and
+`--pod-network-cidr` gives the controller-manager the range to split between nodes:
+
 ```shell
-# 1.
 ssh controlplane
 CP_IP=$(ip route get 1.1.1.1 | awk '{print $7; exit}')
+echo "$CP_IP"
 sudo kubeadm init --apiserver-advertise-address "$CP_IP" --pod-network-cidr 10.244.0.0/16
+```
 
-# 2.
+`echo` prints `controlplane`'s address, such as `192.0.2.10`, which confirms the variable is set
+before `init` uses it. `init` ends with the next steps and a join command:
+
+```
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+**Task 2.** `kubectl` reads `~/.kube/config` by default. `admin.conf` belongs to root, so copy
+it with `sudo`, then make your user its owner:
+
+```shell
 mkdir -p ~/.kube
 sudo cp /etc/kubernetes/admin.conf ~/.kube/config
 sudo chown "$(id -u):$(id -g)" ~/.kube/config
+k get nodes
+```
 
-# 3.
+The node answers without `sudo`, which confirms the kubeconfig works. It is `NotReady` because
+there is no pod network yet:
+
+```
+NAME           STATUS     ROLES           AGE   VERSION
+controlplane   NotReady   control-plane   3s    v1.34.12
+```
+
+**Task 3.** Flannel's manifest uses `10.244.0.0/16`, the range given to `init`, so it needs no
+editing:
+
+```shell
 k apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+k get nodes
+k get pods -n kube-system -l k8s-app=kube-dns
+```
 
-# 4. print the join command, then run it with sudo on each worker
+Within a minute the node is `Ready`, and both CoreDNS pods are `Running`, which shows pods are
+getting addresses from the pod network:
+
+```
+NAME           STATUS   ROLES           AGE   VERSION
+controlplane   Ready    control-plane   33s   v1.34.12
+NAME                       READY   STATUS    RESTARTS   AGE
+coredns-66bc5c9577-cdzfp   1/1     Running   0          23s
+coredns-66bc5c9577-rflwv   1/1     Running   0          23s
+```
+
+[Calico](../../references/pod-network.md#plugins) defaults to `192.168.0.0/16`, so its manifest would need an edit to match.
+
+**Task 4.** The token in `init`'s join command expires after 24 hours, so print a new command,
+then run it with `sudo` on each worker. Each worker is reached from `base`:
+
+```shell
 sudo kubeadm token create --print-join-command
 exit                         # back to base
 ssh node01
-sudo kubeadm join ...        # the printed command
+sudo kubeadm join 192.0.2.10:6443 --token y1nuhs.jhin9fvu35v68or6 --discovery-token-ca-cert-hash sha256:b5f60bdc9764b1c35860eeafa80bf46873414115c76ed911799eeca724decfb0
 exit
 ssh node02
-sudo kubeadm join ...
+sudo kubeadm join 192.0.2.10:6443 --token y1nuhs.jhin9fvu35v68or6 --discovery-token-ca-cert-hash sha256:b5f60bdc9764b1c35860eeafa80bf46873414115c76ed911799eeca724decfb0
 exit
+```
 
-# 5.
+Use the command your cluster printed, since the token and hash differ. Each join ends with:
+
+```
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+```
+
+**Task 5.** The label key ends in `=` with nothing after it, an empty value. `ROLES` is built from
+`node-role.kubernetes.io/<role>` labels:
+
+```shell
 ssh controlplane
 k label node node01 node02 node-role.kubernetes.io/worker=
+k get nodes
+```
 
-# 6.
+Both workers are `Ready` and show the role `worker`:
+
+```
+NAME           STATUS   ROLES           AGE   VERSION
+controlplane   Ready    control-plane   55s   v1.34.12
+node01         Ready    worker          10s   v1.34.12
+node02         Ready    worker          9s    v1.34.12
+```
+
+**Task 6.**
+
+```shell
 k get pods -n kube-system
 ```
 
-Flannel defaults to `10.244.0.0/16`, so its manifest needs no editing. [Calico](../../references/pod-network.md#plugins) defaults to
-`192.168.0.0/16`, so its manifest needs an edit.
+The four control plane pods end in `-controlplane`, there is one `kube-proxy` per node, and every
+pod is `Running` with no restarts:
+
+```
+NAME                                   READY   STATUS    RESTARTS   AGE
+coredns-66bc5c9577-cdzfp               1/1     Running   0          46s
+coredns-66bc5c9577-rflwv               1/1     Running   0          46s
+etcd-controlplane                      1/1     Running   0          54s
+kube-apiserver-controlplane            1/1     Running   0          54s
+kube-controller-manager-controlplane   1/1     Running   0          54s
+kube-proxy-96h9t                       1/1     Running   0          10s
+kube-proxy-hrtfh                       1/1     Running   0          46s
+kube-proxy-tx4rz                       1/1     Running   0          11s
+kube-scheduler-controlplane            1/1     Running   0          54s
+```
 
 </details>
 

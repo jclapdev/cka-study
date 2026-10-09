@@ -443,39 +443,78 @@ Do it again without the steps, in **15 minutes**.
 
 <details><summary>Solution</summary>
 
+Every task runs on `controlplane`. `k auth can-i … --as=` asks the apiserver whether a subject
+may do something, so each task ends with a question that should be answered `yes` and one that
+should be answered `no`. A ServiceAccount's name in `--as` is
+`system:serviceaccount:<namespace>:<name>`.
+
+**Task 1.**
+
 ```shell
 ssh controlplane
-# 1.
 k create namespace web
 k create serviceaccount ci -n web
+k get sa -n web
+```
 
-# 2. kubectl fills in the apps group for deployments
+`ci` is listed next to `default`, the ServiceAccount every namespace gets:
+
+```
+NAME      SECRETS   AGE
+ci        0         0s
+default   0         0s
+```
+
+**Task 2.** `--resource=deployments` fills in the `apps` group by itself. The RoleBinding gives
+the Role to `ci`, written `<namespace>:<name>`:
+
+```shell
 k create role deployer -n web --verb=create,update,delete --resource=deployments
 k create rolebinding ci-deployer -n web --role=deployer --serviceaccount=web:ci
+k auth can-i delete deployments.apps -n web --as=system:serviceaccount:web:ci
+k auth can-i get deployments.apps -n web --as=system:serviceaccount:web:ci
+```
 
-# 3. one ClusterRole, one RoleBinding per namespace
+The answers are `yes`, then `no`: `delete` is in the Role and `get` is not.
+
+**Task 3.** One ClusterRole holds the rule, and a RoleBinding in each namespace grants it only
+there. A ClusterRoleBinding would grant it in every namespace:
+
+```shell
 k create clusterrole secret-reader --verb=get,list --resource=secrets
 k create rolebinding ci-secret-reader -n web --clusterrole=secret-reader --serviceaccount=web:ci
 k create rolebinding ci-secret-reader -n default --clusterrole=secret-reader --serviceaccount=web:ci
+k auth can-i list secrets -n default --as=system:serviceaccount:web:ci
+k auth can-i list secrets -n kube-system --as=system:serviceaccount:web:ci
+```
 
-# 4. PersistentVolumes have no namespace, so only a ClusterRoleBinding reaches them
+`yes` in `default` and `no` in `kube-system` confirm the access stops at the two namespaces.
+
+**Task 4.** PersistentVolumes have no namespace, so a RoleBinding cannot reach them and the
+grant must be a ClusterRoleBinding:
+
+```shell
 k create clusterrole pv-lister --verb=list --resource=persistentvolumes
 k create clusterrolebinding ci-pv-lister --clusterrole=pv-lister --serviceaccount=web:ci
+k auth can-i list persistentvolumes --as=system:serviceaccount:web:ci
+k auth can-i delete persistentvolumes --as=system:serviceaccount:web:ci
+```
 
-# 5.
+Each answer, `yes` then `no`, comes after
+`Warning: resource 'persistentvolumes' is not namespace scoped`, which `can-i` prints for any
+cluster-scoped type.
+
+**Task 5.** `view` is a built-in ClusterRole, and `--group` names a group as the subject. The
+group needs no object, so `--as` takes any user name with `--as-group=auditors`:
+
+```shell
 k create rolebinding auditors-view -n web --clusterrole=view --group=auditors
-
-# check: the first answer of each pair is yes, the second is no
-SA=system:serviceaccount:web:ci
-k auth can-i delete deployments.apps -n web --as=$SA
-k auth can-i get deployments.apps -n web --as=$SA
-k auth can-i list secrets -n default --as=$SA
-k auth can-i list secrets -n kube-system --as=$SA
-k auth can-i list persistentvolumes --as=$SA
-k auth can-i delete persistentvolumes --as=$SA
 k auth can-i list pods -n web --as=anyone --as-group=auditors
 k auth can-i list pods -n default --as=anyone --as-group=auditors
 ```
+
+`yes` in `web` and `no` in `default` confirm the binding works only in `web`.
+
 </details>
 
 ## Further reading

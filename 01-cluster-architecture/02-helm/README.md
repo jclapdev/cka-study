@@ -439,26 +439,91 @@ Do it again without the steps, in **15 minutes**.
 
 <details><summary>Solution</summary>
 
+Every task runs on `controlplane`.
+
+**Task 1.** `helm repo add` saves the repository under the name `podinfo`. `--version` pins the
+chart version, `--create-namespace` makes `store`, and `--set replicaCount=3` overrides one
+value:
+
 ```shell
 ssh controlplane
-# 1.
 helm repo add podinfo https://stefanprodan.github.io/podinfo
 helm install shop podinfo/podinfo --version 6.14.1 -n store --create-namespace --set replicaCount=3
+helm list -n store
+```
 
-# 2. --reuse-values keeps replicaCount=3
+`STATUS` `deployed` and `CHART` `podinfo-6.14.1` confirm the release and its version:
+
+```
+NAME	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART         	APP VERSION
+shop	store    	1       	2026-10-09 12:58:21.853881628 +0000 UTC	deployed	podinfo-6.14.1	6.14.1
+```
+
+**Task 2.** Without `--reuse-values`, an upgrade starts again from the chart's defaults and
+`replicaCount` goes back to 1. With it, the release keeps the values it has and adds the new
+one. `helm get values` prints the values set on the release:
+
+```shell
 helm upgrade shop podinfo/podinfo --version 6.15.0 -n store --reuse-values --set ui.message=sale
+helm get values shop -n store
+```
 
-# 3. revision 1 is the install
+Both values are there, the one from the install and the new one:
+
+```
+USER-SUPPLIED VALUES:
+replicaCount: 3
+ui:
+  message: sale
+```
+
+**Task 3.** `helm history` shows which revision ran which chart version, and `helm rollback`
+takes that revision's number:
+
+```shell
 helm history shop -n store
 helm rollback shop 1 -n store
+helm history shop -n store
+```
 
-# 4.
+The rollback is a new revision, 3, a copy of revision 1:
+
+```
+REVISION	UPDATED                 	STATUS    	CHART         	APP VERSION	DESCRIPTION
+1       	Fri Oct  9 12:58:21 2026	superseded	podinfo-6.14.1	6.14.1     	Install complete
+2       	Fri Oct  9 12:58:22 2026	superseded	podinfo-6.15.0	6.15.0     	Upgrade complete
+3       	Fri Oct  9 12:58:22 2026	deployed  	podinfo-6.14.1	6.14.1     	Rollback to 1
+```
+
+**Task 4.** `helm template` takes the same arguments as `helm install` and prints the manifests
+instead of installing them. `--skip-tests` leaves out the chart's test pods:
+
+```shell
 helm template preview podinfo/podinfo --version 6.15.0 -n store --skip-tests > ~/preview.yaml
+grep '^kind:' ~/preview.yaml
+```
 
-# 5. find it in every namespace; uninstall never deletes the namespace
+Only `kind: Service` and `kind: Deployment` are left. Without `--skip-tests`, three `kind: Pod`
+lines would follow.
+
+**Task 5.** The task does not say which namespace, so list releases in all of them with `-A`:
+
+```shell
 helm list -A
 helm uninstall legacy -n legacy
+k get ns legacy
 ```
+
+`legacy` is the release running `podinfo-6.14.0`:
+
+```
+NAME  	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART         	APP VERSION
+legacy	legacy   	1       	2026-10-06 00:24:41.284702545 +0000 UTC	deployed	podinfo-6.14.0	6.14.0
+shop  	store    	3       	2026-10-09 12:58:22.373745379 +0000 UTC	deployed	podinfo-6.14.1	6.14.1
+```
+
+`helm uninstall` prints `release "legacy" uninstalled` and deletes only what the chart created,
+so `k get ns legacy` still shows the namespace `Active`.
 
 </details>
 

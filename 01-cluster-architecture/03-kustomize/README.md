@@ -524,7 +524,11 @@ Do it again without the steps, in **15 minutes**.
 
 <details><summary>Solution</summary>
 
-Task 1. Generate the manifests, then paste the base kustomization block from Bases and Overlays:
+Every task runs on `controlplane`. `k kustomize <folder>` prints what a kustomization builds
+without changing anything, so use it to check each folder before applying it.
+
+**Task 1.** Generate the two manifests into `base`, then paste the base kustomization block from
+the Bases and Overlays section of the Kustomize page. Its `resources` list names the two files:
 
 ```shell
 ssh controlplane
@@ -536,11 +540,23 @@ resources:
 - deployment.yaml
 - service.yaml
 EOF
+k kustomize base | grep -E '^kind|^  name:'
 ```
 
-Tasks 2 and 4. Generate the Namespace. Build the two patches from `increase_replicas.yaml` on
-the Customizing section and the `envFrom` block on the ConfigMap task page, fixing the names.
-The container is `nginx`, after its image:
+The base builds both objects, each named `shop`:
+
+```
+kind: Service
+  name: shop
+kind: Deployment
+  name: shop
+```
+
+**Tasks 2 and 4.** `namespace: staging` only sets the field on each object, so the overlay also
+needs a Namespace manifest. The replica count and the environment variables are patches, built
+from `increase_replicas.yaml` on the Customizing section and the `envFrom` block on the ConfigMap
+task page. A patch names the base's Deployment, `shop`, and its container, `nginx`, which
+`k create deployment` named after the image:
 
 ```shell
 k create namespace staging --dry-run=client -o yaml > staging/namespace.yaml
@@ -575,6 +591,9 @@ spec:
             name: shop-settings
 ```
 
+The overlay's kustomization lists the base and the Namespace, then sets the namespace, the name
+prefix and the image tag, applies both patches, and generates the ConfigMap:
+
 ```shell
 vim staging/kustomization.yaml
 ```
@@ -599,23 +618,55 @@ configMapGenerator:
 
 ```shell
 k apply -k staging
+k get deploy,svc,cm -n staging
+k exec -n staging deploy/staging-shop -- printenv MODE
 ```
 
-Task 3. The build error names the patch target:
+`apply -k` creates the namespace first, then a ConfigMap whose name ends in a hash of its
+contents, `staging-shop-settings-7t6ch9d7dd`. Kustomize also rewrote the `envFrom` reference to
+that name. Everything is prefixed `staging-`, and the Deployment has its 2 pods:
+
+```
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/staging-shop   2/2     2            2           15s
+
+NAME                   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/staging-shop   ClusterIP   10.101.93.57   <none>        80/TCP    15s
+
+NAME                                         DATA   AGE
+configmap/kube-root-ca.crt                   1      15s
+configmap/staging-shop-settings-7t6ch9d7dd   1      15s
+```
+
+`printenv MODE` prints `staging`, which confirms the container reads the generated ConfigMap.
+
+**Task 3.** Build the overlay to see why it fails:
 
 ```shell
 k kustomize /opt/course/3/overlay
 ```
 
+The error names the patch target it could not find:
+
 ```
 error: no resource matches strategic merge patch "Deployment.v1.apps/tools-api.[noNs]": no matches for Id Deployment.v1.apps/tools-api.[noNs]; failed to find unique target for patch Deployment.v1.apps/tools-api.[noNs]
 ```
 
-The patch names the prefixed `tools-api`. In `vim /opt/course/3/overlay/replicas.yaml`, change
-it to the base's name, `api`, then apply:
+The patch names the prefixed `tools-api`, but a patch is matched against the base's names,
+before `namePrefix` is added. In `vim /opt/course/3/overlay/replicas.yaml`, change the name to
+`api`, then apply:
 
 ```shell
 k apply -k /opt/course/3/overlay
+k get deploy -n tools
+```
+
+It prints `namespace/tools created` and `deployment.apps/tools-api created`. Once the pods start,
+`tools-api` shows the 2 replicas from the fixed patch:
+
+```
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+tools-api   2/2     2            2           20s
 ```
 
 </details>

@@ -86,7 +86,7 @@ Do it again without the steps, in **<N> minutes**.
 
 <details><summary>Solution</summary>
 
-Task 1:
+**Task 1.** <Why this approach, and what any flag or field the steps did not explain does.>
 
 ```shell
 ssh controlplane
@@ -98,14 +98,29 @@ vim <file>
 <what the file holds after editing>
 ```
 
-Task 2:
+```shell
+k <command that reads the result back>
+```
+
+<One sentence on what to look at in the output, ending with a colon.>
+
+```
+<the real output from the lab, trimmed>
+```
+
+<What the output confirms, such as "`READY` `True` means the certificate was signed.">
+
+**Task 2.** <Why this approach.>
 
 ```shell
 exit               # back to base
 ssh node01
 <commands>
+cat <file the task wrote>
 exit
 ```
+
+<What the result shows.>
 
 </details>
 
