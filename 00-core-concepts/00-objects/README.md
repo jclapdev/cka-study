@@ -714,9 +714,6 @@ NAME    READY   STATUS    RESTARTS   AGE
 front   1/1     Running   0          13s
 ```
 
-If `k run` fails with `serviceaccount "default" not found`, the namespace is less than a second
-old and has no `default` [ServiceAccount](../../references/service-accounts.md) yet. Run it again.
-
 **Task 2.** No `k create` command writes a ReplicaSet, so copy `controllers/frontend.yaml` from
 the ReplicaSet page into `vim cache.yaml` with `:set paste`. Change the name, the replicas, the
 container, and both labels to `app: cache`, since the selector and the pod template's labels
