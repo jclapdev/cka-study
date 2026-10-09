@@ -42,7 +42,7 @@ sudo kubeadm token create --print-join-command
 
 ## Node conditions
 
-`Ready` is one of several [conditions](https://kubernetes.io/docs/reference/node/node-status/#condition). `kubectl describe node node01` shows them all, plus allocatable resources and the pods placed there.
+`Ready` is one of several [conditions](https://kubernetes.io/docs/reference/node/node-status/#condition). `kubectl describe node` followed by a node's name shows them all, plus allocatable resources and the pods placed there.
 
 | Condition | What it means |
 | --- | --- |
@@ -60,7 +60,7 @@ A node has no role field. The ROLES column is built from [labels](labels.md) nam
 kubectl label node node01 node02 node-role.kubernetes.io/worker=
 ```
 
-kubeadm labels `controlplane` with `node-role.kubernetes.io/control-plane=` and taints it to match. It gives the workers no role label.
+kubeadm labels the control plane node with `node-role.kubernetes.io/control-plane=` and taints it to match. It gives the workers no role label.
 
 ## Docs
 

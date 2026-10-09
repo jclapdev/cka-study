@@ -12,9 +12,9 @@ make the nodes match it. Workloads run on nodes.
 | [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else — kubectl, kubelets, controllers — talks to it and never to etcd. Serves on 6443. | [static pod](#static-pods) |
 | [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | Key-value store holding all cluster state. | static pod |
 | `kube-controller-manager` | One process running many [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), each a loop comparing desired to actual and acting on the gap (node health, replica counts, service accounts). | static pod |
-| [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes by filtering then scoring. Only writes `spec.nodeName`; the kubelet does the starting. | static pod |
+| [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes: it drops the nodes a pod cannot run on, then picks the best of the rest. Only writes `spec.nodeName`; the kubelet does the starting. | static pod |
 | [`kubelet`](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) | On *every* node, control plane included. Starts containers, reports node and pod status. | systemd unit, not a pod |
-| [`kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) | On every node. Programs iptables/IPVS so [Service](services.md) IPs work. | [DaemonSet](daemonsets.md) |
+| [`kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) | On every node. Writes packet-forwarding rules (iptables or [IPVS](services.md#how-a-service-ip-answers)) so [Service](services.md) IPs work. | [DaemonSet](daemonsets.md) |
 
 A controller is a loop that compares the state an object asks for with what exists, and acts on
 the difference, such as creating a pod when a [Deployment](workloads.md) has too few.
@@ -34,11 +34,11 @@ Because the kubelet reads the files directly:
 - Editing a [manifest](kubectl.md#generating-yaml) file restarts that component within seconds. This is how a
   control plane component is reconfigured.
 - Deleting a static pod with `kubectl delete pod` does nothing lasting.
-  `kube-scheduler-controlplane` is back `Running` within seconds of being deleted,
+  The scheduler's static pod is back `Running` within seconds of being deleted,
   because the kubelet recreates it from the file.
 - The pod object the apiserver shows is a mirror of the file, and its owner is the
   [Node](workers.md), not a controller.
-- Static pods are named `<manifest-name>-<node-name>`, e.g. `etcd-controlplane`.
+- Static pods are named `<manifest-name>-<node-name>`, such as `etcd-controlplane` for etcd on a node named `controlplane`.
 - Anyone can list the directory, but the manifest files are root-only (mode `600`), so
   reading or editing one needs `sudo`.
 

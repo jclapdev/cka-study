@@ -4,7 +4,7 @@ The commands, shortcuts and checks for working with `kubectl` and vim in a termi
 
 ## Hosts and ssh
 
-You start on a machine named `base`, which has no `kubectl`, `k`, `yq` or other tools. Each task opens with a box naming the host to `ssh` into, and all the task's work happens there. Work on the wrong host scores nothing for that task.
+In the CKA, your terminal opens on a machine named `base` that only reaches the task hosts: it has no Kubernetes tools. Each task opens with a box naming the host to `ssh` into, such as `controlplane` or a worker, and all the task's work happens there. Work on the wrong host scores nothing for that task.
 
 ```bash
 ssh node01      # from base, reach the host a task names
@@ -12,13 +12,13 @@ sudo -i         # root, for files under /etc, /opt or /var, or systemctl
 exit            # leave root; exit again to go back to base
 ```
 
-- `kubectl` needs a [kubeconfig](kubeconfig.md). On a host without one it fails with `The connection to the server localhost:8080 was refused`. A task on a worker is about that machine's files and services.
-- Nested ssh, such as `ssh node02` from `node01`, is not supported. Go back to `base` first.
+- `kubectl` needs a [kubeconfig](kubeconfig.md), the file that says where the cluster is and who you are. Only the [control plane](control-plane.md) host has one. On a worker, `k` exists but fails with `The connection to the server localhost:8080 was refused`, so a task on a worker is about that machine's files and services.
+- ssh from one cluster machine to another, such as `ssh node02` from `node01`, is not supported. Go back to `base` first.
 - Each task is a new session. An alias, an exported variable or a `.vimrc` you set is gone in the next task.
 
 ## The k alias and short names
 
-Every host a task names has `k` as an alias for `kubectl`, with bash completion. Tab completes commands, resource types, object names and namespaces after `-n`.
+Every host a task names has `k` as a short name for `kubectl`, with bash completion. Tab completes commands, resource types, object names and namespaces after `-n`.
 
 Short names save typing, and `k api-resources` lists them all ([kubectl quick reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/#resource-types)):
 
@@ -77,7 +77,7 @@ k delete -f api.yaml                # delete what the file describes
 
 ## Snippets from the docs
 
-No `kubectl create` command writes these four kinds, so copy them from the docs instead. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The Quick Reference box is the part of a CKA task that links the documentation for the tools that task needs. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
+Some kinds have no `kubectl create` command, so their YAML comes from the docs. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The table lists where each one is, with other pages worth knowing. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
 
 | Need | Page and section |
 | --- | --- |
@@ -91,9 +91,11 @@ No `kubectl create` command writes these four kinds, so copy them from the docs 
 
 After pasting, change the names, the namespace and the values the task gives. Leave everything else as the docs wrote it.
 
+The Quick Reference box is a part of some CKA tasks that links the docs pages for the tools that task needs.
+
 ## vim for YAML
 
-The INSERT key is blocked, so enter insert mode with `i`.
+In the CKA's remote desktop, the INSERT key is blocked, so enter insert mode with `i`.
 
 | Keys | Does |
 | --- | --- |
@@ -103,7 +105,7 @@ The INSERT key is blocked, so enter insert mode with `i`.
 | `V`, move, `>` or `<` | Selects lines and shifts them right or left by one indent. |
 | `:set et sw=2 ts=2` | Indents with two spaces instead of a tab, which YAML requires. |
 
-Paste in the terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, as in the CKA. In Firefox they are Ctrl+V and Ctrl+C.
+Paste in the terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, as in the CKA. In the CKA's browser, Firefox, they are Ctrl+V and Ctrl+C.
 
 ## kubectl explain
 

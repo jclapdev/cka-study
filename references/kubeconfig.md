@@ -1,11 +1,11 @@
 # kubeconfig
 
-A kubeconfig is the file `kubectl` reads to learn where the [apiserver](control-plane.md#components) is and how to prove identity. Three lists plus a pointer:
+A kubeconfig is the file `kubectl` reads to learn where the [apiserver](control-plane.md#components) is and how to prove who you are. It holds three lists, and a pointer to the entry in use:
 
 | Section | Holds |
 | --- | --- |
 | `clusters` | apiserver URL and the [CA](certificates.md) cert that signs it |
-| `users` | credentials — client cert/key, token, or exec plugin |
+| `users` | credentials: a client certificate and key, a token, or a command to run that returns one |
 | `contexts` | a named (cluster, user, namespace) triple |
 | `current-context` | which context applies when no flag says otherwise |
 

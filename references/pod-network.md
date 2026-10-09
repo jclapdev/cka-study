@@ -4,19 +4,19 @@ Kubernetes requires that every pod gets its own IP and that any pod can reach an
 
 Kubernetes does not build this network itself. CNI (Container Network Interface) is the standard way for a separate program, a CNI plugin, to give each pod its address and connect it to the others ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). A cluster needs exactly one plugin, and [kubeadm](kubeadm.md) installs none. [How the pod network works](../learn/pod-network.md) explains the model.
 
-## Three CIDRs, not one
+## Pod, Service and node address ranges
 
-A CIDR is a range of IP addresses written as a first address and a prefix length. `10.244.0.0/16` means every address that starts with the same first 16 bits as `10.244.0.0`, which is `10.244.0.0` to `10.244.255.255`, 65,536 addresses. `/24` fixes the first 24 bits, so `10.244.1.0/24` is the 256 addresses `10.244.1.0` to `10.244.1.255`.
+A cluster uses three ranges of addresses: one for pods, one for [Services](services.md) and one for the nodes themselves. Each is written as a CIDR. A CIDR is a range of IP addresses written as a first address and a prefix length. `10.244.0.0/16` means every address that starts with the same first 16 bits as `10.244.0.0`, which is `10.244.0.0` to `10.244.255.255`, 65,536 addresses. `/24` fixes the first 24 bits, so `10.244.1.0/24` is the 256 addresses `10.244.1.0` to `10.244.1.255`.
 
 | Range | Set by | Default | Who lives there |
 | --- | --- | --- | --- |
 | [Pod](pod.md) CIDR | [`kubeadm init`](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/) `--pod-network-cidr` | none | pods |
-| [Service](services.md) CIDR | `kubeadm init --service-cidr` | `10.96.0.0/12` | [ClusterIPs](services.md#service-types) |
+| Service CIDR | `kubeadm init --service-cidr` | `10.96.0.0/12` | [ClusterIPs](services.md#service-types) |
 | [Node](workers.md) network | the infrastructure | none | node interfaces |
 
 No interface holds a Service IP. [kube-proxy](control-plane.md#components) writes iptables or [IPVS](services.md#how-a-service-ip-answers) rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
 
-All three must be disjoint. The controller-manager splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. On a cluster with two workers:
+All three must be disjoint. Kubernetes splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. On a cluster with two workers:
 
 ```
 NAME           CIDR
@@ -25,7 +25,7 @@ node01         10.244.1.0/24
 node02         10.244.2.0/24
 ```
 
-The plugin's own configuration must contain those ranges. [Flannel](#plugins)'s is `10.244.0.0/16`. When they disagree, the Flannel pods crash-loop and [CoreDNS](#coredns) stays in `ContainerCreating`, but the nodes still go `Ready` (see below). The Flannel log names the cause:
+The plugin's own configuration must contain those ranges. [Flannel](#plugins), a common CNI plugin, expects `10.244.0.0/16`. When they disagree, the Flannel pods crash-loop and [CoreDNS](#coredns) stays in `ContainerCreating`, but the nodes still go `Ready` (see below). The Flannel log names the cause:
 
 | `init` was given | Flannel log |
 | --- | --- |
@@ -34,7 +34,7 @@ The plugin's own configuration must contain those ranges. [Flannel](#plugins)'s 
 
 Read it with `kubectl logs -n kube-flannel -l app=flannel`.
 
-## Until a CNI exists
+## Before a pod network is installed
 
 - Node condition `Ready` is `False`, reason `KubeletNotReady`, message `container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized` (wording after the first clause varies by kubelet version)
 - CoreDNS pods stay `Pending`, because a `NotReady` node carries the [taint](taints.md) `node.kubernetes.io/not-ready:NoSchedule`, which CoreDNS does not tolerate
@@ -54,11 +54,11 @@ kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/
 
 Calico is another widely used CNI plugin. It enforces NetworkPolicy and defaults to `192.168.0.0/16`, so its [manifest](kubectl.md#generating-yaml) needs editing unless `init` used that range. With Flannel, a NetworkPolicy is accepted and has no effect.
 
-The plugin's pods run as a [DaemonSet](daemonsets.md) that tolerates `NoSchedule` taints, so they start on `controlplane` while it is still `NotReady`. Flannel puts its DaemonSet in a [namespace](namespaces.md) of its own, `kube-flannel`, so `kubectl get pods -n kube-system` does not show it. Use `-A`.
+The plugin's pods run as a [DaemonSet](daemonsets.md) that tolerates `NoSchedule` taints, so they start on the [control plane](control-plane.md) node while it is still `NotReady`. Flannel puts its DaemonSet in a [namespace](namespaces.md) of its own, `kube-flannel`, so `kubectl get pods -n kube-system` does not show it. Use `-A`.
 
 ## Pods on the host network
 
-A pod with `hostNetwork: true` uses the node's own network and address instead of one from the pod CIDR ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). The [control plane](control-plane.md) [static pods](control-plane.md#static-pods), kube-proxy and the Flannel agent all do, which is why they run before any pod network exists:
+A pod with `hostNetwork: true` uses the node's own network and address instead of one from the pod CIDR ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). The control plane [static pods](control-plane.md#static-pods), kube-proxy and the Flannel agent all do, which is why they run before any pod network exists:
 
 ```
 NAME                                   HOSTNET
@@ -84,7 +84,7 @@ ip netns exec <namespace> ip -br addr # the pod's own interfaces
 bridge link                           # which veths are plugged into cni0
 ```
 
-On `node01`, `ip -br link` (trimmed) shows the node's own `eth0`, Flannel's `flannel.1` and `cni0`, and one veth per pod:
+On a worker, `ip -br link` (trimmed) shows the node's own `eth0`, Flannel's `flannel.1` and `cni0`, and one veth per pod:
 
 ```
 eth0@if190       UP             ce:2d:c0:0e:1a:ec <BROADCAST,MULTICAST,UP,LOWER_UP>

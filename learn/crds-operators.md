@@ -10,7 +10,7 @@ A CRD adds storage and validation, but no behaviour. An object of the new type i
 
 ## Operators
 
-An operator is a controller for custom types. It runs in the cluster as ordinary pods, watches objects of its types, and reconciles: it compares what each object asks for with what exists and creates, changes or deletes objects until they match ([operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)). This is the same loop the built-in controllers run for Deployments, applied to a new type ([how a cluster works](cluster-architecture.md#desired-state-and-controllers)).
+An operator is a controller for custom types. cert-manager, which issues TLS certificates and appears in the diagram below, is one. It runs in the cluster as ordinary pods, watches objects of its types, and reconciles: it compares what each object asks for with what exists and creates, changes or deletes objects until they match ([operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)). This is the same loop the built-in controllers run for Deployments, applied to a new type ([how a cluster works](cluster-architecture.md#desired-state-and-controllers)).
 
 ```mermaid
 flowchart LR

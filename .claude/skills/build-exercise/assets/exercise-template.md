@@ -1,10 +1,15 @@
 # <The short name from the root README table, e.g. "Helm" or "etcd Backup and Restore">
 
-<One paragraph: what this tool or concept does, in plain words.>
+<One paragraph: what this tool or concept does, in plain words. Every term in it either was
+taught in Kubernetes Objects or gets a few plain words where it appears.>
 
 <!-- lab: <lab-name> -->
 
-You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. <What this topic's lab already has set up, if anything.> Every command runs on `controlplane` unless a step says otherwise.
+The lab beside each lesson is a working Kubernetes cluster of three machines. `controlplane`
+runs the parts that manage the cluster, and `node01` and `node02` are the workers that run your
+pods. The terminal opens on a fourth machine, `base`, which only reaches the others. Run
+`ssh controlplane` first: `kubectl` and its short form `k` work only there. <What this topic's lab
+already has set up, if anything, such as "Helm is installed on `controlplane`.">
 
 ## Objectives
 
@@ -12,10 +17,10 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 
 ## <First lesson: one task, named for what it achieves, e.g. "Find a chart">
 
-<At most one or two sentences on what the concept is, with the link on the term itself:
-A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
+<At most one or two sentences on what the lesson does and what the concept is, with the link on
+the term itself: A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
 
-1. <Instruction, then what the command does and why. Then each part the lesson has not
+1. <The first lesson's first step starts with `ssh controlplane`. Instruction, then what the command does and why. Then each part the lesson has not
    explained yet: "`-n drill` runs it in the namespace `drill`. `--replicas=2` asks for two
    pods.">:
 

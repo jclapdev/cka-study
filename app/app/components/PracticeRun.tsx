@@ -57,6 +57,7 @@ export function PracticeRun({
   useEffect(() => onRunning(startedAt !== null), [startedAt, onRunning]);
 
   const start = () => {
+    if (onStart && !confirm("Start the practice exam? The lab starts over, and your work in it is lost.")) return;
     onStart?.();
     setStartedAt(Date.now());
     setNow(Date.now());

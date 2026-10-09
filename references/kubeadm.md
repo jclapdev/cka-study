@@ -4,7 +4,7 @@ kubeadm turns machines that already run a [container runtime](workers.md#what-a-
 
 ## What `kubeadm init` does
 
-`init` runs a fixed list of phases, and each line it prints starts with the phase's name in brackets ([init workflow](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#init-workflow)). A run prints about 84 lines and takes about 90 seconds.
+`init` runs a fixed list of phases, and each line it prints starts with the phase's name in brackets ([init workflow](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#init-workflow)).
 
 | Phase | What it does |
 | --- | --- |

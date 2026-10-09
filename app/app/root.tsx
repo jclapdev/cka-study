@@ -115,7 +115,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
               <li key={d.name} className={d.name === MOCK_EXAMS ? "border-t border-line pt-4" : undefined}>
                 <p className="flex justify-between px-2 pb-1 text-sm font-semibold text-muted">
                   <span>{d.name}</span>
-                  {d.weight !== null && <span>{d.weight}%</span>}
+                  {d.weight !== null && <span title={`${d.weight}% of the exam`}>{d.weight}%</span>}
                 </p>
                 {d.topics.length === 0 && <p className="px-2 py-1 text-[0.95rem] text-muted">Coming soon</p>}
                 <ul>

@@ -20,11 +20,11 @@ A taint has a key, an optional value and an effect, written `key=value:Effect`, 
 | `node.kubernetes.io/not-ready:NoSchedule` and `:NoExecute` | the node's `Ready` condition is `False`, such as before a pod network exists ([node conditions](workers.md#node-conditions)) |
 | `node.kubernetes.io/unreachable:NoExecute` | the node stops reporting to the [apiserver](control-plane.md#components) |
 
-The node controller adds and removes these from the node's conditions ([taint nodes by condition](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-nodes-by-condition)). Every pod gets tolerations for `not-ready` and `unreachable` with `tolerationSeconds: 300`, so its pods are evicted from a lost node after 5 minutes ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)).
+The node controller, the part of the control plane that watches node health, adds and removes these from the node's conditions ([taint nodes by condition](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-nodes-by-condition)). Every pod gets tolerations for `not-ready` and `unreachable` with `tolerationSeconds: 300`, so the pods on a lost node are evicted after 5 minutes ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)).
 
 ## On a kubeadm cluster
 
-Only `controlplane` is tainted, so ordinary pods run on `node01` and `node02`:
+In a [kubeadm](kubeadm.md) cluster with one control plane node, `controlplane`, and two workers, `node01` and `node02`, only `controlplane` is tainted, so ordinary pods run on the workers:
 
 ```
 NAME           TAINTS

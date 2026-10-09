@@ -45,8 +45,6 @@ Helm creates objects and then stops. It does not watch them afterwards, so the D
 
 Kustomize solves a similar problem in a different way. It is built into `kubectl`, it changes plain YAML with patches instead of filling in templates, and it keeps no release history ([Kustomize](../references/kustomize.md)). Use Helm to install software someone else packaged as a chart, and use Kustomize to keep variants of your own manifests.
 
-Helm 2 ran a server component called Tiller inside the cluster, which held its own permissions. Helm 3 removed it and moved the release records into Secrets ([removal of Tiller](https://helm.sh/docs/faq/changes_since_helm2/#removal-of-tiller)).
-
 The commands, the rules for values, and the error messages are on the [Helm reference page](../references/helm.md).
 
 ## Further reading

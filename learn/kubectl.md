@@ -1,6 +1,6 @@
 # How kubectl talks to the cluster
 
-`kubectl` is a client for the Kubernetes API, an HTTP interface on the apiserver. Every command, from `get` to `apply` to `edit`, becomes one or more HTTP requests to the apiserver, and every other component works through the same API ([the Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/)). Knowing what happens to those requests explains most errors you will see.
+`kubectl` is a client for the Kubernetes API, an HTTP interface served by the apiserver, the control plane component every request goes through. Every command, from `get` to `apply` to `edit`, becomes one or more HTTP requests to the apiserver, and every other component works through the same API ([the Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/)). Knowing what happens to those requests explains most errors you will see.
 
 ## Finding the cluster
 
@@ -24,11 +24,11 @@ sequenceDiagram
   A-->>K: the stored object, or an error
 ```
 
-Each stage has its own error. `Unauthorized` means authentication failed, `Forbidden` means authorization refused, and `is invalid` means the object broke its schema ([authentication](https://kubernetes.io/docs/concepts/security/controlling-access/#authentication), [authorization](https://kubernetes.io/docs/concepts/security/controlling-access/#authorization), [admission control](https://kubernetes.io/docs/concepts/security/controlling-access/#admission-control)).
+Admission is where the cluster's admission controllers, plugins inside the apiserver, may fill in defaults or refuse an object against a policy. Each stage has its own error. `Unauthorized` means authentication failed, `Forbidden` means authorization refused, and `is invalid` means the object broke its schema ([authentication](https://kubernetes.io/docs/concepts/security/controlling-access/#authentication), [authorization](https://kubernetes.io/docs/concepts/security/controlling-access/#authorization), [admission control](https://kubernetes.io/docs/concepts/security/controlling-access/#admission-control)).
 
 ## Types, groups and versions
 
-Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, and `kubectl explain` reads it from there, so it describes the exact version your cluster runs, including types added later by CRDs.
+Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, and `kubectl explain` reads it from there, so it describes the exact version your cluster runs, including types added later by CustomResourceDefinitions (CRDs), objects that add new types to the cluster.
 
 ## Three ways to change objects
 

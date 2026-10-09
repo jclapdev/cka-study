@@ -59,7 +59,7 @@ export default function Home() {
                 <li key={d.name}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm">
                     <span className="font-semibold">
-                      {d.name} <span className="font-normal text-muted">{d.weight}%</span>
+                      {d.name} <span className="font-normal text-muted">{d.weight}% of the exam</span>
                     </span>
                     <span className="tabular-nums text-muted">
                       {done} of {d.topics.length} topics finished · practice average {avg}%
@@ -90,7 +90,7 @@ export default function Home() {
             <tbody key={d.name}>
               <tr>
                 <th colSpan={4} className="pt-6 pb-2 text-left font-bold">
-                  {d.name} {d.weight !== null && <span className="font-normal text-muted">{d.weight}%</span>}
+                  {d.name} {d.weight !== null && <span className="font-normal text-muted">{d.weight}% of the exam</span>}
                 </th>
               </tr>
               {d.topics.length === 0 && (

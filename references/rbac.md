@@ -2,8 +2,8 @@
 
 RBAC (role-based access control) is how Kubernetes decides what a user may do. Every
 request the [apiserver](control-plane.md#components) accepts has already been
-authenticated into a subject; RBAC decides whether that subject may perform that
-verb on that resource. [How access control works](../learn/access-control.md) explains the model.
+authenticated, so the apiserver knows its subject: the identity that sent it. RBAC decides whether that subject may perform that verb, such as `list`, on that
+resource, such as pods. [How access control works](../learn/access-control.md) explains the model.
 
 ## The model
 
@@ -45,10 +45,9 @@ something if any binding allows it, and removing access means removing bindings.
 
 ## Built-in roles
 
-A new [kubeadm](kubeadm.md) cluster with Flannel has 71 ClusterRoles. 65 are prefixed `system:` and let the
-[control plane](control-plane.md) components talk to the apiserver. `flannel` belongs to the [pod
-network](pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node [join](workers.md#joining). The remaining four are meant
-for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
+Most of a new [kubeadm](kubeadm.md) cluster's ClusterRoles start with `system:` and let the
+[control plane](control-plane.md) components talk to the apiserver. A [pod network](pod-network.md#plugins) such as Flannel adds its own, and
+`kubeadm:get-nodes` lets a new node [join](workers.md#joining). Four are meant for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
 
 Three ClusterRoleBindings give every authenticated subject a few permissions
 before anyone grants it anything ([discovery roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#discovery-roles)).

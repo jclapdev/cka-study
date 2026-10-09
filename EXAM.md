@@ -1,14 +1,16 @@
 # About the CKA
 
+The Certified Kubernetes Administrator (CKA) exam tests whether you can run Kubernetes, the system that runs containers across a group of machines called a cluster. Every task is done hands-on, in a real cluster, from a terminal.
+
 ## Format
 
 - 15 to 20 hands-on tasks in 2 hours, in a remote desktop with a terminal and a browser.
 - The pass mark is 66%. Each task shows its weight as a percentage.
 - The clusters run Kubernetes 1.35.
-- You start on a machine named `base`. Each task starts with a box naming the host to `ssh` into. `sudo -i` gives root, and `exit` returns to `base`. Doing a task on the wrong host scores zero for it, and ssh from one task host to another is not supported.
+- You start on a machine named `base`, which only reaches the task hosts. Each task starts with a box naming the host to `ssh` into. `sudo -i` gives root, and `exit` returns to `base`. Doing a task on the wrong host scores zero for it, and ssh from one task host to another is not supported.
 - `kubectl` is preinstalled with the `k` alias and bash completion on the hosts you `ssh` into, and `yq`, `curl` and `wget` are available there. `base` has none of them.
 - The documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), [helm.sh/docs](https://helm.sh/docs), the [Gateway API docs](https://gateway-api.sigs.k8s.io), and any page a task links in its [Quick Reference](references/kubectl.md#snippets-from-the-docs) box ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
-- Grading checks the final state of the cluster only. How you got there is never inspected, so an [imperative](references/kubectl.md#generating-yaml) `kubectl create` scores the same as hand-written YAML.
+- Grading checks the final state of the cluster only. How you got there is never inspected, so an object made with an [imperative](references/kubectl.md#generating-yaml) command such as `kubectl create` scores the same as one written by hand in YAML, the text format Kubernetes objects are written in.
 - Tasks often combine topics, such as installing a [Helm](references/helm.md) [chart](references/helm.md#charts-repositories-and-releases) that brings a custom resource, or moving an Ingress to the Gateway API. An Ingress is a set of rules that routes outside HTTP traffic to [Services](references/services.md), and the Gateway API is the newer set of objects for the same job.
 
 Registration includes two sessions of the [killer.sh](https://killer.sh) simulator, 17 tasks each, in the same remote desktop as the exam.
@@ -17,7 +19,7 @@ Sources: [Linux Foundation tips for the CKA](https://docs.linuxfoundation.org/tc
 
 ## Exam environment
 
-The remote desktop is XFCE with a terminal and Firefox, and nothing else is on screen.
+The remote desktop has a terminal and Firefox, and nothing else is on screen.
 
 - **Copy and paste.** The terminal copies with Ctrl+Shift+C and pastes with Ctrl+Shift+V, or with its right-click menu. Firefox uses Ctrl+C and Ctrl+V.
 - **vim.** The INSERT key is blocked, so enter insert mode with `i`. Pasted YAML can come out re-indented, one step further right per line. Run `:set paste` before pasting to prevent it.
@@ -25,7 +27,7 @@ The remote desktop is XFCE with a terminal and Firefox, and nothing else is on s
 - **Docs search.** The search box on kubernetes.io is allowed, but opening a result outside the allowed sites is not. The [Kustomize](references/kustomize.md) field reference at `kubectl.docs.kubernetes.io` is not on the allowed list.
 - **Partial credit.** A task is split into sub-tasks, and each one that is right in the final state scores. Harder sub-tasks can count for more. A task finished halfway still earns part of its weight.
 
-YAML comes from three places, fastest first.
+Every object you create starts as YAML, and the YAML comes from three places, fastest first.
 
 1. An imperative command that writes it: `k create deployment web --image=nginx --dry-run=client -o yaml > web.yaml`. `k create`, `k run` and `k expose` cover [Deployments](references/workloads.md), [Pods](references/pod.md), Services, [ConfigMaps](references/config.md), [Secrets](references/config.md#secrets), [Namespaces](references/namespaces.md), [ServiceAccounts](references/service-accounts.md), [Roles](references/rbac.md#the-model), bindings, [Jobs](references/workloads.md#other-workload-kinds) and CronJobs.
 2. A snippet from a kubernetes.io page, found with the search box. Many pages have an example file with a copy button, or a ready-to-paste `cat <<EOF` block. Paste it, then change the names and values.

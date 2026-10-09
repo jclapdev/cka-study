@@ -1,22 +1,26 @@
 # Helm
 
-[Helm](../../references/helm.md) installs a packaged application, called a [chart](../../references/helm.md#charts-repositories-and-releases), into a cluster as a named release, and
-keeps a numbered history of that release so it can be upgraded, rolled back and uninstalled as
-one unit. [How Helm works](../../learn/helm.md) explains what happens during an install.
+[Helm](../../references/helm.md) installs a packaged application into a cluster. The package is a [chart](../../references/helm.md#charts-repositories-and-releases), a set of
+[manifests](../../references/kubectl.md#generating-yaml) with settings you can change, and each install of it is a named release. Helm keeps a
+numbered history of each release, so it can be upgraded, rolled back and uninstalled as one
+unit. [How Helm works](../../learn/helm.md) explains what happens during an install.
 
 <!-- lab: helm -->
 
-You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. Helm is installed on `controlplane`, and one release is already installed. Every command runs on `controlplane`.
+The lab beside each lesson is a working Kubernetes cluster of three machines. `controlplane`
+runs the parts that manage the cluster, and `node01` and `node02` are the workers that run your
+pods. The terminal opens on a fourth machine, `base`, which only reaches the others. Run
+`ssh controlplane` first: `kubectl`, its short form `k`, and Helm work only there.
 
 ## Objectives
 
-* Add a chart repository and find a chart and its versions in it.
-* Read the values a chart accepts before installing it.
-* Install a pinned chart version into a new namespace with a value overridden.
-* Find the objects and the release record an install creates.
-* Upgrade a release, and keep the values it already had.
-* Roll a release back to an earlier revision.
-* Render a chart to a file without installing it.
+* Add a chart repository, and find a chart and its versions in it.
+* Read the settings a chart accepts, called values, before installing it.
+* Install a chosen version of a chart into a new namespace, with one value changed.
+* Find the objects an install creates, and the record Helm keeps of it.
+* Upgrade a release without losing the values it was installed with.
+* Roll a release back to an earlier version of itself.
+* Write the manifests a chart would install to a file, without installing them.
 * Uninstall a release.
 
 ## Find a chart
@@ -24,10 +28,12 @@ You log in to `base`, which has no `kubectl`. From there you can `ssh` to `contr
 A [chart](../../references/helm.md#charts-repositories-and-releases) is a package of Kubernetes [manifests](../../references/kubectl.md#generating-yaml), and a repository is a web server that lists
 charts and their versions.
 
-1. Check that Helm reaches the cluster. It reads the same kubeconfig as `kubectl`
-   ([kubeconfig](../../references/kubeconfig.md)). `helm list` prints the releases installed in a namespace:
+1. Go to `controlplane` and check that Helm reaches the cluster. It reads the same
+   [kubeconfig](../../references/kubeconfig.md) as `kubectl`, the file that says where the cluster is and who you are. `helm list`
+   prints the releases, the installed copies of charts, in a namespace:
 
    ```shell
+   ssh controlplane
    helm list -A
    ```
 
@@ -78,7 +84,7 @@ charts and their versions.
 
 ## Read the values
 
-A chart's templates read settings from its [values](../../references/helm.md#values), and a default for each value ships in the
+A chart's templates, its manifests with blanks to fill in, read settings from its [values](../../references/helm.md#values), and a default for each value ships in the
 chart.
 
 1. Print the defaults. `helm show values` prints the chart's `values.yaml` file, and
@@ -254,6 +260,9 @@ same release.
 
 ## Roll back
 
+Every install and upgrade adds a numbered revision to the release's history, and a rollback
+returns the release to an earlier one.
+
 1. List the revisions. `helm history` prints every revision of a release, oldest first:
 
    ```shell
@@ -351,6 +360,8 @@ installing anything.
    `helm list` would not show them.
 
 ## Uninstall
+
+Uninstalling removes a release and every object its chart created, in one step.
 
 1. Uninstall the release and check what is left. `helm uninstall web` deletes the release and
    every object it created. `k get ns apps` shows whether the namespace still exists:

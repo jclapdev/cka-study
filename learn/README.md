@@ -1,6 +1,6 @@
 # Learn
 
-How each technology in the topics works: what it is for, how its parts fit together, and where to read more.
+Each page explains how one technology behind Kubernetes works: what it is for, how its parts fit together, and where to read more.
 
 | Page | Covers |
 | --- | --- |

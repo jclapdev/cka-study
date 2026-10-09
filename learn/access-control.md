@@ -1,6 +1,6 @@
 # How access control works
 
-Every request to the apiserver answers two questions in order. Authentication asks who sent it, and turns the request's credential into a username and a list of groups. Authorization asks whether that identity may do what it asks, and on a kubeadm cluster RBAC, role-based access control, answers ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)). The two are separate: a request can be authenticated perfectly and still be refused.
+Every request to the apiserver, the part of the control plane that `kubectl` and every component talk to, answers two questions in order. Authentication asks who sent it, and turns the request's credential into a username and a list of groups. Authorization asks whether that identity may do what it asks, and on a kubeadm cluster RBAC, role-based access control, answers ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)). The two are separate: a request can be authenticated perfectly and still be refused.
 
 ## Identities
 
@@ -10,7 +10,7 @@ ServiceAccounts are the exception. They are objects, made for software running i
 
 ## RBAC
 
-RBAC has four objects in two pairs. A Role or ClusterRole lists permissions, each a set of verbs on resources in API groups. A RoleBinding or ClusterRoleBinding grants a role to subjects, which are users, groups or ServiceAccounts ([RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole)). A role that is never bound grants nothing.
+RBAC has four objects in two pairs. A Role or ClusterRole lists permissions, each a set of verbs, such as `get` or `delete`, on resources, such as pods, in API groups. A RoleBinding or ClusterRoleBinding grants a role to subjects, which are users, groups or ServiceAccounts ([RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole)). A role that is never bound grants nothing.
 
 ```mermaid
 flowchart LR

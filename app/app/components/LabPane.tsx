@@ -32,7 +32,7 @@ export function useLab(lab: string | null) {
 }
 
 export function LabPane({ lab, onPopOut }: { lab: ReturnType<typeof useLab>; onPopOut?: () => void }) {
-  const reset = () => confirm("Reset the lab? Everything on the machines is lost.") && lab.start();
+  const reset = () => confirm("Reset the lab? Your work in it is lost.") && lab.start();
   if (lab.status === "running") return <Terminal onReset={reset} onPopOut={onPopOut} />;
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#1b2433] px-6 text-center text-[#e3e8ef] dark:bg-[#0b0e13]">

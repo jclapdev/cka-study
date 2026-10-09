@@ -13,7 +13,7 @@ TLS (Transport Layer Security) is the protocol that sets up an encrypted, authen
 
 ## On a kubeadm cluster
 
-`kubeadm init` creates a CA and signs every other certificate with it. PKI (public key infrastructure) is the set of keys, certificates and CAs that a system's trust is built on. The cluster's PKI is these files, kept in `/etc/kubernetes/pki/` on the [control plane](control-plane.md) node ([where certificates are stored](https://kubernetes.io/docs/setup/best-practices/certificates/#where-certificates-are-stored)):
+`kubeadm init` creates three CAs and signs every other certificate with one of them: the cluster CA signs most, etcd has its own, and so do API extensions, servers that add to the Kubernetes API from outside the apiserver. PKI (public key infrastructure) is the set of keys, certificates and CAs that a system's trust is built on. The cluster's PKI is these files, kept in `/etc/kubernetes/pki/` on the [control plane](control-plane.md) node ([where certificates are stored](https://kubernetes.io/docs/setup/best-practices/certificates/#where-certificates-are-stored)):
 
 | File | What it is |
 | --- | --- |

@@ -1,16 +1,16 @@
 # How a pod gets its own network
 
-Every pod has its own IP address, its own `localhost` and its own ports, even though many pods share one machine. Two pods on a node can both listen on port 80 without a clash. Linux makes that possible with network namespaces, and the pod network plugin sets them up ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)).
+Every pod has its own IP address, its own `localhost` and its own ports, even though many pods share one machine. Two pods on a node can both listen on port 80 without a clash. Linux makes that possible with network namespaces, and the pod network plugin, the program that connects pods to each other, sets them up ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)).
 
 A network namespace is a separate copy of a Linux machine's network: its own interfaces, addresses, routes and firewall rules. A program inside one sees only that copy. Without namespaces, every container on a node would share the node's addresses and ports, and two web servers could not both use port 80.
 
 ## How it works
 
-When a pod starts, the container runtime creates a network namespace for it, and every container in the pod joins that one namespace, which is why they share an IP address and reach each other on `localhost` ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). The runtime then calls the [CNI](../references/pod-network.md) plugin, which connects the new namespace to the node ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). With [Flannel](../references/pod-network.md#plugins), that takes three parts:
+When a pod starts, the container runtime, the program that starts containers, creates a network namespace for it, and every container in the pod joins that one namespace, which is why they share an IP address and reach each other on `localhost` ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). The runtime then calls the network plugin through [CNI](../references/pod-network.md), the standard interface for such plugins, and the plugin connects the new namespace to the node ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). With [Flannel](../references/pod-network.md#plugins), a common plugin, that takes three parts:
 
 - A veth pair is two virtual network interfaces joined like the two ends of a cable: what goes in one end comes out of the other. One end goes inside the pod's namespace as `eth0`, and the other stays on the node.
 - A bridge is a virtual network switch inside the Linux kernel. Flannel's bridge on each node is `cni0`, and the node end of every pod's veth pair is plugged into it, so the pods on one node reach each other through it.
-- The pod gets an address from its node's slice of the pod range, such as `10.244.1.2` on `node01`, and a default route through the bridge's address, `10.244.1.1`.
+- The pod gets an address from its node's slice of the pod range, such as `10.244.1.2` on the node given `10.244.1.0/24`, and a default route through the bridge's address, `10.244.1.1`.
 
 ```mermaid
 flowchart LR

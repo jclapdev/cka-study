@@ -8,7 +8,7 @@ The type decides who can reach the Service ([service types](https://kubernetes.i
 
 | Type | Reachable from | Address |
 | --- | --- | --- |
-| ClusterIP | inside the cluster only | an IP from the service [CIDR](pod-network.md#three-cidrs-not-one), such as `10.99.69.98`. This is the default. |
+| ClusterIP | inside the cluster only | an IP from the service [CIDR](pod-network.md#pod-service-and-node-address-ranges), such as `10.99.69.98`. This is the default. |
 | NodePort | outside the cluster, on every node's IP | the ClusterIP plus a port from 30000 to 32767 opened on every node |
 | LoadBalancer | outside, through a cloud load balancer | a NodePort plus an external IP that a cloud provider fills in. With no cloud, `EXTERNAL-IP` stays `<pending>`. |
 
@@ -42,7 +42,7 @@ NAME                                       ADDRESSTYPE   PORTS   ENDPOINTS      
 endpointslice.discovery.k8s.io/web-xc5mj   IPv4          80      10.244.2.2,10.244.1.2   14s
 ```
 
-The rule kube-proxy wrote for it on `controlplane` (`sudo iptables -t nat -S KUBE-SERVICES`):
+The rule kube-proxy wrote for it on a node (`sudo iptables -t nat -S KUBE-SERVICES`):
 
 ```
 -A KUBE-SERVICES -d 10.99.69.98/32 -p tcp -m comment --comment "default/web cluster IP" -m tcp --dport 80 -j KUBE-SVC-RWPXEWV2W6XBCCKP

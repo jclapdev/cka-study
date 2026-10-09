@@ -21,7 +21,7 @@
 
 Each topic is a short course of lessons, listed under it in the sidebar: an introduction, how the technology works, one lesson per task with steps to tick off, a quiz, and a practice exam.
 
-A topic with a lab shows a terminal beside each lesson. Press **Start lab** and wait for the shell. The first start takes about 6 minutes, later ones under a minute. **Reset** starts the lab over, and so does starting the practice exam. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the CKA terminal.
+A topic with a lab shows a terminal beside each lesson. Press **Start lab** and wait for the shell. It opens on `base`, a machine that only reaches the others, as the CKA does; `ssh controlplane` reaches the cluster. The first start takes about 6 minutes, later ones under a minute. **Reset** starts the lab over, and so does starting the practice exam. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the same keys as the CKA terminal.
 
 ## Grading
 

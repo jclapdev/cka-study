@@ -49,6 +49,14 @@ A topic with a lab shows the lab beside every lesson: a Start lab button, then t
 
 ## Gotchas
 
+- **Cold reader.** Every page is read on its own by someone who has seen nothing else. Before a page is done, check it against five failures. This paragraph once opened every topic and had all five: "You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with Flannel as its pod network. Every command runs on `controlplane`."
+  1. A name before what it is. `base` came first, with no word that there is a lab or what `base` is for. Say what a thing is, in a few plain words, where its name first appears on the page; a link alone does not count.
+  2. A lack before a purpose. "Which has no `kubectl`" means nothing before the reader knows what `kubectl` is for.
+  3. Names without jobs. Each machine, component or object named gets what it does.
+  4. Terms the page does not need, such as Flannel in a topic's Introduction. Cut them, along with facts the reader cannot use there (counts, versions, history).
+  5. A missing step or a contradiction. "Every command runs on `controlplane`" after "You log in to `base`" skipped `ssh controlplane`. Two sentences, or two pages, must never disagree.
+
+  Each `##` lesson opens with a sentence on what it does before step 1, and each Objective makes sense before the lesson is read. When one passage is found failing, sweep every page for the same failure and its close cousins, not only exact copies.
 - **Output blocks** are for output the reader has to read: an error to recognise, a table or YAML whose contents are the lesson, or a value a later step uses. Leave the block out when the command only creates or changes something (`created`, `configured`, `labeled`), when the next step checks the result, or for `ssh`, `exit` and `hostname`. Put a one-word or one-line result in the sentence instead: "The answer is `no`." Trim `created` lines from a block that stays. The sentence before a block says what to look at in it ("`SHORTNAMES` is what you can type instead of the full name:"), never a stock line repeated before every block.
 - **Narration** is any sentence about the lesson, the reader, or how much something matters, instead of about Kubernetes. Delete it. These were all removed from the RBAC exercise:
   - Describing the lesson: "In this lesson, you will…", "Nothing here schedules a pod, so nothing waits."

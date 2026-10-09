@@ -22,7 +22,7 @@ This matters for [RBAC](rbac.md). A RoleBinding grants access inside its own nam
 
 ## Initial namespaces
 
-A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#initial-namespaces)), and [Flannel](pod-network.md#plugins) adds a fifth:
+A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/#initial-namespaces)), and a pod network plugin such as [Flannel](pod-network.md#plugins) adds its own:
 
 | Namespace | Holds |
 | --- | --- |
@@ -32,7 +32,6 @@ A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namesp
 | `kube-node-lease` | One Lease per node. A Lease is a small object with a timestamp, and the kubelet renews its node's every few seconds as a heartbeat. |
 | `kube-flannel` | The Flannel pod network. |
 
-Kubernetes 1.34 serves 32 cluster-scoped and 33 namespaced resource types.
 
 Each new namespace gets a ServiceAccount called `default` straight away ([ServiceAccounts](service-accounts.md#the-model)).
 

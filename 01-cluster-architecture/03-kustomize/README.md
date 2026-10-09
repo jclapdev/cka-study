@@ -1,21 +1,28 @@
 # Kustomize
 
-[Kustomize](../../references/kustomize.md) builds a final set of [manifests](../../references/kubectl.md#generating-yaml) from plain YAML files plus a `kustomization.yaml` that
-lists them and the changes to make, such as a namespace, a name prefix or an image tag. It is
-built into `kubectl`, so no template language and no extra tool is involved.
-[How Kustomize works](../../learn/kustomize.md) explains bases, overlays and generated names.
+[Kustomize](../../references/kustomize.md) takes plain YAML [manifests](../../references/kubectl.md#generating-yaml) and changes them for one use, such as a different
+namespace, a name prefix or an image tag, without editing the original files. A file named
+`kustomization.yaml` lists the manifests and the changes. Kustomize is built into `kubectl`, so
+nothing else needs installing.
+[How Kustomize works](../../learn/kustomize.md) explains how one set of files serves several environments.
 
 <!-- lab: kustomize -->
 
-You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. Every command runs on `controlplane`.
+The lab beside each lesson is a working Kubernetes cluster of three machines. `controlplane`
+runs the parts that manage the cluster, and `node01` and `node02` are the workers that run your
+pods. The terminal opens on a fourth machine, `base`, which only reaches the others. Run
+`ssh controlplane` first: `kubectl` and its short form `k` work only there.
 
 ## Objectives
 
-* Turn generated manifests into a Kustomize base, using the kustomization the docs give you.
+* Turn generated manifests into a base, the shared set of files, with a kustomization copied
+  from the docs.
 * Preview what Kustomize produces before anything reaches the cluster.
-* Write an overlay that changes the base's namespace, names, [labels](../../references/labels.md) and image tag.
+* Write an overlay, the changes for one environment, that sets the base's namespace, names, [labels](../../references/labels.md)
+  and image tag.
 * Change fields in one object with patches copied from the docs.
-* Generate a [ConfigMap](../../references/config.md) whose name changes with its contents, and watch the [Deployment](../../references/workloads.md) roll.
+* Generate a [ConfigMap](../../references/config.md) whose name changes with its contents, and see the [Deployment](../../references/workloads.md) replace its
+  pods when it does.
 * Apply and delete everything a kustomization produces with `-k`.
 
 Every YAML file in the steps comes from `k create --dry-run` or from the allowed docs.
@@ -28,12 +35,13 @@ found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` b
 
 A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordinary manifests with a `kustomization.yaml` that lists them.
 
-1. Make the folder and generate a Deployment and a [Service](../../references/services.md) into it. `mkdir -p ~/web/base` creates
+1. Go to `controlplane`, make the folder, and generate a Deployment and a [Service](../../references/services.md) into it. `mkdir -p ~/web/base` creates
    `base` and its parent `web`, and `cd ~/web` moves into it. `create service clusterip web`
    makes a Service named `web` that is reachable only inside the cluster, and `--tcp=80:80` is
    the Service's port, then the pods' port:
 
    ```shell
+   ssh controlplane
    mkdir -p ~/web/base && cd ~/web
    k create deployment web --image=nginx:1.27 --dry-run=client -o yaml > base/deployment.yaml
    k create service clusterip web --tcp=80:80 --dry-run=client -o yaml > base/service.yaml
@@ -255,8 +263,9 @@ A [patch](../../references/kustomize.md#patches) is a partial manifest. It names
 the fields to add or replace.
 
 1. The [Customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)
-   section has two patch blocks, `increase_replicas.yaml` and `set_memory.yaml`. In `~/web/prod`,
-   paste each block into the terminal, then fix the names in vim. The docs' Deployment is
+   section has two patch blocks, `increase_replicas.yaml` and `set_memory.yaml`. Each block writes
+   its file into the folder you are in, so run `cd ~/web/prod`, paste each block into the
+   terminal, then fix the names in vim. The docs' Deployment is
    `my-nginx`, and so is its container. Yours is `web`, and its container is `nginx`. Set the
    memory limit to `128Mi`. The files read:
 
@@ -288,7 +297,8 @@ the fields to add or replace.
 
    `increase_replicas.yaml` sets `replicas` to 3. `set_memory.yaml` sets a memory limit of
    128 mebibytes on the container, the most memory it may use. A patch uses the base's name,
-   `web`, not `prod-web`. The container is matched by its `name`.
+   `web`, not `prod-web`. The container is matched by its `name`. Then run `cd ~/web` to go back
+   to the folder the other steps run in.
 
 2. In `vim prod/kustomization.yaml`, add the `patches` list from the same docs block. Each
    `path` names one patch file. The file now reads:
@@ -449,6 +459,9 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
 
 ## Delete everything
 
+`-k` works for deleting as it does for applying: it builds the kustomization and acts on every
+object it produces.
+
 1. Delete what the overlay produces. `delete -k prod` builds the kustomization and deletes
    each object it produces:
 
@@ -457,8 +470,8 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    ```
 
    `delete -k` deletes only what the kustomization renders now, which includes
-   `prod-web-config-hc7d4825hb` but not the older ConfigMap. That one goes because its
-   [namespace](../../references/namespaces.md) is deleted.
+   `prod-web-config-hc7d4825hb` but not the older ConfigMap. That one goes too: the overlay
+   lists `namespace.yaml`, so `delete -k` deletes the `prod` [namespace](../../references/namespaces.md), and everything in it.
 
 ## Quiz
 

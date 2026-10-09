@@ -46,8 +46,8 @@ Kustomize	references/kustomize.md
 strategic merge patch	references/kustomize.md#patches
 CNI	references/pod-network.md
 NAT	references/pod-network.md
-CIDR	references/pod-network.md#three-cidrs-not-one
-conflist	references/pod-network.md#until-a-cni-exists
+CIDR	references/pod-network.md#pod-service-and-node-address-ranges
+conflist	references/pod-network.md#before-a-pod-network-is-installed
 Flannel	references/pod-network.md#plugins
 Calico	references/pod-network.md#plugins
 CoreDNS	references/pod-network.md#coredns

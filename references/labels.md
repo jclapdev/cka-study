@@ -8,7 +8,7 @@ A key has an optional prefix and a name, separated by `/`. Prefixes such as `kub
 
 ## Node labels
 
-[kubeadm](kubeadm.md) and the [kubelet](control-plane.md#components) put these labels on `controlplane`:
+[kubeadm](kubeadm.md) and the [kubelet](control-plane.md#components) put these labels on a control plane node:
 
 ```
 beta.kubernetes.io/os=linux,kubernetes.io/hostname=controlplane,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=

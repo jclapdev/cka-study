@@ -1,6 +1,6 @@
 # How kubeadm builds a cluster
 
-A cluster needs more than its programs. Every component needs a certificate so the others can trust it, a kubeconfig that says where the apiserver is, and a way to start before the apiserver exists. kubeadm does that setup. It turns machines that already have a container runtime and a kubelet into a cluster, and it leaves out everything a cluster can choose for itself, such as the pod network ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)).
+A cluster needs more than its programs. Every component needs a certificate, a signed file that proves who it is, so the others can trust it; a kubeconfig, a file that says where the apiserver is; and a way to start before the apiserver, the control plane's front door that everything talks to, exists. kubeadm does that setup. It turns machines that already have a container runtime, the program that starts containers, and a kubelet, the agent that runs pods on a machine, into a cluster, and it leaves out everything a cluster can choose for itself, such as the pod network ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)).
 
 ## Building the control plane
 

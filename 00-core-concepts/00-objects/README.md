@@ -1,24 +1,28 @@
 # Kubernetes Objects
 
-Everything you run on Kubernetes is an object: a record of what you want, which the cluster
-then works to make true. In this topic you run a [Pod](../../references/pod.md), write one in YAML, keep copies of it
-running with a [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) and a [Deployment](../../references/workloads.md), give them one address with a [Service](../../references/services.md), group objects in
-[namespaces](../../references/namespaces.md), and change objects with `kubectl create` and `kubectl apply`.
+Kubernetes runs containers across a group of machines called a cluster. Everything you run on
+it is an object: a record of what you want, which the cluster then works to make true. In this
+topic you run a [Pod](../../references/pod.md), write one in YAML, keep copies of it running with a [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) and a [Deployment](../../references/workloads.md), give
+them one address with a [Service](../../references/services.md), group objects in [namespaces](../../references/namespaces.md), and change objects with `kubectl`,
+the command that talks to the cluster.
 [How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components) that act on it, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command sends.
 
 <!-- lab: cluster -->
 
-You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. Every command runs on `controlplane`.
+The lab beside each lesson is a working Kubernetes cluster of three machines. `controlplane`
+runs the parts that manage the cluster, and `node01` and `node02` are the workers that run your
+pods. The terminal opens on a fourth machine, `base`, which only reaches the others. Run
+`ssh controlplane` first: `kubectl` and its short form `k` work only there.
 
 ## Objectives
 
-* Run a Pod, read its status, and see that a deleted pod stays deleted.
-* Write a Pod [manifest](../../references/kubectl.md#generating-yaml) from the docs and create the pod from the file.
-* Keep a number of pods running with a ReplicaSet, and scale it.
-* Run a Deployment and follow its pods back to it through its ReplicaSet.
+* Run a Pod, read its status, and see that nothing brings it back once you delete it.
+* Write a Pod [manifest](../../references/kubectl.md#generating-yaml), a YAML file that describes the object, from the docs, and create the pod from it.
+* Keep a set number of identical pods running with a ReplicaSet, and change that number.
+* Run a Deployment, and see the ReplicaSet it creates to manage its pods.
 * Give a Deployment's pods one address with a Service, and reach it by name.
-* Create objects in a namespace, and list and reach them across namespaces.
+* Create objects in a namespace, a named group of objects, and reach them from another namespace.
 * Tell `kubectl create` from `kubectl apply`, and change an object by editing its file.
 
 ## Run a pod
@@ -40,7 +44,8 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    yet. Wherever `kubectl` works, [`k`](../../references/kubectl.md#the-k-alias-and-short-names) is the same command with Tab completion: type `k get dep`
    and press Tab, and it writes `deployments`.
 
-2. List the pods. `get pods` lists every pod in the namespace you are working in, `default`:
+2. List the pods. `get pods` lists every pod in `default`, the namespace, or named group of objects, that a command uses when it
+   names none:
 
    ```shell
    k get pods
@@ -72,7 +77,8 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    web    1/1     Running   0          2s    10.244.1.3   node01   <none>           <none>
    ```
 
-   Every pod gets its own IP from the pod network. `NOMINATED NODE` and `READINESS GATES` stay
+   Every pod gets its own IP from the pod network, the part of the cluster that gives pods
+   their addresses. `NOMINATED NODE` and `READINESS GATES` stay
    `<none>` for an ordinary pod.
 
 4. Read what happened to it. `describe pod web` prints the pod's details, and ends with its
@@ -95,7 +101,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
      Normal  Started    0s    kubelet            Started container web
    ```
 
-   The [scheduler](../../references/control-plane.md#components) chose `node01` for the pod, `default/web` being its namespace and name.
+   The [scheduler](../../references/control-plane.md#components), the part of the control plane that picks a node for each pod, chose `node01` for the pod, `default/web` being its namespace and name.
    Then the kubelet on `node01`, the agent that runs pods on that machine, pulled the
    image, created the container and started it.
 
@@ -142,7 +148,8 @@ docs have one for each common type, ready to copy.
        - containerPort: 80
    ```
 
-   `apiVersion` is the version of the Kubernetes API the type belongs to, `v1` for a pod.
+   `apiVersion` is the version of the Kubernetes API, the set of object types the cluster
+   accepts, that the type belongs to: `v1` for a pod.
    `kind` is the type of object. `metadata` identifies the object, here by its `name`. `spec` is
    the state you want: a list of `containers`, where each `-` starts one container with its
    `name`, its `image`, and the `containerPort` it listens on.
@@ -218,7 +225,7 @@ docs have one for each common type, ready to copy.
 ## Keep pods running with a ReplicaSet
 
 A [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) keeps a set number of identical pods running. It finds its pods by [label](../../references/labels.md), a
-key-value pair on an object, and creates new ones from its [pod template](../../references/workloads.md#the-pod-template) when there are too few. No
+key-value pair on an object, and creates new ones from its [pod template](../../references/workloads.md#the-pod-template), a pod manifest kept inside it, when there are too few. No
 `kubectl create` command writes a ReplicaSet, so copy it from the docs.
 
 1. Search kubernetes.io for `replicaset`, open
@@ -482,7 +489,8 @@ command named a namespace.
    k get pods -n kube-system
    ```
 
-   `kube-system` holds the pods that make up the cluster itself:
+   `kube-system` holds the pods that make up the cluster itself, and `kube-flannel` the pods of
+   [Flannel](../../references/pod-network.md#plugins), the pod network that gives each pod its address:
 
    ```
    NAME              STATUS   AGE
@@ -503,7 +511,8 @@ command named a namespace.
    kube-scheduler-controlplane            1/1     Running   1 (2m41s ago)   3d2h
    ```
 
-   The four pods ending in `-controlplane` are the control plane, running on `controlplane`.
+   `kube-node-lease` holds each node's heartbeat, and `kube-public` a little information anyone may
+   read. The four pods ending in `-controlplane` are the control plane, running on `controlplane`.
    There is one `kube-proxy` pod per node, which makes Service IPs work on that node, and two
    `coredns` pods. `1 (2m41s ago)` means the container restarted once, 2 minutes 41 seconds
    ago, when the machines last started.
@@ -632,8 +641,8 @@ not.
    It prints
    `Error from server (AlreadyExists): error when creating "api.yaml": deployments.apps "api" already exists`.
 
-5. See what `apply` keeps. `apply` stores the file it was given in an annotation on the
-   object, `kubectl.kubernetes.io/last-applied-configuration`. `-o jsonpath` prints that one
+5. See what `apply` keeps. `apply` stores the file it was given in an annotation, a note
+   kept on the object, named `kubectl.kubernetes.io/last-applied-configuration`. `-o jsonpath` prints that one
    field, and `\.` keeps each dot in the annotation's name from being read as a step down:
 
    ```shell
@@ -649,7 +658,8 @@ not.
    The next `apply` compares the file with this copy and with the live object, so a field you
    delete from the file is deleted from the object too.
 
-6. Start a pod, then try to change its command with `k edit`. `busybox` is a small image of
+6. Most of a running pod cannot be changed in place, whether from a file or by editing the live
+   object. Start a pod, then try to change its command with `k edit`. `busybox` is a small image of
    shell tools. Everything after `--` is passed to the container, here `sleep 3600`, which
    keeps it running for an hour. `k edit` opens the live object in vim and sends your change
    when you save:
@@ -667,7 +677,7 @@ not.
    error: Edit cancelled, no valid changes were saved.
    ```
 
-   Most of a running pod's spec cannot change. `k edit` keeps your edit in the file it names.
+   `k edit` keeps your edit in the file it names.
 
 7. Replace the pod from that file. `replace -f` replaces an object with the one in the file,
    and `--force` does it by deleting the object and creating it again, which is the only way to

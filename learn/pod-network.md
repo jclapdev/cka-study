@@ -30,9 +30,9 @@ flowchart LR
   n2 --- p2
 ```
 
-The node network is the machines' own addresses. The pod CIDR, a range written in CIDR notation such as `10.244.0.0/16`, is split into one smaller range per node, and the plugin hands out pod addresses from it. The service CIDR holds the stable addresses of Services.
+The node network is the machines' own addresses. The pod CIDR is a range of addresses written as a first address and a prefix length: `10.244.0.0/16` is every address whose first 16 bits match `10.244.0.0`. It is split into one smaller range per node, and the plugin hands out pod addresses from it. The service CIDR holds the stable addresses of Services.
 
-Service addresses are different from the other two. No network interface holds one. kube-proxy writes packet-forwarding rules on every node that send traffic for a Service address to one of its pods ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a Service address answers but never appears in `ip addr`.
+Service addresses are different from the other two. No network interface holds one. kube-proxy, a program that runs on every node, writes packet-forwarding rules there that send traffic for a Service address to one of its pods ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a Service address answers but never appears in `ip addr`.
 
 ## When the network is missing
 
@@ -42,7 +42,7 @@ A node reports `Ready` only once a network configuration file exists in `/etc/cn
 stateDiagram-v2
   [*] --> NotReady: the kubelet registers the node
   NotReady --> Ready: a plugin writes its configuration file
-  Ready --> NotReady: the agent fails, or the kubelet stops reporting
+  Ready --> NotReady: the configuration file is removed, or the kubelet stops reporting
 ```
 
 Some pods do not wait. The control plane static pods, kube-proxy and the plugin's own agent use the node's network instead of a pod address (`hostNetwork: true`), which is how they run before the pod network exists. CoreDNS, the cluster's DNS server, needs a pod address, so it is the first pod to show whether the network works.

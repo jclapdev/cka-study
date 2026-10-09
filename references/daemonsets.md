@@ -4,7 +4,7 @@ A DaemonSet runs one copy of a pod on every node, or on every node that matches 
 
 ## On a kubeadm cluster
 
-A [kubeadm](kubeadm.md) cluster with [Flannel](pod-network.md#plugins) and two workers runs two DaemonSets:
+A [kubeadm](kubeadm.md) cluster with one [control plane](control-plane.md) node, two workers and [Flannel](pod-network.md#plugins) as its pod network runs two DaemonSets:
 
 ```
 NAMESPACE      NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
@@ -14,7 +14,7 @@ kube-system    kube-proxy        3         3         3       3            3     
 
 `DESIRED` is the number of nodes that should run a copy. Each pod is named `<daemonset>-<random>`, such as `kube-proxy-4wdrl`, and `kubectl get pods -o wide` shows which node it runs on.
 
-A DaemonSet's pods still obey [taints](taints.md) ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). Both DaemonSets here tolerate every `NoSchedule` taint, so they also run on `controlplane`, which kubeadm taints `node-role.kubernetes.io/control-plane:NoSchedule` ([control-plane](control-plane.md)).
+A DaemonSet's pods still obey [taints](taints.md) ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). Both of these DaemonSets tolerate every `NoSchedule` taint, so they also run on the control plane node, which kubeadm taints `node-role.kubernetes.io/control-plane:NoSchedule`.
 
 ## Commands
 

@@ -1,31 +1,42 @@
 # CRDs and Operators
 
-A [CustomResourceDefinition](../../references/crds.md) (CRD) adds a new resource type to the [apiserver](../../references/control-plane.md#components), and an [operator](../../references/crds.md#operators) is a
-controller that watches objects of that type and does the work they describe. Installing an
-operator usually means installing its CRDs and its controller together, often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases).
+Kubernetes comes with a fixed set of object types, such as [Pods](../../references/pod.md) and [Deployments](../../references/workloads.md). A
+[CustomResourceDefinition](../../references/crds.md) (CRD) adds a new type to the [apiserver](../../references/control-plane.md#components), the part of the control plane every
+request goes through, so you can create objects of that type like any other. An [operator](../../references/crds.md#operators) is a
+program running in the cluster that watches objects of such a type and does the work they
+describe. Installing an operator usually means installing its CRDs and the program together,
+often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases), a package Helm installs.
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 <!-- lab: crds -->
 
-You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. Helm is installed on `controlplane`. Every command runs on `controlplane`.
+The lab beside each lesson is a working Kubernetes cluster of three machines. `controlplane`
+runs the parts that manage the cluster, and `node01` and `node02` are the workers that run your
+pods. The terminal opens on a fourth machine, `base`, which only reaches the others. Run
+`ssh controlplane` first: `kubectl`, its short form `k`, and Helm work only there.
 
 ## Objectives
 
-* Find the CRDs a cluster has, and the resource types they add.
+* Find the CRDs a cluster has, and the object types they add.
 * Create a CRD from the docs' example, and objects of the new type.
-* See the schema reject a wrong value and an unknown field.
-* Install an operator, cert-manager, with Helm, and list the CRDs it brought.
-* Build a custom resource with `k explain`, and watch the operator act on it.
-* Save a CRD list and a field's documentation to files.
+* See the CRD refuse a wrong value and an unknown field.
+* Install an operator, cert-manager, which issues [certificates](../../references/certificates.md), with Helm, and list the CRDs it
+  brought.
+* Write an object of one of its types, with `k explain` to find the fields, and watch the
+  operator act on it.
+* Save a list of CRDs and a field's description to files.
 
 ## Look for custom resources
 
-A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cluster-scoped type `customresourcedefinitions`.
+A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the cluster. It is itself an object, of the type
+`customresourcedefinitions`, which belongs to the whole cluster rather than a namespace.
 
-1. List the CRDs, and the type that holds them. `k get crd` lists the CRDs, and
+1. Go to `controlplane` and list the CRDs, and the type that holds them. `k get crd` lists the
+   CRDs, and
    `api-resources --api-group=apiextensions.k8s.io` lists only the types in that [API group](../../references/api-groups.md):
 
    ```shell
+   ssh controlplane
    k get crd
    k api-resources --api-group=apiextensions.k8s.io
    ```
@@ -38,16 +49,19 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    customresourcedefinitions   crd,crds     apiextensions.k8s.io/v1   false        CustomResourceDefinition
    ```
 
-   A new [kubeadm](../../references/kubeadm.md) cluster with [Flannel](../../references/pod-network.md#plugins) has none. Every type so far is built into the apiserver.
+   Every type the cluster has is built into the apiserver.
 
 ## Create a CRD
+
+The docs' example CRD adds a made-up type, `CronTab`, which describes a job to run on a
+schedule. Nothing acts on it; it shows what a CRD adds.
 
 1. Search kubernetes.io for `customresourcedefinition`, open
    [Extend the Kubernetes API with CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition),
    and copy the `CronTab` CustomResourceDefinition under "Create a CustomResourceDefinition".
    Paste it into `vim resourcedefinition.yaml` with `:set paste`, and save. It defines the
-   group `stable.example.com`, the kind `CronTab`, the short name `ct`, and three fields under
-   `spec`: `cronSpec` and `image` as strings, `replicas` as an integer.
+   [API group](../../references/api-groups.md) `stable.example.com`, the name the type is filed under; the kind `CronTab`, the
+   type's name in a [manifest](../../references/kubectl.md#generating-yaml); the short name `ct`; and three fields under `spec`: `cronSpec` and `image` as strings, `replicas` as an integer.
 
 2. Apply it and look for the new type. `--api-group=stable.example.com` lists only the types
    in the CRD's group:
@@ -104,6 +118,8 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
    `couldn't find resource`, until the CRD is [`Established`](../../references/crds.md#failure-modes).
 
 ## Create custom objects
+
+With the CRD applied, objects of the new type are created, listed and checked like any other.
 
 1. On the same page, copy the `CronTab` object under
    [Create custom objects](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-custom-objects)
@@ -180,13 +196,13 @@ A [CRD](../../references/crds.md#what-a-crd-adds) is itself an object, of the cl
 
 ## Install an operator
 
-An [operator](../../references/crds.md#operators) is a controller for custom resources. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates](../../references/certificates.md): you
-create a `Certificate` object, and its controller writes the key and certificate into a [Secret](../../references/config.md#secrets).
+An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates], the files that let HTTPS servers prove who they are(../../references/certificates.md): you
+create a `Certificate` object, and its [controller](../../references/control-plane.md#components) writes the key and certificate into a [Secret](../../references/config.md#secrets).
 [How TLS secures the cluster](../../learn/tls.md) explains what a certificate proves.
 
 1. Install cert-manager's Helm chart, with its CRDs.
    `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
-   so there is no `helm repo add` first. `--version v1.21.2` pins the chart version, and
+   a server that stores images and charts, so there is no `helm repo add` first. `--version v1.21.2` pins the chart version, and
    `--set crds.enabled=true` sets one value:
 
    ```shell
@@ -254,15 +270,17 @@ create a `Certificate` object, and its controller writes the key and certificate
    issuers               iss          cert-manager.io/v1   true         Issuer
    ```
 
-   An Issuer is namespaced and a ClusterIssuer is not, the same [split](../../references/namespaces.md#namespaced-and-cluster-scoped-resources) as a [Role](../../references/rbac.md#the-model) and a
+   An Issuer, which signs certificates, works in one namespace, and a ClusterIssuer in the whole
+   cluster, the same [split](../../references/namespaces.md#namespaced-and-cluster-scoped-resources) as a [Role](../../references/rbac.md#the-model) and a
    ClusterRole.
 
-## Configure the operator
+## Issue a certificate
 
-No `kubectl create` command and no kubernetes.io page writes a cert-manager object. `k explain`
-reads the fields from the CRD's schema, and marks the [required ones](../../references/kubectl.md#kubectl-explain).
+cert-manager acts on two kinds of object: an Issuer, which says how certificates are signed, and
+a [Certificate](../../references/crds.md#operators), which asks for one. No `kubectl create` command and no kubernetes.io page writes
+them, so `k explain` reads their fields from the CRDs and marks the [required ones](../../references/kubectl.md#kubectl-explain).
 
-1. Find what an Issuer can be, and what a [Certificate](../../references/crds.md#operators) needs. `grep -E '^  [a-zA-Z]'` keeps the
+1. Find what an Issuer can be, and what a Certificate needs. `grep -E '^  [a-zA-Z]'` keeps the
    lines indented by exactly two spaces, which are the fields directly under `spec`.
    `grep -- '-required-'` keeps the lines marked `-required-`, and `--` stops `grep` from
    reading `-required-` as an option:
@@ -409,6 +427,8 @@ reads the fields from the CRD's schema, and marks the [required ones](../../refe
    A field marked `-required-` in `k explain` has to be in the object, or nothing is created.
 
 ## Save answers to files
+
+A CKA task can ask for its answer in a file instead of as a change to the cluster.
 
 1. Write the names of cert-manager's CRDs to a file. `> crds.txt` writes the output to the
    file instead of the screen, and `cat crds.txt` prints the file:

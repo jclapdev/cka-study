@@ -1,6 +1,6 @@
 # Kustomize
 
-Kustomize builds a set of [manifests](kubectl.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`. `kubectl` 1.34 includes Kustomize v5.7.1, and `kubectl version --client` prints it.
+Kustomize builds a set of [manifests](kubectl.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`.
 
 [How Kustomize works](../learn/kustomize.md) explains bases and overlays and compares Kustomize with [Helm](helm.md).
 
@@ -66,17 +66,6 @@ Kustomize adds a hash of the contents to the generated name, such as `web-config
 | `kubectl apply -f <dir>` | Applies every YAML file in the folder as-is and does not run Kustomize. |
 
 `kubectl kustomize` and every `-k` command also accept a Git URL, such as a project's `config/` folder at a tag ([kubectl kustomize](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_kustomize/)).
-
-## Remote kustomizations
-
-A remote kustomization is fetched and built the same way as a local one. The Gateway API project's [CRD](crds.md) folder at `v1.6.2` builds to 12 objects:
-
-```
-$ kubectl kustomize "https://github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.6.2" | grep "^kind:" | sort | uniq -c
-     10 kind: CustomResourceDefinition
-      1 kind: ValidatingAdmissionPolicy
-      1 kind: ValidatingAdmissionPolicyBinding
-```
 
 ## Commands
 

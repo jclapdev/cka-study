@@ -1,35 +1,44 @@
 # RBAC
 
-Role-based access control ([RBAC](../../references/rbac.md)) decides which requests the [apiserver](../../references/control-plane.md#components) allows, by matching the
-identity behind a request against the rules that have been bound to it.
+Every `kubectl` command is a request to the [apiserver](../../references/control-plane.md#components), the part of the control plane that all requests
+go through. Role-based access control ([RBAC](../../references/rbac.md)) decides which of those requests it allows, by
+checking who sent each one against the permissions granted to them.
 [How access control works](../../learn/access-control.md) explains the model.
 
 <!-- lab: cluster -->
 
-You log in to `base`, which has no `kubectl`. From there you can `ssh` to `controlplane` and the two workers, `node01` and `node02`, which make up a working cluster with [Flannel](../../references/pod-network.md#plugins) as its pod network. Every command runs on `controlplane`.
+The lab beside each lesson is a working Kubernetes cluster of three machines. `controlplane`
+runs the parts that manage the cluster, and `node01` and `node02` are the workers that run your
+pods. The terminal opens on a fourth machine, `base`, which only reaches the others. Run
+`ssh controlplane` first: `kubectl` and its short form `k` work only there.
 
 ## Objectives
 
-* Find out why your own `kubectl` is allowed to do anything.
-* Create a [ServiceAccount](../../references/service-accounts.md) that holds no permissions at all.
-* Grant it one verb on one resource, with a [Role](../../references/rbac.md#the-model) and a RoleBinding.
-* Watch the same request fail in a second namespace, and read the message that says why.
-* Reuse a single ClusterRole definition across two namespaces.
-* Reach a cluster-scoped resource, which a RoleBinding cannot do.
+* Find the permission that lets your own `kubectl` do anything.
+* Create a [ServiceAccount](../../references/service-accounts.md), an identity for a program, that has no permissions at all.
+* Allow it one action on one type of object, with a [Role](../../references/rbac.md#the-model), a list of allowed actions, and a RoleBinding, which grants it.
+* See the same request refused in another namespace, and read the message that says why.
+* Write one list of allowed actions as a ClusterRole, for use in any namespace, and grant it in two.
+* Grant access to nodes, which belong to no namespace, where a RoleBinding cannot.
 
 ## Create two namespaces
 
-A [namespace](../../references/namespaces.md) is a named group of objects, and the boundary a Role and a RoleBinding apply
-within.
+Most permissions are granted inside one [namespace](../../references/namespaces.md), a named group of objects. Two
+namespaces, `dev` and `prod`, show where such a grant stops.
 
-1. Create two. `k create namespace dev` makes a namespace named `dev`:
+1. Go to `controlplane` and create the two. `k create namespace dev` makes a namespace named
+   `dev`:
 
    ```shell
+   ssh controlplane
    k create namespace dev
    k create namespace prod
    ```
 
 ## Find out why your kubectl can do anything
+
+Your own `kubectl` is allowed every request. This lesson finds who the apiserver thinks you are,
+and the grant that allows it.
 
 1. Ask the apiserver who you are. `auth whoami` sends your credentials and prints the user
    and groups the apiserver reads from them:
@@ -46,13 +55,14 @@ within.
    Groups                                              [kubeadm:cluster-admins system:authenticated]
    ```
 
-   You are not a Kubernetes object. `kubernetes-admin` is a name asserted by the client
-   [certificate](../../references/certificates.md) in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
+   You are not a Kubernetes object. `kubernetes-admin` is a name written in the client
+   [certificate](../../references/certificates.md) that `kubectl` signs in with, kept in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
    same certificate. Neither exists as a resource you could delete. [Client certificates](../../references/authentication.md#client-certificates)
    explains how a certificate becomes a user and groups, and [how TLS secures the cluster](../../learn/tls.md)
    how the cluster signs one.
 
-2. Find the binding that gives that group its power. `get clusterrolebinding
+2. Find the binding that gives that group its power. A [ClusterRoleBinding](../../references/rbac.md#the-model) grants a ClusterRole,
+   a named set of permissions, across the whole cluster. `get clusterrolebinding
    kubeadm:cluster-admins` fetches that one binding by name, and `-o wide` adds the `USERS`,
    `GROUPS` and `SERVICEACCOUNTS` columns:
 
@@ -68,13 +78,14 @@ within.
    ```
 
    The [group](../../references/rbac.md#subjects) is bound to `cluster-admin`, which permits everything. That binding is the only
-   reason your commands work, and it is an ordinary [object](../../references/rbac.md#the-model) of the same kind you are about to
+   reason your commands work, and it is an ordinary object of the same kind you are about to
    create.
 
 ## Create an identity
 
-A ServiceAccount is the one subject kind that exists as an object. Users and groups come from
-credentials, so a cluster cannot create them. It can create a [ServiceAccount](../../references/service-accounts.md#the-model).
+Every request comes from a subject: a user, a group or a ServiceAccount. A [ServiceAccount](../../references/service-accounts.md#the-model) is an
+identity for a program, and the only subject that is an object you can create. Users and groups
+exist only in the credentials that sign a request.
 
 1. Create the account in `dev`. `create serviceaccount deploy-bot -n dev` makes a
    ServiceAccount named `deploy-bot` in the namespace `dev`:
@@ -195,6 +206,8 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
 
 ## Cross a namespace boundary
 
+The RoleBinding lives in `dev`, so what it grants stops at `dev`.
+
 1. Ask the same question in `prod`:
 
    ```shell
@@ -222,7 +235,8 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    ```
 
    The message names every field a rule has to match: subject, verb, resource, API group and
-   namespace. `""` is the core [API group](../../references/api-groups.md#where-the-group-matters), not a missing value.
+   namespace. Every resource type belongs to an [API group](../../references/api-groups.md#where-the-group-matters), a family of types, and `""` is the core group,
+   which holds pods. It is not a missing value.
 
 > [!note]
 > The Forbidden message names the group the request needed. If it says `in API group "apps"`
@@ -231,9 +245,9 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
 
 ## Reuse one definition in two namespaces
 
-A ClusterRole is a definition with no namespace, and a RoleBinding is allowed to point at one.
-So a [ClusterRole](../../references/rbac.md#the-model) can be written once and bound in as many namespaces as needed, instead of a
-Role in each.
+A [ClusterRole](../../references/rbac.md#the-model) is a list of allowed actions written once for the whole cluster, outside any
+namespace. A RoleBinding may point at one, so the same ClusterRole can be granted in as many
+namespaces as needed, instead of a Role in each.
 
 1. Write the definition once and bind it twice. `create clusterrole` takes the same
    `--verb` and `--resource` flags as `create role`, with no `-n`. In a RoleBinding,
@@ -261,11 +275,13 @@ Role in each.
    The answer is `no`.
 
 A ClusterRole bound by a RoleBinding is a reusable definition applied per namespace. The
-built-in `view`, `edit` and `admin` roles are meant to be used this way.
+built-in `view` (read most objects, but not [Secrets](../../references/config.md#secrets)), `edit` (also change them) and `admin` (also
+manage permissions in the namespace) roles are meant to be used this way.
 
 ## Reach a cluster-scoped resource
 
-[Nodes](../../references/workers.md) are not in a namespace. They are [cluster-scoped](../../references/namespaces.md#namespaced-and-cluster-scoped-resources), like namespaces themselves and
+[Nodes](../../references/workers.md), the machines pods run on, belong to the whole cluster rather than to a namespace. They
+are [cluster-scoped](../../references/namespaces.md#namespaced-and-cluster-scoped-resources), like namespaces themselves and
 PersistentVolumes, which are pieces of storage that belong to the whole cluster.
 
 1. Try to grant access to them the way that has worked so far:
@@ -343,26 +359,21 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    The three rows you created are `pods`, `configmaps` and `nodes`. They come from four
    bindings across two namespaces, collapsed into one list of what the subject can do.
 
-   Everything else in that table was there before you started, and every authenticated
-   subject gets it. The three `self…reviews` rows come from `system:basic-user`, which lets a
-   subject ask what it is and what it may do. The `/api`, `/apis` and `/openapi` rows come
-   from `system:discovery`, and the `/healthz`, `/livez`, `/readyz` and `/version` rows from
-   `system:public-info-viewer`. These paths are [non-resource URLs](../../references/rbac.md#built-in-roles).
+   Every other row was there before you started: every signed-in subject may ask what it is
+   allowed to do, and read paths such as `/healthz` and `/version`, which are
+   [non-resource URLs](../../references/rbac.md#built-in-roles).
 
-4. See how much of this the cluster already came with. `--no-headers` drops the header
-   line, `wc -l` counts the lines left, and `grep -v '^system:'` keeps only the lines that do
-   not start with `system:`:
+4. List the ClusterRoles the cluster came with, to find the ones meant for people.
+   `--no-headers` drops the header line, and `grep -v '^system:'` drops the roles whose names
+   start with `system:`, which the control plane uses itself:
 
    ```shell
-   k get clusterrole --no-headers | wc -l
    k get clusterrole --no-headers | grep -v '^system:'
    ```
 
-   The first line is the count, then every ClusterRole whose name does not start with
-   `system:`:
+   Two are the ones you just wrote:
 
    ```
-   73
    admin                                                                  2026-08-02T10:49:07Z
    cluster-admin                                                          2026-08-02T10:49:07Z
    configmap-reader                                                       2026-08-09T23:14:15Z
@@ -373,11 +384,8 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    view                                                                   2026-08-02T10:49:07Z
    ```
 
-   65 of the 73 carry the `system:` prefix and let the [control plane](../../references/control-plane.md) components talk to the
-   apiserver. Of the 8 left, 2 are the ones you just wrote, `flannel` belongs to the [pod
-   network](../../references/pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node
-   [join](../../references/workers.md#joining). That leaves 4 meant for people:
-   `cluster-admin`, `admin`, `edit` and `view`.
+   `flannel` belongs to the [pod network](../../references/pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node
+   [join](../../references/workers.md#joining). The 4 meant for people are `cluster-admin`, `admin`, `edit` and `view`.
 
 ## Quiz
 

@@ -1,6 +1,6 @@
 # References
 
-The facts, commands and errors for each concept the topics use.
+Each page holds the facts, commands and error messages for one concept, to look up while you work.
 
 | Page | Covers |
 | --- | --- |
