@@ -15,7 +15,7 @@ check 1 "and keeps 3 replicas" bash -c 'r=$(helm history shop -n store -o json |
 
 task 3 20
 check 2 "the deployed revision is a rollback to podinfo-6.14.1" bash -c 'helm history shop -n store -o json | yq -p json -e ".[-1] | (.status == \"deployed\" and .chart == \"podinfo-6.14.1\" and .rollback_revision == 1)"'
-check 1 "the Deployment runs 6.14.1 with 3 replicas" test "$(k get deploy shop-podinfo -n store -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}')" = "3 ghcr.io/stefanprodan/podinfo:6.14.1"
+check 1 "after the rollback the Deployment runs 6.14.1 with 3 replicas" bash -c 'helm history shop -n store -o json | yq -p json -e ".[-1].rollback_revision == 1" && [ "$(k get deploy shop-podinfo -n store -o jsonpath="{.spec.replicas} {.spec.template.spec.containers[0].image}")" = "3 ghcr.io/stefanprodan/podinfo:6.14.1" ]'
 
 task 4 20
 check 1 "~/preview.yaml has the preview Deployment at 6.15.0" bash -c 'grep -q "name: preview-podinfo" ~/preview.yaml && grep -q "image: \"*ghcr.io/stefanprodan/podinfo:6.15.0" ~/preview.yaml'

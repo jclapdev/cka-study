@@ -37,4 +37,4 @@ Quoted from KodeKloud's CKA course on notes.kodekloud.com: the lessons "Pods wit
 - [x] 17. Background lessons. KodeKloud has "ETCD for Beginners", "Docker vs ContainerD", "TLS Basics", "Prerequisite DNS", "Prerequisite Network Namespaces", "Prerequisite Switching Routing Gateways CNI in kubernetes" and "Storage in Docker". We have no Learn page on etcd, TLS, DNS, network namespaces or storage.
 - [x] 18. Explained solutions. KodeKloud's solutions say what each result shows: "The above confirms that the image used in the pod is busybox." and "All listed pods are running on the controlplane node." Our Practice solutions are commands only.
 - [x] 19. Hints. KodeKloud has "The hints and solutions panel, visible with each question". Our Practice tasks have a solution and no hint.
-- [ ] 20. Marked as you go. On KodeKloud "each question is marked as you progress." Ours checks only after **Finish**, and the learner marks the passed tasks by hand before **Save score**.
+- [x] 20. Marked as you go. On KodeKloud "each question is marked as you progress." Ours checks only after **Finish**, and the learner marks the passed tasks by hand before **Save score**.

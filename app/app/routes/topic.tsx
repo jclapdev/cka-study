@@ -16,6 +16,7 @@ import { Step } from "~/components/Step";
 import { LabPane, useLab } from "~/components/LabPane";
 import { useReferences } from "~/components/ReferencePanel";
 import { labState } from "~/lab/state.server";
+import { parseGrade, type TaskResult } from "~/lab/grade";
 import { Split } from "~/components/Split";
 
 async function load(params: Route.LoaderArgs["params"]) {
@@ -49,6 +50,19 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [
   { title: loaderData ? `${loaderData.lesson.kind === "intro" ? loaderData.exercise.title : loaderData.lesson.title} · CKA Prep` : "CKA Prep" },
 ];
 
+// ponytail: one grader run at a time, because runs share the grader's key file on controlplane.
+let gradeQueue: Promise<unknown> = Promise.resolve();
+function gradeRun(file: string, task: string): Promise<string> {
+  const run = gradeQueue.then(() =>
+    promisify(execFile)(file, { timeout: 120_000, env: { ...process.env, GRADE_TASK: task } }).then(
+      (r) => r.stdout,
+      (e) => `${e.stdout ?? ""}${e.stderr ?? ""}`.trim() || String(e.message),
+    ),
+  );
+  gradeQueue = run;
+  return run;
+}
+
 export async function action({ params, request }: Route.ActionArgs) {
   const { id, exercise } = await load(params);
   const form = await request.formData();
@@ -64,23 +78,30 @@ export async function action({ params, request }: Route.ActionArgs) {
     case "attempt": {
       const practice = exercise.sections.find((s) => s.kind === "practice");
       if (practice?.kind !== "practice") throw data(null, { status: 400 });
-      const passed = (JSON.parse(str("passed")) as unknown[]).map(Number).filter((n) => practice.tasks.some((t) => t.n === n));
+      // Checked tasks send their scores; without a grader the learner marks the tasks they passed.
+      const passedList = (JSON.parse(str("passed") || "[]") as unknown[]).map(Number);
+      const scores = JSON.parse(str("scores") || "{}") as Record<string, unknown>;
+      const got = (t: { n: number; weight: number }) =>
+        str("scores") ? Math.min(t.weight, Math.max(0, Number(scores[t.n]) || 0)) : passedList.includes(t.n) ? t.weight : 0;
       addAttempt({
         topic: id,
         startedAt: str("startedAt"),
         seconds: Number(str("seconds")),
         budgetSeconds: practice.minutes ? practice.minutes * 60 : null,
-        passed,
-        score: practice.tasks.filter((t) => passed.includes(t.n)).reduce((a, t) => a + t.weight, 0),
+        passed: practice.tasks.filter((t) => got(t) >= t.weight).map((t) => t.n),
+        score: Math.round(practice.tasks.reduce((a, t) => a + got(t), 0)),
       });
       break;
     }
     case "grade": {
       if (!hasGrader(params.domain, params.topic)) throw data(null, { status: 400 });
       const now = await labState();
-      if (now.status !== "running" || now.lab !== exercise.lab) return { grade: "Start the lab, then check again." };
-      const run = await promisify(execFile)(path.join(REPO, id, "grade.sh"), { timeout: 120_000 }).catch((e) => e);
-      return { grade: `${run.stdout ?? ""}${run.stderr ?? ""}`.trim() || String(run.message) };
+      if (now.status !== "running" || now.lab !== exercise.lab) return { error: "Start the lab, then check again." };
+      const task = str("task");
+      if (!/^\d*$/.test(task)) throw data(null, { status: 400 });
+      const out = await gradeRun(path.join(REPO, id, "grade.sh"), task);
+      const results: TaskResult[] = parseGrade(out);
+      return results.length ? { results } : { error: out || "The check did not run." };
     }
     default:
       throw data(null, { status: 400 });

@@ -25,9 +25,9 @@ A topic with a lab shows a terminal beside each lesson. Press **Start lab** and 
 
 ## Grading
 
-A topic whose practice exam can be graded shows **Check my work** after you press **Finish**.
+During a practice exam, each task has a **Check** button that marks it: each sub-task passed or failed, and the task's share of its weight. **Finish** checks every task and adds up the score against the 66% pass mark, which **Save score** keeps.
 
-It checks only the cluster's final state, one sub-task at a time, and prints each result, each task's share of its weight, and the total against the 66% pass mark. How you got there is never checked, which is how the CKA grades. Mark the tasks it passed, then press **Save score**.
+Only the cluster's final state is checked, never how you got there, which is how the CKA grades. If the lab is not running, start it and press **Check again**, or mark the tasks you passed yourself.
 
 ## Commands
 

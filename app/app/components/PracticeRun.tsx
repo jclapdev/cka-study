@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import type { Section, Task } from "~/content/parse";
+import type { TaskResult } from "~/lab/grade";
 import { Markdown } from "./Markdown";
 
 type Practice = Extract<Section, { kind: "practice" }>;
+type Graded = { results?: TaskResult[]; error?: string };
+type Results = Record<number, TaskResult | string>; // a string is why the check could not run
+
 type Attempt = { id: number; startedAt: string; seconds: number; budgetSeconds: number | null; score: number };
 
 const PASS_MARK = 66;
@@ -30,7 +34,8 @@ export function PracticeRun({
   onStart?: () => void;
 }) {
   const fetcher = useFetcher();
-  const grading = useFetcher<{ grade: string }>();
+  const grading = useFetcher<Graded>();
+  const [results, setResults] = useState<Results>({});
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [endedAt, setEndedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -51,6 +56,7 @@ export function PracticeRun({
     setNow(Date.now());
     setEndedAt(null);
     setPassed([]);
+    setResults({});
     document.querySelector("article")?.scrollIntoView(); // the page, or its pane beside the terminal
   };
   const reset = () => {
@@ -59,7 +65,25 @@ export function PracticeRun({
   };
 
   const elapsed = startedAt ? Math.round(((endedAt ?? now) - startedAt) / 1000) : 0;
-  const score = practice.tasks.filter((t) => passed.includes(t.n)).reduce((a, t) => a + t.weight, 0);
+  const onResult = (n: number | null, g: Graded) =>
+    setResults((r) => {
+      const next = { ...r };
+      for (const t of g.results ?? []) next[t.n] = t;
+      if (!g.results && n !== null) next[n] = g.error || "The check did not run.";
+      return next;
+    });
+  // Finish checks every task; the learner marks tasks by hand only when there is no grader or it could not run.
+  useEffect(() => {
+    if (grading.state === "idle" && grading.data) onResult(null, grading.data);
+  }, [grading.state, grading.data]);
+  const graded = grader && practice.tasks.every((t) => typeof results[t.n] === "object");
+  const checking = grading.state !== "idle";
+  const manual = !grader || (!checking && !!grading.data?.error);
+  const scoreOf = (t: Task) => {
+    const r = results[t.n];
+    return graded && typeof r === "object" ? r.score : passed.includes(t.n) ? t.weight : 0;
+  };
+  const score = Math.round(practice.tasks.reduce((a, t) => a + scoreOf(t), 0));
 
   const save = () => {
     fetcher.submit(
@@ -67,7 +91,9 @@ export function PracticeRun({
         intent: "attempt",
         startedAt: new Date(startedAt!).toISOString(),
         seconds: String(elapsed),
-        passed: JSON.stringify(passed),
+        ...(graded
+          ? { scores: JSON.stringify(Object.fromEntries(practice.tasks.map((t) => [t.n, scoreOf(t)]))) }
+          : { passed: JSON.stringify(passed) }),
       },
       { method: "post" },
     );
@@ -119,7 +145,12 @@ export function PracticeRun({
             Quit
           </button>
           {!endedAt && (
-            <button onClick={() => setEndedAt(Date.now())} className="rounded bg-accent px-4 py-2 font-semibold text-paper">
+            <button
+              onClick={() => {
+                setEndedAt(Date.now());
+                if (grader) grading.submit({ intent: "grade" }, { method: "post" });
+              }}
+              className="rounded bg-accent px-4 py-2 font-semibold text-paper">
               Finish
             </button>
           )}
@@ -129,35 +160,39 @@ export function PracticeRun({
       {!endedAt ? (
         <>
           <Markdown html={practice.introHtml} />
-          <Tasks tasks={practice.tasks} />
+          <Tasks tasks={practice.tasks} results={results} onResult={grader ? onResult : undefined} />
         </>
       ) : (
         <>
-          <p>You took {clock(elapsed)}. Mark each task you passed.</p>
-          <Tasks tasks={practice.tasks} passed={passed} onToggle={(n) => setPassed((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]))} />
+          <p>
+            You took {clock(elapsed)}.{" "}
+            {checking ? "Checking each task…" : manual ? "Mark each task you passed." : null}
+          </p>
+          {grader && manual && grading.data?.error && (
+            <div className="flex flex-wrap items-center gap-4 rounded-md border border-missed px-5 py-3">
+              <p className="text-missed">{grading.data.error}</p>
+              <button
+                onClick={() => grading.submit({ intent: "grade" }, { method: "post" })}
+                className="ml-auto rounded border border-line px-3 py-1.5 text-sm font-semibold hover:border-accent"
+              >
+                Check again
+              </button>
+            </div>
+          )}
+          {manual ? (
+            <Tasks tasks={practice.tasks} passed={passed} onToggle={(n) => setPassed((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]))} />
+          ) : (
+            <Tasks tasks={practice.tasks} results={results} />
+          )}
           <div className="flex flex-wrap items-center gap-4 rounded-md border border-line bg-surface px-5 py-4">
             <p className="text-lg">
-              Score <strong className={score >= PASS_MARK ? "text-done" : "text-missed"}>{score}%</strong>
+              Score <strong className={score >= PASS_MARK ? "text-done" : "text-missed"}>{checking ? "…" : `${score}%`}</strong>
               <span className="ml-2 text-sm text-muted">pass mark {PASS_MARK}%</span>
             </p>
-            <button onClick={save} className="ml-auto rounded bg-accent px-4 py-2 font-semibold text-paper">
+            <button onClick={save} disabled={checking} className="ml-auto rounded bg-accent px-4 py-2 font-semibold text-paper disabled:opacity-60">
               Save score
             </button>
           </div>
-          {grader && (
-            <section>
-              <button
-                onClick={() => grading.submit({ intent: "grade" }, { method: "post" })}
-                disabled={grading.state !== "idle"}
-                className="rounded border border-line px-4 py-2 font-semibold hover:border-accent disabled:opacity-60"
-              >
-                {grading.state !== "idle" ? "Checking…" : "Check my work"}
-              </button>
-              {grading.data?.grade && (
-                <pre className="mt-3 overflow-x-auto rounded-md border border-line bg-surface px-5 py-4 font-mono text-sm">{grading.data.grade}</pre>
-              )}
-            </section>
-          )}
           {checkHtml && (
             <section>
               <h3 className="mb-3 text-lg font-bold">Check your work</h3>
@@ -176,35 +211,90 @@ export function PracticeRun({
   );
 }
 
-function Tasks({ tasks, passed, onToggle }: { tasks: Task[]; passed?: number[]; onToggle?: (n: number) => void }) {
+function Tasks({
+  tasks,
+  passed,
+  onToggle,
+  results = {},
+  onResult,
+}: {
+  tasks: Task[];
+  passed?: number[];
+  onToggle?: (n: number) => void;
+  results?: Results;
+  onResult?: (n: number, g: Graded) => void;
+}) {
   return (
     <ol className="space-y-3">
-      {tasks.map((t) => (
-        <li key={t.n} className="rounded-md border border-line bg-surface px-5 py-4">
-          <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            {onToggle ? (
-              <label className="flex cursor-pointer items-center gap-2 font-semibold">
-                <input type="checkbox" checked={passed!.includes(t.n)} onChange={() => onToggle(t.n)} className="size-4 accent-done" />
-                Task {t.n}
-              </label>
-            ) : (
-              <span className="font-semibold">Task {t.n}</span>
+      {tasks.map((t) => {
+        const r = results[t.n];
+        const full = typeof r === "object" && r.score >= r.weight;
+        return (
+          <li
+            key={t.n}
+            className={`rounded-md border bg-surface px-5 py-4 ${typeof r === "object" ? (full ? "border-done" : "border-missed") : "border-line"}`}
+          >
+            <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              {onToggle ? (
+                <label className="flex cursor-pointer items-center gap-2 font-semibold">
+                  <input type="checkbox" checked={passed!.includes(t.n)} onChange={() => onToggle(t.n)} className="size-4 accent-done" />
+                  Task {t.n}
+                </label>
+              ) : (
+                <span className="font-semibold">Task {t.n}</span>
+              )}
+              <span className="text-muted">
+                on <span className="font-mono text-ink">{t.hosts.join(", ")}</span>
+              </span>
+              <span className="ml-auto flex items-center gap-3">
+                {onResult && <CheckTask n={t.n} onResult={onResult} />}
+                {typeof r === "object" ? (
+                  <span className={`font-semibold ${full ? "text-done" : "text-missed"}`}>
+                    {full ? "✓" : "✗"} {+r.score.toFixed(1)} of {t.weight}%
+                  </span>
+                ) : (
+                  <span className="font-semibold">{t.weight}%</span>
+                )}
+              </span>
+            </div>
+            <Markdown html={t.html} />
+            {typeof r === "object" && (
+              <ul className="mt-3 space-y-0.5 text-sm">
+                {r.checks.map((c, i) => (
+                  <li key={i} className={c.ok ? "text-done" : "text-missed"}>
+                    {c.ok ? "✓" : "✗"} {c.what}
+                  </li>
+                ))}
+              </ul>
             )}
-            <span className="text-muted">
-              on <span className="font-mono text-ink">{t.hosts.join(", ")}</span>
-            </span>
-            <span className="ml-auto font-semibold">{t.weight}%</span>
-          </div>
-          <Markdown html={t.html} />
-          {t.hintHtml && (
-            <details className="mt-3 rounded border border-line">
-              <summary className="cursor-pointer px-3 py-1.5 text-sm font-semibold">Hint</summary>
-              <Markdown html={t.hintHtml} className="border-t border-line px-3 py-2" />
-            </details>
-          )}
-        </li>
-      ))}
+            {typeof r === "string" && <p className="mt-3 text-sm text-missed">{r}</p>}
+            {t.hintHtml && (
+              <details className="mt-3 rounded border border-line">
+                <summary className="cursor-pointer px-3 py-1.5 text-sm font-semibold">Hint</summary>
+                <Markdown html={t.hintHtml} className="border-t border-line px-3 py-2" />
+              </details>
+            )}
+          </li>
+        );
+      })}
     </ol>
+  );
+}
+
+/** Runs one task's checks and marks it. */
+function CheckTask({ n, onResult }: { n: number; onResult: (n: number, g: Graded) => void }) {
+  const f = useFetcher<Graded>();
+  useEffect(() => {
+    if (f.state === "idle" && f.data) onResult(n, f.data);
+  }, [f.state, f.data]);
+  return (
+    <button
+      onClick={() => f.submit({ intent: "grade", task: String(n) }, { method: "post" })}
+      disabled={f.state !== "idle"}
+      className="rounded border border-line px-2.5 py-0.5 font-semibold hover:border-accent disabled:opacity-60"
+    >
+      {f.state !== "idle" ? "Checking…" : "Check"}
+    </button>
   );
 }
 
