@@ -44,10 +44,7 @@ export default function Home() {
       )}
 
       <section className="mt-10">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-xl font-bold">Domains</h2>
-          <span className="text-sm text-muted">Pass mark {PASS}%</span>
-        </div>
+        <h2 className="text-xl font-bold">Domains</h2>
         <ul className="mt-4 space-y-4">
           {domains
             .filter((d) => d.weight !== null)
@@ -62,12 +59,11 @@ export default function Home() {
                       {d.name} <span className="font-normal text-muted">{d.weight}% of the exam</span>
                     </span>
                     <span className="tabular-nums text-muted">
-                      {done} of {d.topics.length} topics finished · practice average {avg}%
+                      {done} of {d.topics.length} topics finished · practice average {avg}% · pass mark {PASS}%
                     </span>
                   </div>
-                  <span className="relative mt-1.5 block h-2 rounded-full bg-line" title={`${avg}% against a ${PASS}% pass mark`}>
+                  <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-line">
                     <span className={`block h-full rounded-full ${avg >= PASS ? "bg-done" : "bg-accent"}`} style={{ width: `${avg}%` }} />
-                    <span aria-hidden className="absolute -top-1 h-4 w-0.5 bg-ink" style={{ left: `${PASS}%` }} />
                   </span>
                 </li>
               );
@@ -93,21 +89,12 @@ export default function Home() {
                   {d.name} {d.weight !== null && <span className="font-normal text-muted">{d.weight}% of the exam</span>}
                 </th>
               </tr>
-              {d.topics.length === 0 && (
-                <tr className="border-t border-line">
-                  <td colSpan={4} className="py-2 text-sm text-muted">Coming soon</td>
-                </tr>
-              )}
-              {d.topics.map((t) => (
+              {d.topics.filter((t) => t.progress).map((t) => (
                 <tr key={t.id} className="border-t border-line">
                   <td className="py-2">
-                    {t.progress ? (
-                      <Link to={`/t/${t.id}`} className="hover:text-accent hover:underline">
-                        {t.name}
-                      </Link>
-                    ) : (
-                      <span className="text-muted">{t.name}</span>
-                    )}
+                    <Link to={`/t/${t.id}`} className="hover:text-accent hover:underline">
+                      {t.name}
+                    </Link>
                     {(missed(t) || score(t)) && (
                       <span className="mt-0.5 block text-sm text-muted sm:hidden">
                         {[missed(t) && `Quiz missed ${missed(t)}`, score(t) && `Best score ${score(t)}`].filter(Boolean).join(" · ")}
@@ -115,14 +102,10 @@ export default function Home() {
                     )}
                   </td>
                   <td className="py-2 pr-4">
-                    {t.progress ? (
-                      <span className="flex items-center gap-3 text-sm tabular-nums">
-                        <span className="flex-1"><Meter done={t.progress.stepsDone} total={t.progress.steps} /></span>
-                        {t.progress.stepsDone}/{t.progress.steps}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-muted">Coming soon</span>
-                    )}
+                    <span className="flex items-center gap-3 text-sm tabular-nums">
+                      <span className="flex-1"><Meter done={t.progress!.stepsDone} total={t.progress!.steps} /></span>
+                      {t.progress!.stepsDone} of {t.progress!.steps}
+                    </span>
                   </td>
                   <td className={`hidden py-2 text-right tabular-nums sm:table-cell ${t.progress?.missed ? "text-missed" : "text-muted"}`}>
                     {missed(t)}
@@ -132,6 +115,18 @@ export default function Home() {
                   </td>
                 </tr>
               ))}
+              {d.topics.some((t) => !t.progress) && (
+                <tr className="border-t border-line">
+                  <td colSpan={4} className="py-2 text-sm text-muted">
+                    Coming soon: {d.topics.filter((t) => !t.progress).map((t) => t.name).join(", ")}
+                  </td>
+                </tr>
+              )}
+              {d.topics.length === 0 && (
+                <tr className="border-t border-line">
+                  <td colSpan={4} className="py-2 text-sm text-muted">Coming soon</td>
+                </tr>
+              )}
             </tbody>
           ))}
         </table>

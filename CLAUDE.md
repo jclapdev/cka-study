@@ -23,7 +23,7 @@ Write the app's text and the pages it shows the way a course site such as KodeKl
 
 ## App
 
-Run `cd app && pnpm test` after changing the app or the README format it reads.
+Run `cd app && pnpm test` after changing the app or the README format it reads. Then run `pnpm test:browser` against the running app (`CKA_URL=http://127.0.0.1:<port>` for a dev server) and look at the screenshots it saves in `app/test-results/`.
 
 ## Cold-reader
 

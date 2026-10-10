@@ -1,6 +1,7 @@
 import path from "node:path";
 import GithubSlugger from "github-slugger";
 import type { Element, Root as HastRoot } from "hast";
+import { toString as hastToString } from "hast-util-to-string";
 import type { Html, List, ListItem, Paragraph, Root, RootContent } from "mdast";
 import { toString } from "mdast-util-to-string";
 import rehypeRaw from "rehype-raw";
@@ -16,7 +17,7 @@ import { INTRO } from "./links";
 
 export type Step = { key: string; label: number; html: string };
 export type Block = { html: string } | { steps: Step[] };
-export type RecallItem = { key: string; question: string; answerHtml: string };
+export type RecallItem = { key: string; questionHtml: string; answerHtml: string };
 export type Task = { n: number; hosts: string[]; weight: number; html: string; hintHtml: string };
 
 export type Section =
@@ -232,6 +233,7 @@ function renderer(file: string, topic?: InTopic) {
     .use(rehypeRaw)
     .use(rehypeSlug)
     .use(rewriteLinks, { file, topic })
+    .use(keepShortCode)
     .use(rehypeShiki, { themes: { light: "github-light", dark: "github-dark-default" }, defaultColor: false })
     .use(rehypeStringify);
   const nodes = async (children: RootContent[]) => {
@@ -239,8 +241,24 @@ function renderer(file: string, topic?: InTopic) {
     const hast = await processor.run({ type: "root", children: mermaidToHtml(children) } as Root);
     return processor.stringify(hast as HastRoot);
   };
-  const markdown = (md: string) => nodes((unified().use(remarkParse).use(remarkGfm).parse(md) as Root).children);
-  return { nodes, markdown };
+  const parse = (md: string) => (unified().use(remarkParse).use(remarkGfm).parse(md) as Root).children;
+  const markdown = (md: string) => nodes(parse(md));
+  // One line of Markdown without its paragraph, for text that sits inside other markup.
+  const inline = (md: string) => {
+    const [first] = parse(md);
+    return nodes(first?.type === "paragraph" ? (first.children as RootContent[]) : parse(md));
+  };
+  return { nodes, markdown, inline };
+}
+
+/** Inline code short enough to fit on a line stays on one, instead of breaking at a hyphen in `--version`. */
+function keepShortCode() {
+  return (tree: HastRoot) => {
+    visit(tree, "element", (el: Element, _i, parent) => {
+      if (el.tagName !== "code" || (parent as Element | undefined)?.tagName === "pre") return;
+      if (hastToString(el).length <= 24) el.properties.className = [...((el.properties.className as string[]) ?? []), "whitespace-nowrap"];
+    });
+  };
 }
 
 /** The topic a README belongs to, for rendering its pages as lessons. */
@@ -281,7 +299,7 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
     } else if (s.kind === "recall") {
       const items: RecallItem[] = [];
       for (const r of recallKeys(md, s.nodes))
-        items.push({ key: r.key, question: r.summary, answerHtml: await render.markdown(r.body) });
+        items.push({ key: r.key, questionHtml: await render.inline(r.summary), answerHtml: await render.markdown(r.body) });
       out.push({ kind: "recall", ...base, items });
     } else if (s.kind === "practice") {
       const { found, rest } = detailsBlocks(md, s.nodes);

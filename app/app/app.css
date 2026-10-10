@@ -59,8 +59,9 @@ body {
   margin-left: 0.15em;
   font-size: 0.8em;
 }
-.md :where(code):not(pre code) {
-  @apply rounded bg-line/60 px-1 py-0.5 font-normal;
+.md :where(code):not(pre code),
+.md-inline code {
+  @apply rounded bg-line/60 px-1 py-0.5 font-mono text-[0.875em] font-normal;
   overflow-wrap: anywhere;
 }
 .md :where(code):not(pre code)::before,
@@ -68,7 +69,12 @@ body {
   content: none;
 }
 .md pre {
-  @apply relative overflow-x-auto rounded-md border border-line bg-surface px-4 py-3 font-mono text-[0.85rem] leading-6 text-ink;
+  @apply relative overflow-x-auto rounded-md border border-line px-4 py-3 font-mono text-[0.85rem] leading-6 text-ink;
+  /* A shadow on the right edge while the block scrolls further; the cover moves with the text and hides it at the end. */
+  background:
+    linear-gradient(to left, var(--color-surface) 40%, transparent) right / 3rem 100% no-repeat local,
+    linear-gradient(to left, color-mix(in srgb, var(--color-ink) 18%, transparent), transparent) right / 1rem 100% no-repeat scroll,
+    var(--color-surface);
 }
 .md pre.shiki span {
   color: var(--shiki-light);

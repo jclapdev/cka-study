@@ -88,8 +88,8 @@ export default function App({ loaderData }: Route.ComponentProps) {
           <SidebarIcon />
         </button>
       )}
-      <nav className={`border-b border-line bg-surface lg:sticky ${hidden ? "lg:hidden" : ""} lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r`}>
-        <div className="flex items-center justify-between px-5 py-4">
+      <nav className={`relative z-30 border-b border-line bg-surface lg:sticky ${hidden ? "lg:hidden" : ""} lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r`}>
+        <div className="flex h-16 items-center justify-between px-5 lg:h-auto lg:py-4">
           <NavLink to="/" className="text-lg font-bold">
             CKA Prep
           </NavLink>
@@ -105,7 +105,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
             <SidebarIcon />
           </button>
         </div>
-        <ul id="topics" className={`space-y-5 px-3 pb-6 lg:block ${open ? "block" : "hidden"}`}>
+        <ul
+          id="topics"
+          className={`absolute inset-x-0 top-16 max-h-[calc(100dvh-4rem)] space-y-5 overflow-y-auto border-b border-line bg-surface px-3 pb-6 pt-2 lg:static lg:block lg:max-h-none lg:overflow-visible lg:border-0 lg:pt-0 ${open ? "block" : "hidden"}`}
+        >
           <li className="space-y-1">
             <NavLink to="/" end className={navItem}>
               Dashboard
@@ -113,10 +116,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </li>
             {loaderData.domains.map((d) => (
               <li key={d.name} className={d.name === MOCK_EXAMS ? "border-t border-line pt-4" : undefined}>
-                <p className="flex justify-between px-2 pb-1 text-sm font-semibold text-muted">
-                  <span>{d.name}</span>
-                  {d.weight !== null && <span title={`${d.weight}% of the exam`}>{d.weight}%</span>}
-                </p>
+                <p className="px-2 pb-1 text-sm font-semibold text-muted">{d.name}</p>
                 {d.topics.length === 0 && <p className="px-2 py-1 text-[0.95rem] text-muted">Coming soon</p>}
                 <ul>
                   {d.topics.map((t) => (
@@ -137,7 +137,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                               </span>
                             )}
                           </span>
-                          <Meter done={t.progress.stepsDone} total={t.progress.steps} />
+                          {t.progress.stepsDone > 0 && <Meter done={t.progress.stepsDone} total={t.progress.steps} />}
                         </NavLink>
                         {"lessons" in t && pathname.startsWith(`/t/${t.id}`) && (
                           <ul aria-label="Lessons" className="mb-2 ml-3 mt-1 border-l border-line pl-2">

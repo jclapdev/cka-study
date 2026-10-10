@@ -38,3 +38,22 @@ Quoted from KodeKloud's CKA course on notes.kodekloud.com: the lessons "Pods wit
 - [x] 18. Explained solutions. KodeKloud's solutions say what each result shows: "The above confirms that the image used in the pod is busybox." and "All listed pods are running on the controlplane node." Our Practice solutions are commands only.
 - [x] 19. Hints. KodeKloud has "The hints and solutions panel, visible with each question". Our Practice tasks have a solution and no hint.
 - [x] 20. Marked as you go. On KodeKloud "each question is marked as you progress." Ours checks only after **Finish**, and the learner marks the passed tasks by hand before **Save score**.
+
+## Looks wrong
+
+Found by clicking through the app in a browser at 1440px and 390px wide, and compared with React's docs, Docusaurus, MDN and KodeKloud's CKA notes. `cd app && pnpm test:browser` checks 21, 24 and 26 on every lesson.
+
+- [x] 21. Next opened the new lesson mid-page: its title was 1,194px above the screen. On the other four sites the next page opens with its title 122–205px from the top.
+- [x] 22. Previous and Next looked different: a solid blue block beside an outline, at different widths. They are now two matching cards, as on Docusaurus and KodeKloud.
+- [x] 23. A 220px Notes box sat below Next, so the lesson did not end there. Notes is now a closed section above Previous and Next.
+- [x] 24. On a phone, lesson pages covered the top bar, so the topic list could not be reached.
+- [x] 25. On a phone, the lab took half the screen before it had started. It is now one Start lab bar until the lab runs.
+- [x] 26. Quiz questions showed raw backticks, such as `` `--set image.tag=x` ``.
+- [x] 27. Inline code broke at its hyphens: `--version` split into "--" and "version" across two lines.
+- [x] 28. Code blocks were cut off on the right with no sign there was more. A shadow now shows on the right edge.
+- [x] 29. Each dashboard domain bar had an unlabelled black tick at 66%. Each row now reads "pass mark 66%".
+- [x] 30. The dashboard wrote "0 of 35 steps" in one place and "0/35" in another.
+- [x] 31. 23 "Coming soon" rows filled most of the dashboard. Each domain now has one "Coming soon:" line.
+- [x] 32. An empty grey bar under every sidebar topic looked like a divider. The bar shows once a topic is started.
+- [x] 33. "25%" beside a domain in the sidebar read as progress. The exam share stays on the dashboard.
+- [x] 34. Double-clicking the divider set the lesson back to half the width, but a reload brought back the old width.

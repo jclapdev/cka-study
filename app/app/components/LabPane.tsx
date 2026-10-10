@@ -35,7 +35,7 @@ export type Lab = ReturnType<typeof useLab>;
 /** What the terminal tab shows until the lab is running: Start lab, then a wait. */
 export function LabStart({ lab }: { lab: Lab }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#1b2433] px-6 text-center text-[#e3e8ef] dark:bg-[#0b0e13]">
+    <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#1b2433] px-6 py-5 text-center text-[#e3e8ef] dark:bg-[#0b0e13]">
       {lab.status === "starting" ? (
         <>
           <span aria-hidden className="size-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />

@@ -8,6 +8,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "test": "vitest run",
+    "test:browser": "playwright test",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
@@ -41,6 +42,7 @@
     "ws": "^8.22.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.0",
     "@react-router/dev": "^8.4.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.2.2",

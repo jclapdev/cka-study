@@ -1,8 +1,8 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { data, Link } from "react-router";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { data, Link, useLocation, useNavigationType } from "react-router";
 import type { Route } from "./+types/topic";
 import { INTRO, lessonHref } from "~/content/links";
 import { inTopic, parseExercise, renderDoc, untitled } from "~/content/parse";
@@ -149,6 +149,23 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
     setPopped(true);
   };
 
+  // The lesson scrolls in its own pane beside the lab, which stays put between lessons, so a new
+  // lesson starts at its top (or at the section a link names), and Back returns to where you were.
+  const location = useLocation();
+  const navType = useNavigationType();
+  useLayoutEffect(() => {
+    const pane = document.getElementById("lesson");
+    if (!pane) return;
+    const saved = paneScroll.get(location.key);
+    const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (navType === "POP" && saved !== undefined) pane.scrollTop = saved;
+    else if (target) target.scrollIntoView();
+    else pane.scrollTop = 0;
+    const keep = () => paneScroll.set(location.key, pane.scrollTop);
+    pane.addEventListener("scroll", keep, { passive: true });
+    return () => pane.removeEventListener("scroll", keep);
+  }, [location.key]);
+
   const body = (
     <article
       key={`${id}/${lesson.slug}`}
@@ -220,23 +237,13 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         }
       })}
 
+      {!running && <Notes key={id} body={state.note} />}
       {!running && (
-        <nav aria-label="Lessons" className="mt-14 flex flex-wrap justify-between gap-4 border-t border-line pt-6">
-          {prev ? (
-            <Link to={lessonHref(id, prev.slug)} className="rounded border border-line px-4 py-2 hover:border-accent">
-              <span className="block text-xs text-muted">Previous</span>
-              {prev.title}
-            </Link>
-          ) : <span />}
-          {next && (
-            <Link to={lessonHref(id, next.slug)} className="ml-auto rounded bg-accent px-4 py-2 text-right font-semibold text-paper hover:opacity-90">
-              <span className="block text-xs font-normal">Next</span>
-              {next.title}
-            </Link>
-          )}
+        <nav aria-label="Lessons" className="mt-8 grid grid-cols-2 gap-4">
+          {prev ? <LessonLink to={lessonHref(id, prev.slug)} label="‹ Previous" title={prev.title} /> : <span />}
+          {next && <LessonLink to={lessonHref(id, next.slug)} label="Next ›" title={next.title} end />}
         </nav>
       )}
-      {!running && <Notes key={id} body={state.note} />}
     </article>
   );
 
@@ -273,15 +280,27 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
           />
         }
         rightHidden={exercise.lab ? (popped ? !refs.open : paneHidden) : false}
+        rightSmall={!!exercise.lab && !popped && lab.status !== "running" && !refs.reference}
         place={refs.place}
         label="Resize lesson and lab"
       />
       {exercise.lab && !popped && paneHidden && (
-        <button onClick={togglePane} aria-label="Show panel" title="Show panel" className="fixed right-3 top-3 z-30 rounded border border-line bg-surface p-1.5 hover:bg-paper">
+        <button onClick={togglePane} aria-label="Show panel" title="Show panel" className="fixed right-3 top-[4.75rem] z-30 rounded lg:top-3 border border-line bg-surface p-1.5 hover:bg-paper">
           <SidebarIcon flip />
         </button>
       )}
     </>
+  );
+}
+
+const paneScroll = new Map<string, number>();
+
+function LessonLink({ to, label, title, end }: { to: string; label: string; title: string; end?: boolean }) {
+  return (
+    <Link to={to} className={`rounded-md border border-line px-4 py-3 hover:border-accent ${end ? "text-right" : ""}`}>
+      <span className="block text-sm text-muted">{label}</span>
+      <span className="font-semibold text-accent">{title}</span>
+    </Link>
   );
 }
 

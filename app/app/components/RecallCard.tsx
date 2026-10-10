@@ -9,7 +9,7 @@ export function RecallCard({ item, grade }: { item: RecallItem; grade?: "got" | 
   return (
     <details className={`group rounded-md border border-line border-l-4 ${edge} bg-surface`}>
       <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-4 font-semibold">
-        <span>{item.question}</span>
+        <span className="md-inline" dangerouslySetInnerHTML={{ __html: item.questionHtml }} />
         <span className="shrink-0 text-sm font-normal text-accent group-open:hidden">Show answer</span>
       </summary>
       <div className="border-t border-line px-5 py-4">

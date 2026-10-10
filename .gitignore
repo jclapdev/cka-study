@@ -6,6 +6,8 @@ app/node_modules/
 app/.react-router/
 app/build/
 app/data/
+app/test-results/
+app/playwright-report/
 
 # Local secrets, if any are ever added
 .env

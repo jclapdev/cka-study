@@ -6,13 +6,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
  * bottom part. The divider between them drags, and each side keeps at least 320px. The left pane
  * keeps main's padding, which the practice exam's sticky clock bar relies on.
  *
+ * Below lg the split starts under root.tsx's 4rem top bar, so the topic list stays in reach.
  * `rightHidden` hides the right side, which stays mounted. `place` scrolls the left pane once the
  * saved width is in, for a page that was scrolling the window before the split appeared.
  */
-export function Split({ left, right, rightHidden, place, label }: {
+export function Split({ left, right, rightHidden, rightSmall, place, label }: {
   left: React.ReactNode;
   right: React.ReactNode;
   rightHidden?: boolean;
+  /** Below lg, the right side takes only the height it needs, such as a Start lab bar. */
+  rightSmall?: boolean;
   place?: (pane: HTMLElement) => void;
   label: string;
 }) {
@@ -68,17 +71,18 @@ export function Split({ left, right, rightHidden, place, label }: {
     setSplit(keep(clamp(p)));
   };
 
-  const tracks = `minmax(0,${shown}fr) minmax(0,${100 - shown}fr)`;
+  const small = rightSmall && !wide && !rightHidden;
+  const tracks = small ? "minmax(0,1fr) auto" : `minmax(0,${shown}fr) minmax(0,${100 - shown}fr)`;
   return (
     <div
       ref={grid}
       style={{ "--tracks": tracks } as React.CSSProperties}
-      className="fixed inset-0 z-20 grid grid-rows-(--tracks) bg-paper lg:left-[17rem] lg:grid-cols-(--tracks) lg:grid-rows-1 lg:group-data-[sidebar=hidden]/app:left-0"
+      className="fixed inset-0 top-16 z-20 grid grid-rows-(--tracks) bg-paper lg:top-0 lg:left-[17rem] lg:grid-cols-(--tracks) lg:grid-rows-1 lg:group-data-[sidebar=hidden]/app:left-0"
     >
       <div ref={pane} id="lesson" className="min-h-0 overflow-y-auto px-4 py-8 sm:px-10">{left}</div>
       <div className={`relative min-h-0 ${rightHidden ? "" : "border-t border-line lg:border-l lg:border-t-0"}`}>
         <div className={`relative h-full ${rightHidden ? "invisible overflow-hidden" : ""}`}>{right}</div>
-        {!rightHidden && (
+        {!rightHidden && !small && (
           <div
             role="separator"
             tabIndex={0}
@@ -95,7 +99,8 @@ export function Split({ left, right, rightHidden, place, label }: {
             }}
             onPointerMove={drag}
             onLostPointerCapture={() => setSplit(keep)}
-            onDoubleClick={() => setSplit(keep(50))}
+            // As an update, so it saves after the one the second click's release queued.
+            onDoubleClick={() => setSplit(() => keep(50))}
             onKeyDown={onKey}
             className="group absolute inset-x-0 top-0 z-30 flex h-2 cursor-row-resize touch-none items-center justify-center outline-none lg:inset-x-auto lg:inset-y-0 lg:left-0 lg:h-auto lg:w-2 lg:cursor-col-resize"
           >
