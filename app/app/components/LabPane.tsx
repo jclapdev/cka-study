@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useRevalidator, useRouteLoaderData } from "react-router";
 import type { loader as rootLoader } from "~/root";
-import { Terminal } from "~/components/Terminal";
 
 /** Starts, or resets, a lab through POST /lab/<lab>, and says whether it is ready. */
 export function useLab(lab: string | null) {
@@ -31,9 +30,10 @@ export function useLab(lab: string | null) {
   return { status, start, blocked: s.status === "starting" } as const;
 }
 
-export function LabPane({ lab, onPopOut }: { lab: ReturnType<typeof useLab>; onPopOut?: () => void }) {
-  const reset = () => confirm("Reset the lab? Your work in it is lost.") && lab.start();
-  if (lab.status === "running") return <Terminal onReset={reset} onPopOut={onPopOut} />;
+export type Lab = ReturnType<typeof useLab>;
+
+/** What the terminal tab shows until the lab is running: Start lab, then a wait. */
+export function LabStart({ lab }: { lab: Lab }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#1b2433] px-6 text-center text-[#e3e8ef] dark:bg-[#0b0e13]">
       {lab.status === "starting" ? (

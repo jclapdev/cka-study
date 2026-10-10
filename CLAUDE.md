@@ -8,7 +8,7 @@ The reader is studying for the CKA. [README.md](README.md) is the entry point. I
 
 ## Lab details live in one place
 
-Everything about running the lab lives in `lab/README.md` and `lab/labs/` and nowhere else. Each lab is a folder, `lab/labs/<name>/`, with a `base` file naming the lab it builds on, if any, and a `setup.sh`; `lab/lab.sh` and the app read those folders, so adding a lab touches nothing else. The app never describes a lab: no lab page, no lab names, no lab status outside the topic. A topic's Introduction names where the learner logs in (`base`), the machines they can reach and what the lab already has set up; nothing else lists machines. A topic shows Start lab, then the terminal with New session and Reset. An exercise names its lab only in an invisible `<!-- lab: <name> -->` comment, puts any fact a task needs in the task, and never mentions `docker`, saved copies, the computer it runs on or the lab's IP addresses.
+Everything about running the lab lives in `lab/README.md` and `lab/labs/` and nowhere else. Each lab is a folder, `lab/labs/<name>/`, with a `base` file naming the lab it builds on, if any, and a `setup.sh`; `lab/lab.sh` and the app read those folders, so adding a lab touches nothing else. The app never describes a lab: no lab page, no lab names, no lab status outside the topic. A topic's Introduction names where the learner logs in (`base`), the machines they can reach and what the lab already has set up; nothing else lists machines. A topic shows Start lab, then terminal tabs with + and Reset lab. An exercise names its lab only in an invisible `<!-- lab: <name> -->` comment, puts any fact a task needs in the task, and never mentions `docker`, saved copies, the computer it runs on or the lab's IP addresses.
 
 ## Wording
 

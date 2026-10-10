@@ -44,14 +44,23 @@ export function useReferences(page: string, splitsOnOpen: boolean) {
       if (again) window.scrollBy(0, again.getBoundingClientRect().top - top);
     });
   }, [splitsOnOpen]);
-  const panel = refs.length ? (
-    <ReferencePanel refs={refs} onOpen={(h) => setRefs([...refs, h])} onBack={() => setRefs(refs.slice(0, -1))} onClose={close} />
-  ) : null;
-  return { open: refs.length > 0, onClick, panel, place: splitsOnOpen ? place : undefined };
+  const [title, setTitle] = useState("");
+  const reference = refs.length
+    ? {
+        title: title || "Reference",
+        // Changes with each page opened, so the pane brings the reference tab to the front.
+        key: refs.join(" "),
+        close,
+        body: <ReferencePanel refs={refs} onOpen={(h) => setRefs([...refs, h])} onBack={() => setRefs(refs.slice(0, -1))} onTitle={setTitle} />,
+      }
+    : null;
+  return { open: refs.length > 0, onClick, reference, place: splitsOnOpen ? place : undefined };
 }
 
-/** The last of `refs`, a stack of reference pages opened one from another, shown beside the lesson. */
-function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string[]; onOpen: (href: string) => void; onBack: () => void; onClose: () => void }) {
+export type Reference = NonNullable<ReturnType<typeof useReferences>["reference"]>;
+
+/** The last of `refs`, a stack of reference pages opened one from another, shown in a tab beside the page. */
+function ReferencePanel({ refs, onOpen, onBack, onTitle }: { refs: string[]; onOpen: (href: string) => void; onBack: () => void; onTitle: (title: string) => void }) {
   const href = refs[refs.length - 1];
   const [path, hash] = href.split("#");
   const body = useRef<HTMLDivElement>(null);
@@ -61,9 +70,13 @@ function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string[]; onO
   useEffect(() => {
     const abort = new AbortController();
     setHtml(undefined);
+    onTitle("");
     fetch(`/reference/${path.slice("/doc/".length)}`, { signal: abort.signal })
       .then((res) => (res.ok ? res.json() : null))
-      .then((doc) => setHtml(doc?.html ?? null))
+      .then((doc) => {
+        setHtml(doc?.html ?? null);
+        onTitle(doc?.title ?? "");
+      })
       .catch(() => abort.signal.aborted || setHtml(null));
     return () => abort.abort();
   }, [path]);
@@ -75,34 +88,21 @@ function ReferencePanel({ refs, onOpen, onBack, onClose }: { refs: string[]; onO
     else body.current.scrollTop = 0;
   }, [html, hash]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    addEventListener("keydown", onKey);
-    return () => removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <aside aria-label="Reference" className="absolute inset-0 z-10 flex flex-col bg-paper">
-      <div className="flex items-center justify-between border-b border-line px-4 py-2">
-        {refs.length > 1 ? (
-          <button onClick={onBack} className="rounded px-2 py-1 text-sm hover:bg-surface">
-            ← Back
-          </button>
-        ) : <span />}
-        <button onClick={onClose} aria-label="Close" title="Close" className="rounded px-2 py-1 text-lg leading-none hover:bg-surface">
-          ✕
+    <div
+      ref={body}
+      onClick={(e) => {
+        const next = referenceHref(e);
+        if (next) onOpen(next);
+      }}
+      className="h-full overflow-y-auto bg-paper px-6 py-6"
+    >
+      {refs.length > 1 && (
+        <button onClick={onBack} className="-ml-2 mb-4 rounded px-2 py-1 text-sm text-muted hover:bg-surface hover:text-ink">
+          ← Back
         </button>
-      </div>
-      <div
-        ref={body}
-        onClick={(e) => {
-          const next = referenceHref(e);
-          if (next) onOpen(next);
-        }}
-        className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
-      >
-        {html ? <Markdown html={html} /> : <p className="text-muted">{html === null ? "This page didn't load." : "Loading…"}</p>}
-      </div>
-    </aside>
+      )}
+      {html ? <Markdown html={html} /> : <p className="text-muted">{html === null ? "This page didn't load." : "Loading…"}</p>}
+    </div>
   );
 }

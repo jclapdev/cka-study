@@ -12,7 +12,7 @@ In the study app, a topic is a short course of lessons listed under it in the si
 3. One lesson per `##` section of the README before Quiz, named by its heading, such as "Find a chart" or "Install a release".
 4. **Quiz**, then **Practice**, which also shows Check your work and Further reading.
 
-A topic with a lab shows the lab beside every lesson: a Start lab button, then the terminal with New session and Reset. Nothing on the page describes the lab. A link to a `references/*.md` page opens that page.
+A topic with a lab shows the lab beside every lesson: a Start lab button, then terminal tabs with + and Reset lab. Nothing on the page describes the lab. A link to a `references/*.md` page opens that page.
 
 `01-cluster-architecture/03-kustomize/` is the finished example. Match it.
 

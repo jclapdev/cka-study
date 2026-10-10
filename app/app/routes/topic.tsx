@@ -13,11 +13,13 @@ import { Notes } from "~/components/Notes";
 import { PracticeRun } from "~/components/PracticeRun";
 import { RecallCard } from "~/components/RecallCard";
 import { Step } from "~/components/Step";
-import { LabPane, useLab } from "~/components/LabPane";
+import { useLab } from "~/components/LabPane";
+import { Pane } from "~/components/Pane";
 import { useReferences } from "~/components/ReferencePanel";
 import { labState } from "~/lab/state.server";
 import { parseGrade, type TaskResult } from "~/lab/grade";
 import { Split } from "~/components/Split";
+import { SidebarIcon } from "~/root";
 
 async function load(params: Route.LoaderArgs["params"]) {
   const file = topicReadme(params.domain, params.topic);
@@ -118,7 +120,19 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   const lab = useLab(exercise.lab);
   const [popped, setPopped] = useState(false);
   const refs = useReferences(`${id}/${lesson.slug}`, !exercise.lab);
-  // The lab pane hides while the terminal has a window of its own, and comes back when it closes.
+  // The panel beside the lesson, hidden and shown like the sidebar, and shown again when a reference opens.
+  const [paneHidden, setPaneHidden] = useState(false);
+  useEffect(() => {
+    try { setPaneHidden(localStorage.getItem("pane") === "hidden"); } catch {}
+  }, []);
+  const togglePane = () => {
+    setPaneHidden(!paneHidden);
+    try { localStorage.setItem("pane", paneHidden ? "shown" : "hidden"); } catch {}
+  };
+  useEffect(() => {
+    if (refs.reference) setPaneHidden(false);
+  }, [refs.reference?.key]);
+  // The terminals leave the panel while they have a window of their own, and come back when it closes.
   const popup = useRef<{ win: Window; timer: number } | null>(null);
   useEffect(() => () => clearInterval(popup.current?.timer), []);
   const popOut = () => {
@@ -244,16 +258,30 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
 
   if (!exercise.lab && !refs.open) return page;
 
-  // While the terminal has a window of its own the lab pane hides.
+  // While the terminals have a window of their own, the panel shows only a reference.
   return (
-    <Split
-      left={page}
-      right={<>{exercise.lab && <LabPane lab={lab} onPopOut={popOut} />}{refs.panel}</>}
-      rightHidden={popped && !refs.open}
-      reveal={refs.open}
-      place={refs.place}
-      label="Resize lesson and lab"
-    />
+    <>
+      <Split
+        left={page}
+        right={
+          <Pane
+            lab={exercise.lab ? lab : undefined}
+            terminals={!popped}
+            reference={refs.reference}
+            onPopOut={popOut}
+            onHide={exercise.lab && !popped ? togglePane : undefined}
+          />
+        }
+        rightHidden={exercise.lab ? (popped ? !refs.open : paneHidden) : false}
+        place={refs.place}
+        label="Resize lesson and lab"
+      />
+      {exercise.lab && !popped && paneHidden && (
+        <button onClick={togglePane} aria-label="Show panel" title="Show panel" className="fixed right-3 top-3 z-30 rounded border border-line bg-surface p-1.5 hover:bg-paper">
+          <SidebarIcon flip />
+        </button>
+      )}
+    </>
   );
 }
 

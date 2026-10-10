@@ -4,6 +4,7 @@ import { renderDoc } from "~/content/parse";
 import { readMarkdown } from "~/content/repo";
 import { Markdown } from "~/components/Markdown";
 import { useReferences } from "~/components/ReferencePanel";
+import { Pane } from "~/components/Pane";
 import { Split } from "~/components/Split";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -23,7 +24,7 @@ export default function Doc({ loaderData, params }: Route.ComponentProps) {
     </article>
   );
   if (!refs.open) return page;
-  return <Split left={page} right={refs.panel} reveal place={refs.place} label="Resize page and reference" />;
+  return <Split left={page} right={<Pane terminals={false} reference={refs.reference} />} place={refs.place} label="Resize page and reference" />;
 }
 
 export { Problem as ErrorBoundary } from "~/root";

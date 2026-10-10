@@ -1,6 +1,7 @@
 import { useRouteLoaderData } from "react-router";
 import type { loader as rootLoader } from "~/root";
-import { LabPane, useLab } from "~/components/LabPane";
+import { useLab } from "~/components/LabPane";
+import { Pane } from "~/components/Pane";
 
 export const meta = () => [{ title: "Terminal · CKA Prep" }];
 
@@ -9,7 +10,7 @@ export default function TerminalWindow() {
   const lab = useLab(useRouteLoaderData<typeof rootLoader>("root")!.lab.lab);
   return (
     <div className="h-dvh">
-      <LabPane lab={lab} />
+      <Pane lab={lab} terminals />
     </div>
   );
 }

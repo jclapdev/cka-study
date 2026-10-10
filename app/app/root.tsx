@@ -199,9 +199,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function SidebarIcon() {
+/** A window with a panel down its left side, or its right side when `flip`. */
+export function SidebarIcon({ flip }: { flip?: boolean }) {
   return (
-    <svg aria-hidden viewBox="0 0 20 20" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg aria-hidden viewBox="0 0 20 20" className={`size-5 ${flip ? "-scale-x-100" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.5">
       <rect x="2.5" y="3.5" width="15" height="13" rx="2" />
       <path d="M7.5 3.5v13" />
     </svg>

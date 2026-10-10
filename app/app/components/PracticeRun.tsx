@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import type { Section, Task } from "~/content/parse";
 import type { TaskResult } from "~/lab/grade";
+import { useConfirm } from "./Confirm";
 import { Markdown } from "./Markdown";
 
 type Practice = Extract<Section, { kind: "practice" }>;
@@ -56,8 +57,9 @@ export function PracticeRun({
 
   useEffect(() => onRunning(startedAt !== null), [startedAt, onRunning]);
 
-  const start = () => {
-    if (onStart && !confirm("Start the practice exam? The lab starts over, and your work in it is lost.")) return;
+  const [ask, dialog] = useConfirm();
+  const start = async () => {
+    if (onStart && !(await ask("Start the practice exam? The lab starts over, and your work in it is lost.", "Start"))) return;
     onStart?.();
     setStartedAt(Date.now());
     setNow(Date.now());
@@ -132,6 +134,7 @@ export function PracticeRun({
           </details>
         )}
         {attempts.length > 0 && <History attempts={attempts} />}
+        {dialog}
       </div>
     );
 
