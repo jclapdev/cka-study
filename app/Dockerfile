@@ -13,4 +13,7 @@ ENV CKA_REPO=/repo
 # The project root, so `docker compose exec app lab/lab.sh ...` finds the lab.
 WORKDIR /repo
 EXPOSE 5173
-CMD ["pnpm", "--dir", "app", "dev", "--host", "0.0.0.0", "--port", "5173"]
+# node_modules lives in its own volume, which a rebuild leaves as it was, so packages added
+# since the image was built are installed here. The store goes in that volume too; left to
+# itself, pnpm would put it in the project folder.
+CMD ["sh", "-c", "CI=1 pnpm --dir app install --frozen-lockfile --store-dir /repo/app/node_modules/.pnpm-store && exec pnpm --dir app dev --host 0.0.0.0 --port 5173"]
