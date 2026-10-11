@@ -1,6 +1,6 @@
 # Workers
 
-A node is one machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet, [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). The only difference is that it has no control plane [static pods](control-plane.md#static-pods).
+A node is a machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet, [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). The only difference is that it has no control plane [static pods](control-plane.md#static-pods).
 
 ## What a worker runs
 

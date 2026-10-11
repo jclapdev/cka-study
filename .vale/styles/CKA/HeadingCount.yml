@@ -1,0 +1,19 @@
+# A count in a heading: "Give pods one address with a Service", "Three address ranges".
+extends: existence
+message: "'%s' in a heading: name the thing, not how many."
+level: error
+scope: heading
+ignorecase: true
+tokens:
+  - one
+  - two
+  - three
+  - four
+  - five
+  - six
+  - seven
+  - eight
+  - nine
+  - ten
+  - once
+  - twice

@@ -1,0 +1,12 @@
+# Captured output carries the lab's details, so this one reads code blocks too.
+extends: existence
+message: "'%s' is a detail of the lab's machine. Replace it as the build-exercise skill says."
+level: error
+scope: raw
+ignorecase: true
+nonword: true
+tokens:
+  - '192\.168\.104\.'
+  - '\bjohn\b'
+  - '\bterms-demo\b'
+  - '\barm64\b'

@@ -1,6 +1,6 @@
 # Services
 
-A Service is a stable address for a changing set of pods. [Pods](pod.md) come and go with new IPs each time, so clients don't connect to them directly. A Service picks its pods with a [label](labels.md) selector, gets one fixed IP and DNS name, and spreads connections across whichever pods match right now ([Service](https://kubernetes.io/docs/concepts/services-networking/service/)).
+A Service is a stable address for a changing set of pods. [Pods](pod.md) come and go with new IPs each time, so clients don't connect to them directly. A Service picks its pods with a [label](labels.md) selector, gets a stable IP and DNS name, and spreads connections across whichever pods match right now ([Service](https://kubernetes.io/docs/concepts/services-networking/service/)).
 
 ## Service types
 

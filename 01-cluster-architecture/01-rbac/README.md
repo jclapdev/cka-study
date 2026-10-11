@@ -16,17 +16,17 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 
 * Find the permission that lets your own `kubectl` do anything.
 * Create a [ServiceAccount](../../references/service-accounts.md), an identity for a program, that has no permissions at all.
-* Allow it one action on one type of object, with a [Role](../../references/rbac.md#the-model), a list of allowed actions, and a RoleBinding, which grants it.
+* Allow it an action on a type of object, with a [Role](../../references/rbac.md#the-model), a list of allowed actions, and a RoleBinding, which grants it.
 * See the same request refused in another namespace, and read the message that says why.
-* Write one list of allowed actions as a ClusterRole, for use in any namespace, and grant it in two.
+* Write a list of allowed actions as a ClusterRole, for use in any namespace, and grant it in `dev` and `prod`.
 * Grant access to nodes, which belong to no namespace, where a RoleBinding cannot.
 
-## Create two namespaces
+## Create the namespaces
 
 Most permissions are granted inside one [namespace](../../references/namespaces.md), a named group of objects. Two
 namespaces, `dev` and `prod`, show where such a grant stops.
 
-1. Go to `controlplane` and create the two. `k create namespace dev` makes a namespace named
+1. Go to `controlplane` and create them. `k create namespace dev` makes a namespace named
    `dev`:
 
    ```shell
@@ -243,13 +243,13 @@ The RoleBinding lives in `dev`, so what it grants stops at `dev`.
 > and your hand-written Role has `apiGroups: [""]`, the rule matches nothing.
 > `k create role --resource=deployments` fills in `apps` for you.
 
-## Reuse one definition in two namespaces
+## Reuse a ClusterRole across namespaces
 
 A [ClusterRole](../../references/rbac.md#the-model) is a list of allowed actions written once for the whole cluster, outside any
 namespace. A RoleBinding may point at one, so the same ClusterRole can be granted in as many
 namespaces as needed, instead of a Role in each.
 
-1. Write the definition once and bind it twice. `create clusterrole` takes the same
+1. Write the ClusterRole and bind it in each namespace. `create clusterrole` takes the same
    `--verb` and `--resource` flags as `create role`, with no `-n`. In a RoleBinding,
    `--clusterrole=configmap-reader` names a ClusterRole in place of a Role:
 
@@ -456,7 +456,7 @@ Do it again without the steps, in **15 minutes**.
 
    </details>
 
-3. **Host `controlplane`, weight 20%.** Create one ClusterRole `secret-reader` that allows `get`
+3. **Host `controlplane`, weight 20%.** Create a ClusterRole `secret-reader` that allows `get`
    and `list` on [Secrets](../../references/config.md#secrets). Use it so that `ci` can read Secrets in `web` and `default` but not in
    any other namespace. Name each binding `ci-secret-reader`.
 
@@ -521,7 +521,7 @@ k auth can-i get deployments.apps -n web --as=system:serviceaccount:web:ci
 
 The answers are `yes`, then `no`: `delete` is in the Role and `get` is not.
 
-**Task 3.** One ClusterRole holds the rule, and a RoleBinding in each namespace grants it only
+**Task 3.** A ClusterRole holds the rule, and a RoleBinding in each namespace grants it only
 there. A ClusterRoleBinding would grant it in every namespace:
 
 ```shell
@@ -596,7 +596,7 @@ On `controlplane`:
 ## Further reading
 
 * The [RBAC](../../references/rbac.md) reference has the object model, the subject kinds, the roles every
-  subject gets, and the failure modes in one place.
+  subject gets, and the failure modes.
 * [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
   is the reference for every field of a Role, a ClusterRole and both bindings.
 * [ServiceAccounts](https://kubernetes.io/docs/concepts/security/service-accounts/) covers

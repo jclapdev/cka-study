@@ -1,6 +1,6 @@
 # kubeadm
 
-kubeadm turns machines that already run a [container runtime](workers.md#what-a-worker-runs) and a [kubelet](control-plane.md#components) into a cluster. `kubeadm init` builds the [control plane](control-plane.md) on one machine, and `kubeadm join` adds more machines to it ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)). It does not install a [pod network](pod-network.md).
+kubeadm turns machines that already run a [container runtime](workers.md#what-a-worker-runs) and a [kubelet](control-plane.md#components) into a cluster. `kubeadm init` builds the [control plane](control-plane.md) on a machine, and `kubeadm join` adds more machines to it ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)). It does not install a [pod network](pod-network.md).
 
 ## What `kubeadm init` does
 

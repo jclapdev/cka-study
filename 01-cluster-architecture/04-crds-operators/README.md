@@ -203,7 +203,7 @@ create a `Certificate` object, and its [controller](../../references/control-pla
 1. Install cert-manager's Helm chart, with its CRDs.
    `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
    a server that stores images and charts, so there is no `helm repo add` first. `--version v1.21.2` pins the chart version, and
-   `--set crds.enabled=true` sets one value:
+   `--set crds.enabled=true` sets `crds.enabled`:
 
    ```shell
    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
@@ -749,7 +749,7 @@ On `controlplane`:
 ## Further reading
 
 * The [CRDs and operators](../../references/crds.md) reference has the parts of a CRD, validation, operators and the failure
-  modes in one place.
+  modes.
 * [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
   explains when to add a custom resource, and the other way to extend the API, aggregation, which
   puts a separate API server behind the main one.

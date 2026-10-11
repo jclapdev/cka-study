@@ -4,7 +4,7 @@
 
 ## Finding the cluster
 
-`kubectl` reads a kubeconfig file to learn the apiserver's address, the CA certificate to check it with, and the credential to send. The file holds clusters, users and contexts, where a context pairs one cluster with one user and a default namespace ([organizing cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)). Without a kubeconfig, `kubectl` tries `localhost:8080` and fails, which is the error on any machine that has none.
+`kubectl` reads a kubeconfig file to learn the apiserver's address, the CA certificate to check it with, and the credential to send. The file holds clusters, users and contexts, where a context pairs a cluster with a user and a default namespace ([organizing cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)). Without a kubeconfig, `kubectl` tries `localhost:8080` and fails, which is the error on any machine that has none.
 
 ## What happens to a request
 
@@ -30,7 +30,7 @@ Admission is where the cluster's admission controllers, plugins inside the apise
 
 Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, and `kubectl explain` reads it from there, so it describes the exact version your cluster runs, including types added later by CustomResourceDefinitions (CRDs), objects that add new types to the cluster.
 
-## Three ways to change objects
+## Ways to change objects
 
 `kubectl` offers three ways to manage objects ([management techniques](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/#management-techniques)):
 

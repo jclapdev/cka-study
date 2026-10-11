@@ -1,0 +1,19 @@
+# Sentences about the lesson, the reader or the exam instead of about Kubernetes.
+extends: existence
+message: "'%s' is narration or exam framing. State the fact, or delete the sentence."
+level: error
+ignorecase: true
+tokens:
+  - in this lesson
+  - this exercise
+  - the steps above
+  - the way the exam asks
+  - every exam host
+  - as exam tasks ask
+  - under exam time
+  - worth recogni[sz]ing
+  - worth reading
+  - similar to this
+  - (?:it's|it is) worth noting
+  - keep in mind
+  - remember that

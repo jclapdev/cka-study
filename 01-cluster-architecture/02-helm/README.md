@@ -16,7 +16,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 
 * Add a chart repository, and find a chart and its versions in it.
 * Read the settings a chart accepts, called values, before installing it.
-* Install a chosen version of a chart into a new namespace, with one value changed.
+* Install a chosen version of a chart into a new namespace, with a value changed.
 * Find the objects an install creates, and the record Helm keeps of it.
 * Upgrade a release without losing the values it was installed with.
 * Roll a release back to an earlier version of itself.
@@ -124,12 +124,12 @@ chart.
 
 ## Install a release
 
-A [release](../../references/helm.md#charts-repositories-and-releases) is one installed copy of a chart, with its own name, in one namespace.
+A [release](../../references/helm.md#charts-repositories-and-releases) is an installed copy of a chart, with its own name, in a namespace.
 
 1. Install version 6.14.1 as the release `web` in a new namespace `apps`, with 2 replicas.
    `helm install` takes the release name, `web`, then the chart, `podinfo/podinfo`.
    `--version 6.14.1` pins the chart version, `-n apps` is the namespace, `--create-namespace`
-   creates it if it does not exist, and `--set replicaCount=2` overrides one value:
+   creates it if it does not exist, and `--set replicaCount=2` overrides `replicaCount`:
 
    ```shell
    helm install web podinfo/podinfo --version 6.14.1 -n apps --create-namespace --set replicaCount=2
@@ -489,8 +489,8 @@ Do it again without the steps, in **15 minutes**.
 Every task runs on `controlplane`.
 
 **Task 1.** `helm repo add` saves the repository under the name `podinfo`. `--version` pins the
-chart version, `--create-namespace` makes `store`, and `--set replicaCount=3` overrides one
-value:
+chart version, `--create-namespace` makes `store`, and `--set replicaCount=3` overrides
+`replicaCount`:
 
 ```shell
 ssh controlplane
@@ -605,7 +605,7 @@ On `controlplane`:
 ## Further reading
 
 * The [Helm](../../references/helm.md) reference has the model, where releases are stored, and the error
-  messages in one place.
+  messages.
 * [Using Helm](https://helm.sh/docs/intro/using_helm/) covers `--set` syntax for lists and
   nested keys, and the other install sources: a local folder, a `.tgz` and a URL.
 * [Use OCI-based registries](https://helm.sh/docs/topics/registries/) covers installing charts

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Self-check for cka-rules.py: each rule blocks the bad case and passes the good one."""
+import datetime
 import json
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -17,8 +19,9 @@ def run(event, **data):
 
 def transcript(*calls):
     f = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False)
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
     for name, inp in calls:
-        f.write(json.dumps({"type": "assistant", "message": {"content": [
+        f.write(json.dumps({"type": "assistant", "timestamp": now, "message": {"content": [
             {"type": "tool_use", "name": name, "input": inp}]}}) + "\n")
     f.close()
     return f.name
@@ -53,5 +56,22 @@ assert "browser" in stop(transcript(app_edit)).get("reason", "")
 assert "browser" not in stop(transcript(app_edit, visit)).get("reason", "")
 assert "browser" in stop(transcript(visit, app_edit)).get("reason", "")
 assert stop(transcript(app_edit), msg="Still working on it.") == {}
-assert stop(transcript(app_edit), active=True) == {}
+
+# Each reader stamps the pages it read and cleared in its own file, and a page it flagged stays unstamped.
+os.environ["CKA_STATE"] = state = tempfile.mkdtemp()
+pages = transcript(("Read", {"file_path": f"{CWD}/references/pod.md"}), ("Read", {"file_path": f"{CWD}/references/rbac.md"}))
+verdict = 'FINDING references/rbac.md:3 | counts | "one" | why\nVERDICT: 1 findings'
+for reader in ("cold-reader", "style-reader"):
+    run("SubagentStop", agent_type=reader, agent_transcript_path=pages, last_assistant_message=verdict)
+style = json.load(open(f"{state}/style-read.json"))
+assert "references/pod.md" in style and "references/rbac.md" not in style
+assert json.load(open(f"{state}/cold-read.json")) == style
+
+# Vale fails a page that uses a banned phrase.
+bad = Path(CWD) / "references" / "zz-vale-check.md"
+bad.write_text("# Check\n\nThe chart sets one value.\n")
+try:
+    assert "EmptyCount" in subprocess.run(["vale", "--output=line", str(bad)], cwd=CWD, capture_output=True, text=True).stdout
+finally:
+    bad.unlink()
 print("all checks pass")

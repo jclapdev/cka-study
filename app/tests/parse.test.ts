@@ -75,7 +75,7 @@ describe("parse", () => {
     const md = readMarkdown(RBAC)!;
     const s = summarize(md);
     expect(s.stepKeys.length).toBeGreaterThan(10);
-    expect(s.stepKeys).toContain("create-two-namespaces#1");
+    expect(s.stepKeys).toContain("create-the-namespaces#1");
     expect(s.recallKeys).toHaveLength(7);
     expect(s.hasPractice).toBe(true);
     const ex = await parseExercise(md, RBAC);

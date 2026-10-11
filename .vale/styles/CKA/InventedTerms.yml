@@ -1,0 +1,10 @@
+# Words invented while building. Use what a learner already says: lab, quiz, practice exam, score.
+extends: existence
+message: "'%s' is a term made up while building. Use lab, quiz, practice exam or score."
+level: error
+ignorecase: true
+tokens:
+  - starting state
+  - timed (?:run|task)s?
+  - ticks
+  - time pressure

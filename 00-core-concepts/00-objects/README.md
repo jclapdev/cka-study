@@ -3,7 +3,7 @@
 Kubernetes runs containers across a group of machines called a cluster. Everything you run on
 it is an object: a record of what you want, which the cluster then works to make true. In this
 topic you run a [Pod](../../references/pod.md), write one in YAML, keep copies of it running with a [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) and a [Deployment](../../references/workloads.md), give
-them one address with a [Service](../../references/services.md), group objects in [namespaces](../../references/namespaces.md), and change objects with `kubectl`,
+them a stable address with a [Service](../../references/services.md), group objects in [namespaces](../../references/namespaces.md), and change objects with `kubectl`,
 the command that talks to the cluster.
 [How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components) that act on it, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command sends.
@@ -21,7 +21,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 * Write a Pod [manifest](../../references/kubectl.md#generating-yaml), a YAML file that describes the object, from the docs, and create the pod from it.
 * Keep a set number of identical pods running with a ReplicaSet, and change that number.
 * Run a Deployment, and see the ReplicaSet it creates to manage its pods.
-* Give a Deployment's pods one address with a Service, and reach it by name.
+* Give a Deployment's pods a stable address with a Service, and reach it by name.
 * Create objects in a namespace, a named group of objects, and reach them from another namespace.
 * Tell `kubectl create` from `kubectl apply`, and change an object by editing its file.
 
@@ -347,7 +347,7 @@ The ReplicaSet page recommends
 of creating ReplicaSets yourself.
 
 1. Create a Deployment with three pods. `create deployment web` makes a Deployment named
-   `web`, `--image=nginx:1.27` is the image of its one container, and `--replicas=3` is how many
+   `web`, `--image=nginx:1.27` is the image of its container, and `--replicas=3` is how many
    pods it keeps. `rollout status deploy/web` waits until all three are ready:
 
    ```shell
@@ -420,10 +420,10 @@ of creating ReplicaSets yourself.
    The old ReplicaSet stays, with no pods, so the change can be undone. This replacement is a
    [rollout](../../references/workloads.md#rollouts).
 
-## Give pods one address with a Service
+## Reach pods through a Service
 
 Each pod has [its own IP](../../learn/network-namespaces.md), and a pod that replaces it gets a new one. A [Service](../../references/services.md) gives a set of
-pods one fixed IP and a [DNS name](../../learn/dns.md), and picks its pods by label.
+pods a stable IP and a [DNS name](../../learn/dns.md), and picks its pods by label.
 
 1. Expose the Deployment. `expose deployment web` creates a Service named `web` that selects
    the Deployment's pods by their label, `app: web`, and `--port=80` is the port it listens
@@ -808,7 +808,7 @@ Do it again without the steps, in **15 minutes**.
 
 <details><summary>Solution</summary>
 
-Every task runs on `controlplane`, so `ssh` there once from `base`.
+Every task runs on `controlplane`, so `ssh` there from `base` first.
 
 **Task 1.** Create the namespace, then the pod in it. `-n store` puts the pod in `store`, and
 without it the pod would land in `default`:
@@ -820,7 +820,7 @@ k run front --image=nginx:1.27 -n store
 k get pod front -n store
 ```
 
-`1/1` and `Running` show the pod's one container started:
+`1/1` and `Running` show the pod's container started:
 
 ```
 NAME    READY   STATUS    RESTARTS   AGE

@@ -1,0 +1,15 @@
+# Stock phrases from Wikipedia's "Signs of AI writing" that course text never needs.
+extends: existence
+message: "'%s' is a stock phrase. Say it plainly."
+level: error
+ignorecase: true
+tokens:
+  - not just .{1,40}? but
+  - not only .{1,40}? but also
+  - serves as
+  - stands as
+  - plays an? (?:crucial|key|vital|pivotal|important) role
+  - delves?
+  - seamless(?:ly)?
+  - leverag(?:e|es|ing)
+  - a testament to

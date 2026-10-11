@@ -1,6 +1,6 @@
 # References
 
-Each page holds the facts, commands and error messages for one concept, to look up while you work.
+Each page holds the facts, commands and error messages for a concept, to look up while you work.
 
 | Page | Covers |
 | --- | --- |

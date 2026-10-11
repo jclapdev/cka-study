@@ -14,3 +14,6 @@ app/playwright-report/
 
 # Cold-reader stamps, written by the reviewer's stop hook
 .claude/state/
+
+# The Kubernetes docs sample that app/scripts/overused.ts compares the pages against
+app/.cache/

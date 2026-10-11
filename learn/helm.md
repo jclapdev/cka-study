@@ -6,7 +6,7 @@ Helm adds three things on top of `kubectl`. It packages an application's manifes
 
 ## How it works
 
-A chart is a folder of templates, which are Kubernetes manifests with gaps in them, plus a `values.yaml` file that fills each gap with a default ([the chart file structure](https://helm.sh/docs/topics/charts/#the-chart-file-structure)). A release is one installed copy of a chart, with its own name, in one namespace.
+A chart is a folder of templates, which are Kubernetes manifests with gaps in them, plus a `values.yaml` file that fills each gap with a default ([the chart file structure](https://helm.sh/docs/topics/charts/#the-chart-file-structure)). A release is an installed copy of a chart, with its own name, in a namespace.
 
 When you run `helm install`, everything up to the last step happens on your own machine. Helm merges the chart's defaults with the values you give, fills in the templates, and sends the finished manifests to the apiserver. It then saves a record of the release (the chart, the values and the manifests) as a Secret in the release's namespace. From Helm 4 on, a new release is applied with server-side apply, in which the apiserver records which tool owns each field of an object ([server-side apply](https://helm.sh/docs/overview/#server-side-apply), [field management](https://kubernetes.io/docs/reference/using-api/server-side-apply/#field-management)).
 

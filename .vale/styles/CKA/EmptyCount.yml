@@ -1,0 +1,14 @@
+# "one" where the number tells the reader nothing: write "a", or name the thing.
+extends: existence
+message: "'%s': the count says nothing here. Write 'a' or name the thing."
+level: error
+ignorecase: true
+tokens:
+  - in one place
+  - (?:sets|overrides|changes) one value
+  - with one value changed
+  - one installed copy
+  - its one container
+  - pod's one container
+  - (?:them|pods|gets) one (?:fixed |stable )?(?:address|IP)
+  - there once

@@ -1,0 +1,13 @@
+# The app never describes a lab or the computer it runs on (CLAUDE.md, "Lab details live in one place").
+extends: existence
+message: "'%s' describes the lab or how it is built. Say what the learner sees instead."
+level: error
+ignorecase: true
+tokens:
+  - in this lab
+  - this lab
+  - the lab's
+  - saved cop(?:y|ies)
+  - grade the run
+  - the way a grader
+  - not used by anything in this course

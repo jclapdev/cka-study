@@ -8,7 +8,7 @@ The container network interface (CNI) is a standard for how a container runtime 
 
 A plugin usually comes in two parts: that configuration file on every node, and an agent pod on every node, installed as a DaemonSet, which carries traffic between nodes. Plugins differ in how they carry it and in what else they do. Flannel connects pods and nothing more, while Calico also enforces NetworkPolicy, the rules that limit which pods may talk to which.
 
-## Three address ranges
+## Address ranges
 
 A cluster uses three separate ranges, and they must not overlap:
 

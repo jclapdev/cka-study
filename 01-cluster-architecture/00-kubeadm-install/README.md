@@ -188,7 +188,7 @@ Kubernetes needs a [network plugin](../../learn/pod-network.md) to [give pods ad
 plugin hands out pod addresses from the range you give `init`, which must not overlap the range
 for [Services](../../references/services.md), the stable addresses in front of pods, or the machines' own network ([three address ranges](../../references/pod-network.md#pod-service-and-node-address-ranges)).
 
-### Why is controlplane NotReady when all four control plane pods are running?
+### Why is controlplane NotReady when all the control plane pods are running?
 
 Check the node, the pods, and `/etc/cni/net.d/`, where a network plugin writes its configuration file
 in the [CNI](../../references/pod-network.md) format, the standard for such plugins. `describe node` prints the

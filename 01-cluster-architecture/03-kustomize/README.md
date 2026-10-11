@@ -18,9 +18,9 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 * Turn generated manifests into a base, the shared set of files, with a kustomization copied
   from the docs.
 * Preview what Kustomize produces before anything reaches the cluster.
-* Write an overlay, the changes for one environment, that sets the base's namespace, names, [labels](../../references/labels.md)
+* Write an overlay, the changes for an environment, that sets the base's namespace, names, [labels](../../references/labels.md)
   and image tag.
-* Change fields in one object with patches copied from the docs.
+* Change fields in an object with patches copied from the docs.
 * Generate a [ConfigMap](../../references/config.md) whose name changes with its contents, and see the [Deployment](../../references/workloads.md) replace its
   pods when it does.
 * Apply and delete everything a kustomization produces with `-k`.
@@ -301,7 +301,7 @@ the fields to add or replace.
    to the folder the other steps run in.
 
 2. In `vim prod/kustomization.yaml`, add the `patches` list from the same docs block. Each
-   `path` names one patch file. The file now reads:
+   `path` names a patch file. The file now reads:
 
    ```yaml
    resources:
@@ -733,7 +733,7 @@ On `controlplane`:
 ## Further reading
 
 * The [Kustomize](../../references/kustomize.md) reference has the fields an overlay can set, patches,
-  generated names and the failure modes in one place.
+  generated names and the failure modes.
 * [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
   covers `secretGenerator`, `generatorOptions` and `replacements`, which copies a field from one
   object into others.

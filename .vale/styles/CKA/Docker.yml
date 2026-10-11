@@ -1,0 +1,7 @@
+# Exercises never mention docker: that belongs in lab/README.md and lab/labs/.
+extends: existence
+message: "Exercises never mention '%s'. That belongs in lab/README.md."
+level: error
+ignorecase: true
+tokens:
+  - docker

@@ -9,10 +9,11 @@
   pages already written, in the same task.
 - Stop: a reply that reports `result:` is held back until the work is in the user's
   checkout on main, pushed, any app change has been seen in a browser on port 5199, and
-  every changed learner page has passed the cold-reader.
-- SubagentStop (cold-reader): stamps each page the reviewer read in full and found clear.
+  every changed learner page has passed both readers.
+- SubagentStop (cold-reader, style-reader): stamps each page the reader read in full and
+  found clear, in that reader's own stamp file.
 - `cka-rules.py prepush` (from .githooks/pre-push): git refuses to push a changed learner
-  page without a current stamp, however the push was started.
+  page that fails Vale or lacks a current stamp from either reader, however the push was started.
 - PreToolUse guards: the stamp file can't be written, and the git hook can't be skipped.
 """
 import datetime
@@ -25,7 +26,9 @@ import sys
 
 CHECKOUT = "/Users/john/projects/cka-prep"
 APP_URL = "5199"
-STAMPS = os.environ.get("CKA_STAMPS", f"{CHECKOUT}/.claude/state/cold-read.json")
+STATE = os.environ.get("CKA_STATE", f"{CHECKOUT}/.claude/state")
+# Each reader that must clear a learner page before it is pushed, and its stamp file.
+READERS = {"cold-reader": "cold-read.json", "style-reader": "style-read.json"}
 FOLDER = re.compile(r"^\d\d-[^/]+(/\d\d-[^/]+)?$")
 SKILL_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|lab/labs/.+)$")
 LEARNER_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|EXAM\.md|README\.md|lab/README\.md)$")
@@ -157,9 +160,13 @@ def main_check():
                 "visible in the running app: " + "; ".join(problems) + ".")
 
 
-def load_stamps():
+def stamp_file(reader):
+    return os.path.join(STATE, READERS[reader])
+
+
+def load_stamps(reader):
     try:
-        return json.load(open(STAMPS))
+        return json.load(open(stamp_file(reader)))
     except (OSError, ValueError):
         return {}
 
@@ -176,36 +183,53 @@ def epoch(timestamp):
 
 
 def stamp(data):
-    """The cold-reader finished: stamp each learner page it read, has no finding on, and that
+    """A reader finished: stamp each learner page it read, has no finding on, and that
     hasn't changed since it was read. No verdict line, no stamps."""
+    reader = data["agent_type"]
     message = data.get("last_assistant_message", "")
     if not re.search(r"^VERDICT: (clear|\d+ findings?)\s*$", message.strip().splitlines()[-1] if message.strip() else ""):
         return
-    flagged = set(re.findall(r"^FINDING (\S+?):\d+ \| failure [1-5] \| \"", message, re.M))
+    flagged = set(re.findall(r"^FINDING (\S+?):\d+ \| ", message, re.M))
     read = {}
     for call, ts in tool_calls(data["agent_transcript_path"], with_time=True):
         path = call["input"].get("file_path", "")
         if call["name"] == "Read" and "offset" not in call["input"] and "limit" not in call["input"]:
             read[path] = epoch(ts)
-    stamps = load_stamps()
+    stamps = load_stamps(reader)
     for path, read_at in read.items():
         rel = repo_path(data["cwd"], path)
         if rel and LEARNER_PAGES.match(rel) and rel not in flagged and os.path.exists(path) \
                 and os.path.getmtime(path) <= read_at + 1:
             stamps[rel] = blob(path)
-    os.makedirs(os.path.dirname(STAMPS), exist_ok=True)
-    json.dump(stamps, open(STAMPS, "w"), indent=1, sort_keys=True)
+    os.makedirs(STATE, exist_ok=True)
+    json.dump(stamps, open(stamp_file(reader), "w"), indent=1, sort_keys=True)
 
 
 def unreviewed(pages_with_blobs):
-    stamps = load_stamps()
-    return [rel for rel, b in pages_with_blobs if stamps.get(rel) != b]
+    """'<page> (<reader>)' for each reader whose stamp on the page is missing or stale."""
+    missing = []
+    for reader in READERS:
+        stamps = load_stamps(reader)
+        missing += [f"{rel} ({reader})" for rel, b in pages_with_blobs if stamps.get(rel) != b]
+    return missing
+
+
+def vale(root, pages):
+    """Vale's errors on these pages (the rules in .vale/styles/CKA), or '' when they pass."""
+    pages = [p for p in pages if os.path.exists(os.path.join(root, p))]
+    if not pages:
+        return ""
+    try:
+        out = subprocess.run(["vale", "--output=line", *pages], cwd=root, capture_output=True, text=True)
+    except FileNotFoundError:
+        return "vale is not installed (brew install vale)"
+    return (out.stdout + out.stderr).strip() if out.returncode else ""
 
 
 def prepush():
     """Run by .githooks/pre-push with git's '<local ref> <local sha> <remote ref> <remote sha>' lines."""
     zero = "0" * 40
-    missing = set()
+    missing, changed_pages = set(), set()
     for line in sys.stdin:
         local_ref, local_sha, _, remote_sha = line.split()
         if local_sha == zero:
@@ -216,9 +240,16 @@ def prepush():
         pages = [(p, subprocess.run(["git", "rev-parse", f"{local_sha}:{p}"], capture_output=True, text=True).stdout.strip())
                  for p in changed if LEARNER_PAGES.match(p)]
         missing.update(unreviewed(pages))
+        changed_pages.update(p for p, _ in pages)
+    root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
+    errors = vale(root, sorted(changed_pages))
+    if errors:
+        print("Vale found wording these pages must not use:\n" + errors, file=sys.stderr)
     if missing:
-        print("These learner pages changed but haven't passed the cold-reader:\n  " + "\n  ".join(sorted(missing))
-              + "\nRun the cold-reader agent on them, fix what it finds, and push again.", file=sys.stderr)
+        print("These learner pages changed but haven't passed the reader named beside them:\n  "
+              + "\n  ".join(sorted(missing))
+              + "\nRun that agent on them, fix what it finds, and push again.", file=sys.stderr)
+    if errors or missing:
         sys.exit(1)
 
 
@@ -230,10 +261,15 @@ def review_check(data):
     changed = subprocess.run(["git", "-C", root, "diff", "--name-only", "--diff-filter=d", "origin/main"],
                              capture_output=True, text=True).stdout.split()
     pages = [(p, blob(os.path.join(root, p))) for p in changed if LEARNER_PAGES.match(p)]
+    problems = []
     missing = unreviewed(pages)
     if missing:
-        return ("These learner pages haven't passed the cold-reader since they last changed: "
-                + ", ".join(missing) + ". Run the cold-reader agent on them and fix what it finds.")
+        problems.append("These learner pages haven't passed the reader named beside them since they "
+                        "last changed: " + ", ".join(missing) + ". Run that agent on them and fix what it finds.")
+    errors = vale(root, [p for p, _ in pages])
+    if errors:
+        problems.append("Vale found wording these pages must not use:\n" + errors)
+    return "\n".join(problems) or None
 
 
 def done_gate(data):
@@ -258,7 +294,7 @@ def main():
         standards_sweep(data)
     elif event == "Stop":
         done_gate(data)
-    elif event == "SubagentStop" and data.get("agent_type") == "cold-reader":
+    elif event == "SubagentStop" and data.get("agent_type") in READERS:
         stamp(data)
 
 

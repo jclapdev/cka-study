@@ -7,7 +7,9 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "test": "vitest run",
+    "test": "vitest run && pnpm lint:prose",
+    "lint:prose": "cd .. && vale --output=line README.md EXAM.md lab/README.md learn references [0-9][0-9]-*/[0-9][0-9]-*/README.md",
+    "overused": "node scripts/overused.ts",
     "test:browser": "playwright test",
     "db:generate": "drizzle-kit generate"
   },

@@ -1,0 +1,7 @@
+# A section name made up while building. The section is the Quiz.
+extends: existence
+message: "'Recall' is a term made up while building. The section is the Quiz."
+level: error
+ignorecase: false
+tokens:
+  - Recall

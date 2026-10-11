@@ -97,7 +97,7 @@
     ],
     "SubagentStop": [
       {
-        "matcher": "cold-reader",
+        "matcher": "cold-reader|style-reader",
         "hooks": [
           {
             "type": "command",

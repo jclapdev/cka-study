@@ -4,7 +4,7 @@ Kubernetes runs containers across a group of machines and keeps them running the
 
 ## Desired state and controllers
 
-Every object in Kubernetes has two halves: `spec`, the state you want, and `status`, the state the cluster last observed ([object spec and status](https://kubernetes.io/docs/concepts/overview/working-with-objects/#object-spec-and-status)). A controller is a loop that compares the two for one kind of object and acts on the difference ([controller pattern](https://kubernetes.io/docs/concepts/architecture/controller/#controller-pattern)). If a Deployment, an object that keeps a set number of identical pods running, asks for three pods and two exist, its controller creates one more. If a node dies, the pods on it are gone and the controllers create new ones elsewhere.
+Every object in Kubernetes has two halves: `spec`, the state you want, and `status`, the state the cluster last observed ([object spec and status](https://kubernetes.io/docs/concepts/overview/working-with-objects/#object-spec-and-status)). A controller is a loop that compares the two for a kind of object and acts on the difference ([controller pattern](https://kubernetes.io/docs/concepts/architecture/controller/#controller-pattern)). If a Deployment, an object that keeps a set number of identical pods running, asks for three pods and two exist, its controller creates one more. If a node dies, the pods on it are gone and the controllers create new ones elsewhere.
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ A mirror pod is the copy of a static pod that the kubelet shows through the apis
 
 A pod is one or more containers that share an IP address and can share storage. It is the smallest thing the scheduler places, and it stays on its node for life. A pod that seems to have moved is a new pod made by a controller. You rarely create pods directly. A Deployment keeps a number of identical pods running, and a DaemonSet keeps one pod on every node, which is how node agents such as kube-proxy and the pod network's agent are installed.
 
-A Deployment does not create pods itself. It creates a ReplicaSet, whose controller keeps the number of pods matching its label selector equal to `replicas`, and it creates a new ReplicaSet each time the pod template changes ([Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [how a ReplicaSet works](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#how-a-replicaset-works)). A Service finds the same pods by their labels and gives them one address ([Service](https://kubernetes.io/docs/concepts/services-networking/service/)).
+A Deployment does not create pods itself. It creates a ReplicaSet, whose controller keeps the number of pods matching its label selector equal to `replicas`, and it creates a new ReplicaSet each time the pod template changes ([Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [how a ReplicaSet works](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#how-a-replicaset-works)). A Service finds the same pods by their labels and gives them a stable address ([Service](https://kubernetes.io/docs/concepts/services-networking/service/)).
 
 ```mermaid
 flowchart LR
@@ -84,7 +84,7 @@ flowchart LR
   S -.->|sends traffic to| P2
 ```
 
-Namespaces divide one cluster into named groups of objects, and labels tag objects so other objects can select them, such as a Service choosing its pods.
+Namespaces divide a cluster into named groups of objects, and labels tag objects so other objects can select them, such as a Service choosing its pods.
 
 The facts for each part are on the reference pages: [control plane](../references/control-plane.md), [workers](../references/workers.md), [pods](../references/pod.md), [DaemonSets](../references/daemonsets.md), [namespaces](../references/namespaces.md) and [labels](../references/labels.md).
 
