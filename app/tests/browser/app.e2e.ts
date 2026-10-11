@@ -93,3 +93,41 @@ for (const [name, size] of Object.entries({ desktop: DESKTOP, phone: PHONE })) {
     });
   });
 }
+
+test("a done step folds to its first line and opens again", async ({ page }) => {
+  await page.setViewportSize(DESKTOP);
+  const [first] = await topics(page);
+  // A step not yet done, with a code block under its first line. The test unticks it again at the end.
+  const steps = page.locator("article li:has(> form button[aria-pressed])");
+  let i = -1;
+  for (const href of first.lessons) {
+    await page.goto(href);
+    i = await steps.evaluateAll((lis) =>
+      lis.findIndex((li) => li.querySelector('button[aria-pressed="false"]') && li.querySelector("pre")),
+    );
+    if (i >= 0) break;
+  }
+  expect(i, "a lesson has a step to tick").toBeGreaterThanOrEqual(0);
+  const step = steps.nth(i);
+  const tick = step.locator("button[aria-pressed]");
+  const code = step.locator("pre").first();
+  const toggle = step.locator("button[aria-expanded]");
+
+  await tick.click();
+  await expect(code).toBeHidden();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await page.reload();
+  await expect(code).toBeHidden();
+
+  await toggle.click();
+  await expect(code).toBeVisible();
+  await toggle.click();
+  await expect(code).toBeHidden();
+  await step.locator(".md > :first-child").click({ position: { x: 5, y: 5 } });
+  await expect(code).toBeVisible();
+
+  await tick.click();
+  await expect(tick).toHaveAttribute("aria-pressed", "false");
+  await expect(code).toBeVisible();
+  await expect(toggle).toHaveCount(0);
+});
