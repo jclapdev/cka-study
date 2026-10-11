@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isRouteErrorResponse, Link, Links, Meta, NavLink, Outlet, Scripts, ScrollRestoration, useLocation, useRevalidator, useRouteError } from "react-router";
 import type { Route } from "./+types/root";
 import { lessonHref } from "./content/links";
-import { overview } from "./db/progress";
-import { labState } from "./lab/state.server";
+import { lastLesson, openRunTopic, overview } from "./db/progress";
+import { labController } from "./lab/controller";
+import { readPrefs, setPref } from "./prefs";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -17,8 +18,45 @@ export const links: Route.LinksFunction = () => [
 
 export const meta: Route.MetaFunction = () => [{ title: "CKA Prep" }];
 
-export async function loader() {
-  return { domains: overview(), lab: await labState() };
+export async function loader({ request }: Route.LoaderArgs) {
+  const domains = overview();
+  return {
+    domains,
+    lab: await labController().fresh(),
+    exam: openRunTopic(),
+    last: lastLesson(domains),
+    prefs: readPrefs(request.headers.get("cookie")),
+  };
+}
+
+/**
+ * Keeps every page's lab status current: ws://<dev server>/events sends the lab's state whenever it
+ * changes, from this window, another one, or the lab stopping by itself, and the page reloads its data.
+ */
+function useLabEvents(lab: unknown) {
+  const revalidator = useRevalidator();
+  const latest = useRef({ revalidator, lab: JSON.stringify(lab) });
+  latest.current = { revalidator, lab: JSON.stringify(lab) };
+  useEffect(() => {
+    let ws: WebSocket;
+    let retry = 0;
+    let gone = false;
+    const connect = () => {
+      ws = new WebSocket(`ws://${location.host}/events`);
+      ws.onmessage = (e) => {
+        if (e.data !== latest.current.lab) latest.current.revalidator.revalidate();
+      };
+      ws.onclose = () => {
+        if (!gone) retry = window.setTimeout(connect, 2000);
+      };
+    };
+    connect();
+    return () => {
+      gone = true;
+      clearTimeout(retry);
+      ws.close();
+    };
+  }, []);
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -51,22 +89,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => setOpen(false), [pathname]);
-  const [hidden, setHidden] = useState(false);
-  useEffect(() => {
-    try { setHidden(localStorage.getItem("sidebar") === "hidden"); } catch {}
-  }, []);
+  const [hidden, setHidden] = useState(loaderData.prefs.sidebar);
   const toggleSidebar = () => {
     setHidden(!hidden);
-    try { localStorage.setItem("sidebar", hidden ? "shown" : "hidden"); } catch {}
+    setPref("sidebar", hidden ? "shown" : "hidden");
   };
-  // A lab started from another page or tab keeps every page's lab status current until it is ready.
-  const revalidator = useRevalidator();
-  const starting = loaderData.lab.status === "starting";
-  useEffect(() => {
-    if (!starting) return;
-    const t = setInterval(() => revalidator.state === "idle" && revalidator.revalidate(), 3000);
-    return () => clearInterval(t);
-  }, [starting, revalidator]);
+  useLabEvents(loaderData.lab);
   // The terminal popped out into its own window.
   if (pathname === "/terminal") return <Outlet />;
   // A reference or Learn page opened in a tab of its own, without the topic list.
@@ -137,7 +165,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                               </span>
                             )}
                           </span>
-                          {t.progress.stepsDone > 0 && <Meter done={t.progress.stepsDone} total={t.progress.steps} />}
+                          {t.progress.lessonsDone > 0 && <Meter done={t.progress.lessonsDone} total={t.progress.lessons} />}
                         </NavLink>
                         {"lessons" in t && pathname.startsWith(`/t/${t.id}`) && (
                           <ul aria-label="Lessons" className="mb-2 ml-3 mt-1 border-l border-line pl-2">
@@ -151,8 +179,8 @@ export default function App({ loaderData }: Route.ComponentProps) {
                                   }
                                 >
                                   {l.title}
-                                  {l.steps > 0 && l.done === l.steps && (
-                                    <span className="text-done" title="All steps done">✓</span>
+                                  {l.done && (
+                                    <span className="text-done" title="Done">✓</span>
                                   )}
                                 </NavLink>
                               </li>
@@ -176,6 +204,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
                 ["/doc/lab/README.md", "Getting started"],
                 ["/doc/EXAM.md", "About the CKA"],
                 ["/doc/references/README.md", "References"],
+                ["/doc/CHANGELOG.md", "What's new"],
               ].map(([to, label]) => (
                 <li key={to}>
                   <NavLink to={to} className={navItem}>
@@ -212,7 +241,7 @@ export function SidebarIcon({ flip }: { flip?: boolean }) {
 export function Meter({ done, total }: { done: number; total: number }) {
   if (!total) return null;
   return (
-    <span className="mt-1 block h-1 overflow-hidden rounded-full bg-line" title={`${done} of ${total} steps done`}>
+    <span className="mt-1 block h-1 overflow-hidden rounded-full bg-line" title={`${done} of ${total} lessons done`}>
       <span className="block h-full bg-done" style={{ width: `${(done / total) * 100}%` }} />
     </span>
   );

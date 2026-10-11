@@ -59,11 +59,19 @@ export function readMarkdown(rel: string): string | null {
   if (inside.startsWith("..") || path.isAbsolute(inside)) return null;
   if (!abs.endsWith(".md") || inside.split(path.sep)[0] === "app") return null;
   try {
-    return fs.readFileSync(abs, "utf8");
+    const mtime = fs.statSync(abs).mtimeMs;
+    const hit = files.get(abs);
+    if (hit?.mtime === mtime) return hit.text;
+    const text = fs.readFileSync(abs, "utf8");
+    files.set(abs, { mtime, text });
+    return text;
   } catch {
     return null;
   }
 }
+
+// Pages read on every page load, kept until the file changes on disk.
+const files = new Map<string, { mtime: number; text: string }>();
 
 /** Every lab folder in lab/labs. */
 export function listLabs(): string[] {

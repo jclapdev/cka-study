@@ -20,13 +20,23 @@ export function Markdown({ html, className = "" }: { html: string; className?: s
       };
       pre.append(btn);
     }
-    const diagrams = root.querySelectorAll<HTMLElement>("pre.mermaid:not([data-processed])");
-    if (diagrams.length)
+    // Diagrams follow the system's dark mode, and are drawn again from their source when it changes.
+    const diagrams = [...root.querySelectorAll<HTMLElement>("pre.mermaid")];
+    if (!diagrams.length) return;
+    const scheme = matchMedia("(prefers-color-scheme: dark)");
+    const draw = () =>
       import("mermaid").then(({ default: mermaid }) => {
-        const dark = matchMedia("(prefers-color-scheme: dark)").matches;
-        mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "neutral" });
-        mermaid.run({ nodes: [...diagrams] });
+        for (const d of diagrams) {
+          d.dataset.source ??= d.textContent ?? "";
+          d.textContent = d.dataset.source;
+          d.removeAttribute("data-processed");
+        }
+        mermaid.initialize({ startOnLoad: false, theme: scheme.matches ? "dark" : "neutral" });
+        mermaid.run({ nodes: diagrams });
       });
+    draw();
+    scheme.addEventListener("change", draw);
+    return () => scheme.removeEventListener("change", draw);
   }, [html]);
 
   return <div ref={ref} className={`md ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;

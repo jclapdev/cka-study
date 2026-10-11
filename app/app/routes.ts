@@ -5,7 +5,8 @@ export default [
   route("t/:domain/:topic/:lesson?", "routes/topic.tsx"),
   route("doc/*", "routes/doc.tsx"),
   route("reference/*", "routes/reference.ts"),
-  route("lab/:state", "routes/lab.ts"),
+  route("lab/:lab", "routes/lab.ts"),
+  route("note/:domain/:topic", "routes/note.ts"),
   route("terminal", "routes/terminal.tsx"),
   route("*", "routes/missing.ts"),
 ] satisfies RouteConfig;

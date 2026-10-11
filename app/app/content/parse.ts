@@ -110,6 +110,17 @@ function detailsBlocks(md: string, nodes: RootContent[]) {
 
 const orderedItems = (list: List) => (list.ordered ? list.children : []);
 
+/**
+ * Keys for a section's numbered steps, from each step's first sentence, so a tick stays on its step
+ * when steps are added or moved, or the explanation after that sentence changes. Two steps with the
+ * same first sentence get -1, -2 after the first.
+ */
+function stepKeys(slug: string, items: ListItem[]) {
+  const slugger = new GithubSlugger();
+  const first = (item: ListItem) => toString(item.children[0] ?? item).split(/\n|(?<=[.:?!])\s/)[0].slice(0, 80);
+  return items.map((item) => `${slug}#${slugger.slug(first(item)) || "step"}`);
+}
+
 function recallKeys(md: string, nodes: RootContent[]) {
   const slugger = new GithubSlugger();
   return detailsBlocks(md, nodes).found.map((d) => ({ ...d, key: slugger.slug(d.summary) }));
@@ -129,9 +140,8 @@ function lessonsOf(md: string, intro: RootContent[], sections: Raw[], learnTitle
   const trailing: Lesson[] = [];
   let taught = false;
   for (const s of sections) {
-    const stepKeys =
-      s.kind === "steps" ? s.nodes.flatMap((n) => (n.type === "list" ? orderedItems(n) : [])).map((_, i) => `${s.slug}#${i + 1}`) : [];
-    if (s.kind === "plain" || (s.kind === "steps" && !stepKeys.length && !taught)) {
+    const keys = s.kind === "steps" ? stepKeys(s.slug, s.nodes.flatMap((n) => (n.type === "list" ? orderedItems(n) : []))) : [];
+    if (s.kind === "plain" || (s.kind === "steps" && !keys.length && !taught)) {
       if (taught) {
         out.at(-1)!.sections.push(s.slug);
         trailing.push(...learnIn(s.nodes));
@@ -142,22 +152,32 @@ function lessonsOf(md: string, intro: RootContent[], sections: Raw[], learnTitle
       continue;
     }
     taught = true;
-    out.push(...learnIn(s.nodes), { slug: s.slug, title: s.title, kind: s.kind, sections: [s.slug], stepKeys });
+    out.push(...learnIn(s.nodes), { slug: s.slug, title: s.title, kind: s.kind, sections: [s.slug], stepKeys: keys });
   }
   return [...out, ...trailing];
 }
 
+// Every page load counts progress against every README, so each README's outline is kept until its text changes.
+const summaries = new Map<string, Summary>();
+
 export function summarize(md: string, learnTitle: LearnTitle = (n) => n): Summary {
-  const { title, intro, sections } = splitSections(md);
-  const lessons = lessonsOf(md, intro, sections, learnTitle);
-  return {
-    title,
-    stepKeys: lessons.flatMap((l) => l.stepKeys),
-    recallKeys: sections.flatMap((s) => (s.kind === "recall" ? recallKeys(md, s.nodes).map((r) => r.key) : [])),
-    hasPractice: sections.some((s) => s.kind === "practice"),
-    lab: labOf(intro),
-    lessons,
-  };
+  let s = summaries.get(md);
+  if (!s) {
+    const { title, intro, sections } = splitSections(md);
+    const lessons = lessonsOf(md, intro, sections, (n) => n);
+    s = {
+      title,
+      stepKeys: lessons.flatMap((l) => l.stepKeys),
+      recallKeys: sections.flatMap((x) => (x.kind === "recall" ? recallKeys(md, x.nodes).map((r) => r.key) : [])),
+      hasPractice: sections.some((x) => x.kind === "practice"),
+      lab: labOf(intro),
+      lessons,
+    };
+    if (summaries.size > 100) summaries.clear();
+    summaries.set(md, s);
+  }
+  // A Learn page's title can change without the README changing.
+  return { ...s, lessons: s.lessons.map((l) => (l.kind === "learn" ? { ...l, title: learnTitle(l.slug) } : l)) };
 }
 
 /** The lab named by a `<!-- lab: <name> -->` comment in the introduction. */
@@ -279,6 +299,7 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
     if (s.kind === "steps") {
       const blocks: Block[] = [];
       let pending: RootContent[] = [];
+      const keys = stepKeys(s.slug, s.nodes.flatMap((n) => (n.type === "list" ? orderedItems(n) : [])));
       let n = 0;
       const flush = async () => {
         if (pending.length) blocks.push({ html: await render.nodes(pending) });
@@ -290,7 +311,7 @@ export async function parseExercise(md: string, file: string, learnTitle: LearnT
           const start = node.start ?? 1;
           const steps: Step[] = [];
           for (const [i, item] of node.children.entries())
-            steps.push({ key: `${s.slug}#${++n}`, label: start + i, html: await render.nodes(item.children) });
+            steps.push({ key: keys[n++], label: start + i, html: await render.nodes(item.children) });
           blocks.push({ steps });
         } else pending.push(node);
       }

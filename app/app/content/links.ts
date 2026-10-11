@@ -2,3 +2,6 @@
 export const INTRO = "introduction";
 
 export const lessonHref = (topic: string, lesson: string) => (lesson === INTRO ? `/t/${topic}` : `/t/${topic}/${lesson}`);
+
+/** The CKA pass mark, in percent. */
+export const PASS_MARK = 66;

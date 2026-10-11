@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useConfirm } from "~/components/Confirm";
-import { type Lab, LabStart } from "~/components/LabPane";
+import { type Lab, LabStart, startQuestion } from "~/components/LabPane";
 import type { Reference } from "~/components/ReferencePanel";
 import { Terminal } from "~/components/Terminal";
 import { SidebarIcon } from "~/root";
@@ -8,18 +8,21 @@ import { SidebarIcon } from "~/root";
 /** The most terminals open at once, as the server allows. */
 const MAX = 4;
 
-/** The terminal tabs every window shares, from ws://<dev server>/terminal. Null until the server answers. */
+/**
+ * The terminal tabs every window shares, from ws://<dev server>/terminal, and the lab's generation,
+ * which changes whenever the machines are recreated or stopped. Null until the server answers.
+ */
 function useTerminalTabs(on: boolean) {
-  const [tabs, setTabs] = useState<number[] | null>(null);
+  const [list, setList] = useState<{ tabs: number[]; gen: number } | null>(null);
   const ws = useRef<WebSocket | null>(null);
   useEffect(() => {
-    if (!on) return setTabs(null);
+    if (!on) return setList(null);
     let retry = 0;
     let gone = false;
     const connect = () => {
       const s = new WebSocket(`ws://${location.host}/terminal`);
       ws.current = s;
-      s.onmessage = (e) => setTabs((JSON.parse(e.data as string) as { tabs: number[] }).tabs);
+      s.onmessage = (e) => setList(JSON.parse(e.data as string));
       // A dropped connection, such as a dev server restart, comes back by itself.
       s.onclose = () => {
         if (!gone) retry = window.setTimeout(connect, 1000);
@@ -33,14 +36,14 @@ function useTerminalTabs(on: boolean) {
     };
   }, [on]);
   const send = (m: object) => ws.current?.readyState === WebSocket.OPEN && ws.current.send(JSON.stringify(m));
-  return { tabs, add: () => send({ add: true }), close: (id: number) => send({ close: id }) };
+  return { tabs: list?.tabs ?? null, gen: list?.gen ?? 0, add: () => send({ add: true }), close: (id: number) => send({ close: id }) };
 }
 
 type Tab = { key: string; label: string; close?: () => void };
 
 /**
  * The right side of a page: a row of tabs over what they show. A topic with a lab has its terminals
- * there (`terminals`), or Start lab until the lab is running; a reference or Learn page opened from
+ * there (`terminals`), or Start lab until its lab is running; a reference or Learn page opened from
  * the page joins as a tab of its own.
  */
 export function Pane({ lab, terminals, reference, onPopOut, onHide }: {
@@ -51,7 +54,7 @@ export function Pane({ lab, terminals, reference, onPopOut, onHide }: {
   onHide?: () => void;
 }) {
   const running = !!lab && terminals && lab.status === "running";
-  const { tabs, add, close } = useTerminalTabs(running);
+  const { tabs, gen, add, close } = useTerminalTabs(running);
   const [ask, dialog] = useConfirm();
   const [active, setActive] = useState("");
   // A tab this window just asked for shows once the server adds it.
@@ -77,7 +80,7 @@ export function Pane({ lab, terminals, reference, onPopOut, onHide }: {
   }, [tabs]);
 
   const reset = async () => {
-    if (lab && (await ask("Reset the lab? Your work in it is lost.", "Reset lab"))) lab.start();
+    if (lab && (await ask(startQuestion(lab, "reset")!, "Reset lab"))) lab.start();
   };
   const icon = "rounded p-1.5 text-muted hover:bg-paper hover:text-ink";
 
@@ -118,7 +121,8 @@ export function Pane({ lab, terminals, reference, onPopOut, onHide }: {
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1 px-2">
           {running && onPopOut && (
-            <button onClick={onPopOut} aria-label="Open in new window" title="Open in new window" className={icon}>
+            // On a phone a new window opens as another tab, away from the lesson, so the button shows only on wide screens.
+            <button onClick={onPopOut} aria-label="Open in new window" title="Open in new window" className={`hidden lg:block ${icon}`}>
               <PopOutIcon />
             </button>
           )}
@@ -135,8 +139,8 @@ export function Pane({ lab, terminals, reference, onPopOut, onHide }: {
         </div>
       </div>
       <div className="relative min-h-0 flex-1">
-        {lab && terminals && !running && shown === "lab" && <LabStart lab={lab} />}
-        {running && tabs?.map((id) => <Terminal key={id} id={id} active={shown === `t${id}`} />)}
+        {lab && terminals && !running && shown === "lab" && <LabStart lab={lab} ask={ask} />}
+        {running && tabs?.map((id) => <Terminal key={`${gen}:${id}`} id={id} gen={gen} active={shown === `t${id}`} />)}
         {reference && <div className={`absolute inset-0 ${shown === "ref" ? "" : "invisible"}`}>{reference.body}</div>}
       </div>
       {dialog}

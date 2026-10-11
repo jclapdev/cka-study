@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
  * terminal's keys, Ctrl+Shift+C and Ctrl+Shift+V, or the right-click menu. Every tab stays mounted;
  * `active` is the one showing.
  */
-export function Terminal({ id, active }: { id: number; active: boolean }) {
+export function Terminal({ id, gen, active }: { id: number; gen: number; active: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const fitRef = useRef<() => void>(() => {});
   const termRef = useRef<import("@xterm/xterm").Terminal | null>(null);
@@ -17,13 +17,17 @@ export function Terminal({ id, active }: { id: number; active: boolean }) {
     let cancelled = false;
     Promise.all([import("@xterm/xterm"), import("@xterm/addon-fit")]).then(([{ Terminal: XTerm }, { FitAddon }]) => {
       if (cancelled || !ref.current) return;
-      const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+      // The colours follow the system's dark mode, also when it changes while the terminal is open.
+      const scheme = matchMedia("(prefers-color-scheme: dark)");
+      const theme = () => (scheme.matches ? { background: "#0b0e13" } : { background: "#1b2433", foreground: "#e3e8ef" });
       const term = new XTerm({
         fontFamily: '"JetBrains Mono", ui-monospace, monospace',
         fontSize: 14,
         cursorBlink: true,
-        theme: dark ? { background: "#0b0e13" } : { background: "#1b2433", foreground: "#e3e8ef" },
+        theme: theme(),
       });
+      const recolour = () => (term.options.theme = theme());
+      scheme.addEventListener("change", recolour);
       termRef.current = term;
       const fit = new FitAddon();
       term.loadAddon(fit);
@@ -34,15 +38,17 @@ export function Terminal({ id, active }: { id: number; active: boolean }) {
       let retry = 0;
       let dropped = false;
       const send = (m: object) => ws?.readyState === WebSocket.OPEN && ws.send(JSON.stringify(m));
-      // A tab that isn't showing keeps its size; fitting it would squeeze the shell to nothing.
+      // A tab that isn't showing keeps its size; fitting it would squeeze the shell to nothing. Two
+      // windows can show the same shell, so only the one in use sets its size, and takes it back on focus.
       const resize = () => {
         if (!ref.current?.checkVisibility({ visibilityProperty: true })) return;
         fit.fit();
-        send({ r: [term.cols, term.rows] });
+        if (document.hasFocus()) send({ r: [term.cols, term.rows] });
       };
+      addEventListener("focus", resize);
       fitRef.current = resize;
       const connect = () => {
-        ws = new WebSocket(`ws://${location.host}/terminal?id=${id}`);
+        ws = new WebSocket(`ws://${location.host}/terminal?id=${id}&gen=${gen}`);
         // The server sends the whole screen first, so start from a clean one.
         ws.onopen = () => {
           dropped = false;
@@ -51,7 +57,8 @@ export function Terminal({ id, active }: { id: number; active: boolean }) {
         };
         ws.onmessage = (e) => term.write(e.data as string);
         // The server closes with the shell's exit code as the reason when the shell ends, and "gone"
-        // when the tab was closed. No reason means the connection dropped: try again.
+        // when the tab was closed or the lab started over, when the panel brings new tabs. No reason
+        // means the connection dropped: try again.
         ws.onclose = (e) => {
           if (e.reason === "gone") return;
           if (e.reason) {
@@ -88,6 +95,8 @@ export function Terminal({ id, active }: { id: number; active: boolean }) {
       dispose = () => {
         clearTimeout(retry);
         observer.disconnect();
+        removeEventListener("focus", resize);
+        scheme.removeEventListener("change", recolour);
         ws.onclose = null;
         ws.close();
         term.dispose();
@@ -98,7 +107,7 @@ export function Terminal({ id, active }: { id: number; active: boolean }) {
       cancelled = true;
       dispose();
     };
-  }, [id]);
+  }, [id, gen]);
 
   useEffect(() => {
     if (!active) return setMenu(null);

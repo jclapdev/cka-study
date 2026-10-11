@@ -1,4 +1,5 @@
 import { Link, useRouteLoaderData } from "react-router";
+import { PASS_MARK } from "~/content/links";
 import type { loader as rootLoader } from "~/root";
 import { Meter } from "~/root";
 
@@ -7,19 +8,22 @@ type Topic = Data["domains"][number]["topics"][number];
 const missed = (t: Topic) => (t.progress?.recall ? `${t.progress.missed} of ${t.progress.recall}` : "");
 const score = (t: Topic) =>
   t.progress?.bestScore != null ? `${t.progress.bestScore}%` : t.progress?.hasPractice ? "Not attempted" : "";
-const PASS = 66;
+/** A topic is finished when every one of its lessons has its tick. */
+const finished = (t: Topic) => !!t.progress?.lessons && t.progress.lessonsDone === t.progress.lessons;
 
 export default function Home() {
-  const { domains } = useRouteLoaderData<typeof rootLoader>("root")!;
+  const { domains, last } = useRouteLoaderData<typeof rootLoader>("root")!;
   const written = domains.flatMap((d) => d.topics).filter((t) => t.progress);
-  const next = written.find((t) => t.progress!.stepsDone < t.progress!.steps) ?? written[0];
-  const finished = written.filter((t) => t.progress!.steps && t.progress!.stepsDone === t.progress!.steps).length;
+  // Continue returns to the lesson opened last; before any, it starts the first unfinished topic.
+  const first = written.find((t) => !finished(t)) ?? written[0];
+  const next = last ? written.find((t) => t.id === last.topic) : first;
+  const href = last?.href ?? (first ? `/t/${first.id}` : "/");
 
   return (
     <div className="mx-auto max-w-4xl">
       <h1 className="text-3xl font-bold sm:text-4xl">Dashboard</h1>
       <p className="mt-3 text-muted">
-        You have finished {finished} of {written.length} available topics.
+        You have finished {written.filter(finished).length} of {written.length} available topics.
       </p>
 
       {next && (
@@ -30,12 +34,13 @@ export default function Home() {
               <div className="min-w-0 flex-1 basis-56">
                 <p className="text-sm text-muted">{domains.find((d) => d.topics.includes(next))?.name}</p>
                 <p className="text-lg font-semibold">{next.name}</p>
+                {last?.title && <p className="text-sm text-muted">{last.title}</p>}
                 <span className="mt-1 flex items-center gap-3 text-sm tabular-nums text-muted">
-                  <span className="w-40"><Meter done={next.progress!.stepsDone} total={next.progress!.steps} /></span>
-                  {next.progress!.stepsDone} of {next.progress!.steps} steps
+                  <span className="w-40"><Meter done={next.progress!.lessonsDone} total={next.progress!.lessons} /></span>
+                  {next.progress!.lessonsDone} of {next.progress!.lessons} lessons
                 </span>
               </div>
-              <Link to={`/t/${next.id}`} className="rounded bg-accent px-4 py-2 font-semibold text-paper hover:opacity-90">
+              <Link to={href} className="rounded bg-accent px-4 py-2 font-semibold text-paper hover:opacity-90">
                 Continue
               </Link>
             </div>
@@ -49,9 +54,10 @@ export default function Home() {
           {domains
             .filter((d) => d.weight !== null)
             .map((d) => {
-              const scores = d.topics.map((t) => t.progress?.bestScore ?? 0);
+              // Only topics with a practice exam have a score to average.
+              const scores = d.topics.filter((t) => t.progress?.hasPractice).map((t) => t.progress?.bestScore ?? 0);
               const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-              const done = d.topics.filter((t) => t.progress?.steps && t.progress.stepsDone === t.progress.steps).length;
+              const done = d.topics.filter(finished).length;
               return (
                 <li key={d.name}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm">
@@ -59,11 +65,12 @@ export default function Home() {
                       {d.name} <span className="font-normal text-muted">{d.weight}% of the exam</span>
                     </span>
                     <span className="tabular-nums text-muted">
-                      {done} of {d.topics.length} topics finished · practice average {avg}% · pass mark {PASS}%
+                      {done} of {d.topics.length} topics finished
+                      {scores.length > 0 && <> · practice average {avg}% · pass mark {PASS_MARK}%</>}
                     </span>
                   </div>
                   <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-line">
-                    <span className={`block h-full rounded-full ${avg >= PASS ? "bg-done" : "bg-accent"}`} style={{ width: `${avg}%` }} />
+                    <span className={`block h-full rounded-full ${avg >= PASS_MARK ? "bg-done" : "bg-accent"}`} style={{ width: `${avg}%` }} />
                   </span>
                 </li>
               );
@@ -77,7 +84,7 @@ export default function Home() {
           <thead className="text-sm text-muted">
             <tr>
               <th className="py-2 font-normal">Topic</th>
-              <th className="w-28 py-2 font-normal sm:w-44">Progress</th>
+              <th className="w-28 py-2 font-normal sm:w-44">Lessons done</th>
               <th className="hidden py-2 text-right font-normal sm:table-cell">Quiz missed</th>
               <th className="hidden py-2 text-right font-normal sm:table-cell">Best score</th>
             </tr>
@@ -103,8 +110,8 @@ export default function Home() {
                   </td>
                   <td className="py-2 pr-4">
                     <span className="flex items-center gap-3 text-sm tabular-nums">
-                      <span className="flex-1"><Meter done={t.progress!.stepsDone} total={t.progress!.steps} /></span>
-                      {t.progress!.stepsDone} of {t.progress!.steps}
+                      <span className="flex-1"><Meter done={t.progress!.lessonsDone} total={t.progress!.lessons} /></span>
+                      {t.progress!.lessonsDone} of {t.progress!.lessons}
                     </span>
                   </td>
                   <td className={`hidden py-2 text-right tabular-nums sm:table-cell ${t.progress?.missed ? "text-missed" : "text-muted"}`}>

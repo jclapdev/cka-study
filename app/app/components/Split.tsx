@@ -1,4 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useRouteLoaderData } from "react-router";
+import { type SplitName, setPref } from "~/prefs";
+import type { loader as rootLoader } from "~/root";
 
 /**
  * The page on the left and a pane on the right, each filling the screen beside the topic list
@@ -7,10 +10,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
  * keeps main's padding, which the practice exam's sticky clock bar relies on.
  *
  * Below lg the split starts under root.tsx's 4rem top bar, so the topic list stays in reach.
- * `rightHidden` hides the right side, which stays mounted. `place` scrolls the left pane once the
- * saved width is in, for a page that was scrolling the window before the split appeared.
+ * `rightHidden` hides the right side, which stays mounted. `place` scrolls the left pane once it is
+ * drawn, for a page that was scrolling the window before the split appeared. `name` picks which
+ * saved width to use: the lesson beside its lab, or a page beside a reference.
  */
-export function Split({ left, right, rightHidden, rightSmall, place, label }: {
+export function Split({ name, left, right, rightHidden, rightSmall, place, label }: {
+  name: SplitName;
   left: React.ReactNode;
   right: React.ReactNode;
   rightHidden?: boolean;
@@ -21,27 +26,20 @@ export function Split({ left, right, rightHidden, rightSmall, place, label }: {
 }) {
   const grid = useRef<HTMLDivElement>(null);
   const pane = useRef<HTMLDivElement>(null);
-  // The left side's share of the width (the height below lg) in percent.
-  const [split, setSplit] = useState(50);
+  // The left side's share of the width (the height below lg) in percent, saved in a cookie so the
+  // server draws it at the width it was left.
+  const [split, setSplit] = useState(useRouteLoaderData<typeof rootLoader>("root")!.prefs.split[name]);
   const [wide, setWide] = useState(true);
-  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
-    try {
-      const saved = Number(localStorage.getItem("split") ?? NaN);
-      if (saved > 0 && saved < 100) setSplit(saved);
-    } catch {}
-    setLoaded(true);
     const lg = matchMedia("(min-width: 64rem)");
     const onChange = () => setWide(lg.matches);
     onChange();
     lg.addEventListener("change", onChange);
     return () => lg.removeEventListener("change", onChange);
   }, []);
-  useLayoutEffect(() => {
-    if (loaded) place?.(pane.current!);
-  }, [loaded]);
+  useLayoutEffect(() => place?.(pane.current!), []);
   const keep = (p: number) => {
-    try { localStorage.setItem("split", String(p)); } catch {}
+    setPref(`split-${name}`, String(p));
     return p;
   };
   const length = () => {
@@ -71,18 +69,20 @@ export function Split({ left, right, rightHidden, rightSmall, place, label }: {
     setSplit(keep(clamp(p)));
   };
 
-  const small = rightSmall && !wide && !rightHidden;
-  const tracks = small ? "minmax(0,1fr) auto" : `minmax(0,${shown}fr) minmax(0,${100 - shown}fr)`;
+  // Rows below lg and columns from lg up are set apart in CSS, so a phone gets its own layout from
+  // the first paint instead of the wide one corrected after load.
+  const small = rightSmall && !rightHidden;
+  const tracks = `minmax(0,${shown}fr) minmax(0,${100 - shown}fr)`;
   return (
     <div
       ref={grid}
-      style={{ "--tracks": tracks } as React.CSSProperties}
-      className="fixed inset-0 top-16 z-20 grid grid-rows-(--tracks) bg-paper lg:top-0 lg:left-[17rem] lg:grid-cols-(--tracks) lg:grid-rows-1 lg:group-data-[sidebar=hidden]/app:left-0"
+      style={{ "--rows": small ? "minmax(0,1fr) auto" : tracks, "--cols": tracks } as React.CSSProperties}
+      className="fixed inset-0 top-16 z-20 grid grid-rows-(--rows) bg-paper lg:top-0 lg:left-[17rem] lg:grid-cols-(--cols) lg:grid-rows-1 lg:group-data-[sidebar=hidden]/app:left-0"
     >
       <div ref={pane} id="lesson" className="min-h-0 overflow-y-auto px-4 py-8 sm:px-10">{left}</div>
       <div className={`relative min-h-0 ${rightHidden ? "" : "border-t border-line lg:border-l lg:border-t-0"}`}>
         <div className={`relative h-full ${rightHidden ? "invisible overflow-hidden" : ""}`}>{right}</div>
-        {!rightHidden && !small && (
+        {!rightHidden && (
           <div
             role="separator"
             tabIndex={0}
@@ -102,7 +102,7 @@ export function Split({ left, right, rightHidden, rightSmall, place, label }: {
             // As an update, so it saves after the one the second click's release queued.
             onDoubleClick={() => setSplit(() => keep(50))}
             onKeyDown={onKey}
-            className="group absolute inset-x-0 top-0 z-30 flex h-2 cursor-row-resize touch-none items-center justify-center outline-none lg:inset-x-auto lg:inset-y-0 lg:left-0 lg:h-auto lg:w-2 lg:cursor-col-resize"
+            className={`group absolute inset-x-0 top-0 z-30 h-2 cursor-row-resize touch-none items-center justify-center outline-none lg:inset-x-auto lg:inset-y-0 lg:left-0 lg:h-auto lg:w-2 lg:cursor-col-resize ${small ? "hidden lg:flex" : "flex"}`}
           >
             <span className="h-1 w-10 rounded-full bg-line group-hover:bg-accent group-focus-visible:bg-accent group-focus-visible:ring-2 group-focus-visible:ring-accent lg:h-10 lg:w-1" />
           </div>

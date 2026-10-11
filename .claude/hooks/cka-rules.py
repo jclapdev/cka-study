@@ -31,7 +31,9 @@ STATE = os.environ.get("CKA_STATE", f"{CHECKOUT}/.claude/state")
 READERS = {"cold-reader": "cold-read.json", "style-reader": "style-read.json"}
 FOLDER = re.compile(r"^\d\d-[^/]+(/\d\d-[^/]+)?$")
 SKILL_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|lab/labs/.+)$")
-LEARNER_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|EXAM\.md|README\.md|lab/README\.md)$")
+LEARNER_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|EXAM\.md|CHANGELOG\.md|README\.md|lab/README\.md)$")
+# What a learner sees: a push that changes any of it adds a line to CHANGELOG.md, shown as What's new.
+LEARNER_VISIBLE = re.compile(r"^(app/app/.+|\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|EXAM\.md|lab/README\.md)$")
 GATE_FILES = re.compile(r"(^|/)(\.githooks/|\.claude/hooks/|\.claude/settings[^/]*\.json$)")
 
 
@@ -234,7 +236,7 @@ def vale(root, pages):
 def prepush():
     """Run by .githooks/pre-push with git's '<local ref> <local sha> <remote ref> <remote sha>' lines."""
     zero = "0" * 40
-    missing, changed_pages = set(), set()
+    missing, changed_pages, unlogged = set(), set(), set()
     for line in sys.stdin:
         local_ref, local_sha, _, remote_sha = line.split()
         if local_sha == zero:
@@ -246,6 +248,8 @@ def prepush():
                  for p in changed if LEARNER_PAGES.match(p)]
         missing.update(unreviewed(pages))
         changed_pages.update(p for p, _ in pages)
+        if "CHANGELOG.md" not in changed:
+            unlogged.update(p for p in changed if LEARNER_VISIBLE.match(p))
     root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip()
     errors = vale(root, sorted(changed_pages))
     if errors:
@@ -254,7 +258,11 @@ def prepush():
         print("These learner pages changed but haven't passed the reader named beside them:\n  "
               + "\n  ".join(sorted(missing))
               + "\nRun that agent on them, fix what it finds, and push again.", file=sys.stderr)
-    if errors or missing:
+    if unlogged:
+        print("These files change what a learner sees, but CHANGELOG.md has no new line for them:\n  "
+              + "\n  ".join(sorted(unlogged))
+              + "\nAdd a dated line saying what changed, in the learner's words, and push again.", file=sys.stderr)
+    if errors or missing or unlogged:
         sys.exit(1)
 
 

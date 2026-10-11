@@ -27,17 +27,23 @@
 
 ## Using the app
 
-Each topic is a short course of lessons, listed under it in the sidebar: an introduction, how the technology works, one lesson per task with steps to check off, a quiz, and a practice exam.
+Each topic is a short course of lessons, listed under it in the sidebar: an introduction, how the technology works, one lesson per task with steps to check off, a quiz, and a practice exam. A lesson gets a ✓ in the sidebar once you have opened it, checked off all its steps, answered every quiz question with **Got it**, or saved a practice exam score of 66% or more. The Dashboard's **Continue** button opens the lesson you had open last.
+
+Your progress is saved on your computer.
 
 Most topics have a lab: a set of practice machines, running on your computer, that you work on through a terminal shown beside each lesson. Press **Start lab** and wait for the shell. The first start takes about 6 minutes, later ones under a minute. If the lab doesn't start, the button changes to **Try again**.
 
-The cluster is the set of machines running Kubernetes. The shell opens on `base`, a machine outside the cluster, and the Certified Kubernetes Administrator (CKA) exam this course prepares you for starts you on one too. From `base` you reach the cluster's machines with `ssh` and do the work there. `controlplane` is the one that runs the parts managing the cluster, and `kubectl`, the command you use to work with Kubernetes, is set up only there. So run `ssh controlplane` first. Each topic's introduction names the machines in its lab.
+Your computer runs one lab at a time, and each topic starts its own, even when two topics use the same machines. Starting a lab in another topic ends the one that was running and loses its work, so the app asks first. A lab also stops by itself after an hour with no terminal open. Press **Start lab** to start it again.
 
-**+** opens another terminal, up to four, so you can keep one command running while you work in another. After `exit`, press Enter for a new shell. **Reset lab** starts the lab over, and so does starting the practice exam. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the keys the CKA exam's terminal uses, or right-click for Copy and Paste.
+The cluster is the set of machines running Kubernetes. The shell opens on `base`, a machine outside the cluster. The Certified Kubernetes Administrator (CKA) exam also starts you on a machine like it. From `base` you reach the cluster's machines with `ssh` and do the work there. `controlplane` is the one that runs the parts managing the cluster, and `kubectl`, the command you use to work with Kubernetes, is set up only there. So run `ssh controlplane` first. Each topic's introduction names the machines in its lab.
+
+**+** opens another terminal, up to four, so you can keep one command running while you work in another. After `exit`, press Enter for a new shell. **Reset lab** starts the lab over, and so does starting the practice exam; either way the terminals close and a fresh one opens. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the keys the CKA exam's terminal uses, or right-click for Copy and Paste.
+
+On a wide screen, the button beside **Reset lab** opens the terminals in a window of their own, and the button at the far right hides the panel.
 
 ## Grading
 
-During a practice exam, each task shows its weight, the percent of the total score it is worth, and a **Check** button. **Check** lists each part of the task as passed or failed, and how much of the task's weight you earned. **Finish** checks every task and adds up the score against the 66% pass mark, which **Save score** keeps.
+A practice exam's clock starts once its lab is ready, and keeps running if you reload the page or open another lesson, as the CKA's clock does. During a practice exam, each task shows its weight, the percent of the total score it is worth, and a **Check** button. **Check** lists each part of the task as passed or failed, and how much of the task's weight you earned. **Finish** checks every task and adds up the score against the 66% pass mark, which **Save score** keeps.
 
 Only the cluster's final state is checked, never how you got there, as in the CKA. If the lab is not running when you press **Finish**, the tasks can't be checked: a message says so, with a **Check again** button beside it. Start the lab and press **Check again**, or check the box beside each task you passed, and the score adds up from those.
 

@@ -24,7 +24,7 @@ export default function Doc({ loaderData, params }: Route.ComponentProps) {
     </article>
   );
   if (!refs.open) return page;
-  return <Split left={page} right={<Pane terminals={false} reference={refs.reference} />} place={refs.place} label="Resize page and reference" />;
+  return <Split name="doc" left={page} right={<Pane terminals={false} reference={refs.reference} />} place={refs.place} label="Resize page and reference" />;
 }
 
 export { Problem as ErrorBoundary } from "~/root";

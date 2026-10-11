@@ -1,13 +1,23 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { data, Link, useLocation, useNavigationType } from "react-router";
+import { useEffect, useLayoutEffect, useState } from "react";
+import { data, Link, redirect, useLocation, useNavigationType, useRouteLoaderData } from "react-router";
 import type { Route } from "./+types/topic";
+import type { loader as rootLoader } from "~/root";
 import { INTRO, lessonHref } from "~/content/links";
 import { inTopic, parseExercise, renderDoc, untitled } from "~/content/parse";
 import { hasGrader, learnTitle, readMarkdown, REPO, topicReadme } from "~/content/repo";
-import { addAttempt, setMark, setNote, topicState } from "~/db/progress";
+import {
+  addAttempt,
+  endPracticeRun,
+  practiceRunOf,
+  recordVisit,
+  setMark,
+  startPracticeRun,
+  topicState,
+  updatePracticeRun,
+} from "~/db/progress";
 import { Markdown } from "~/components/Markdown";
 import { Notes } from "~/components/Notes";
 import { PracticeRun } from "~/components/PracticeRun";
@@ -15,10 +25,13 @@ import { RecallCard } from "~/components/RecallCard";
 import { Step } from "~/components/Step";
 import { useLab } from "~/components/LabPane";
 import { Pane } from "~/components/Pane";
+import { usePopout } from "~/components/popout";
 import { useReferences } from "~/components/ReferencePanel";
-import { labState } from "~/lab/state.server";
+import { BusyError, labController } from "~/lab/controller";
 import { parseGrade, type TaskResult } from "~/lab/grade";
 import { Split } from "~/components/Split";
+import { setPref } from "~/prefs";
+import { fromApp } from "~/request.server";
 import { SidebarIcon } from "~/root";
 
 async function load(params: Route.LoaderArgs["params"]) {
@@ -30,9 +43,12 @@ async function load(params: Route.LoaderArgs["params"]) {
 
 export async function loader({ params }: Route.LoaderArgs) {
   const { id, md, file, exercise } = await load(params);
+  // The Introduction has one address, the topic's own.
+  if (params.lesson === INTRO) throw redirect(`/t/${id}`);
   const index = exercise.lessons.findIndex((l) => l.slug === (params.lesson ?? INTRO));
   if (index < 0) throw data(null, { status: 404 });
   const lesson = exercise.lessons[index];
+  recordVisit(id, lesson.slug);
   const topic = inTopic(md, file);
   const learnFile = `learn/${lesson.slug}.md`;
   const learnHtml = lesson.kind === "learn" ? (await renderDoc(untitled(readMarkdown(learnFile) ?? ""), learnFile, topic)).html : "";
@@ -66,44 +82,83 @@ function gradeRun(file: string, task: string): Promise<string> {
 }
 
 export async function action({ params, request }: Route.ActionArgs) {
+  if (!fromApp(request)) throw data("Forbidden", { status: 403 });
   const { id, exercise } = await load(params);
   const form = await request.formData();
   const str = (k: string) => String(form.get(k) ?? "");
+  const practice = exercise.sections.find((s) => s.kind === "practice");
+  const run = practiceRunOf(id);
+  const now = () => new Date().toISOString();
   switch (str("intent")) {
     case "step":
     case "recall":
       setMark(id, str("intent") as "step" | "recall", str("key"), str("value") || null);
       break;
-    case "note":
-      setNote(id, str("body"));
+    case "practice-start": {
+      if (practice?.kind !== "practice") throw data(null, { status: 400 });
+      if (!exercise.lab) {
+        startPracticeRun(id, now());
+        break;
+      }
+      // The lab starts over first; the clock starts when it is running, and the run ends if it fails.
+      startPracticeRun(id, null);
+      try {
+        labController().start(id, exercise.lab, (code) => (code === 0 ? updatePracticeRun(id, { startedAt: now() }) : endPracticeRun(id)));
+      } catch (e) {
+        endPracticeRun(id);
+        if (e instanceof BusyError) return { error: e.message };
+        throw e;
+      }
+      break;
+    }
+    case "practice-finish":
+      if (run?.startedAt && !run.endedAt) updatePracticeRun(id, { endedAt: now() });
+      break;
+    case "practice-pass":
+      if (run) updatePracticeRun(id, { passed: (JSON.parse(str("passed") || "[]") as unknown[]).map(Number) });
+      break;
+    case "practice-quit":
+      endPracticeRun(id);
       break;
     case "attempt": {
-      const practice = exercise.sections.find((s) => s.kind === "practice");
-      if (practice?.kind !== "practice") throw data(null, { status: 400 });
-      // Checked tasks send their scores; without a grader the learner marks the tasks they passed.
-      const passedList = (JSON.parse(str("passed") || "[]") as unknown[]).map(Number);
-      const scores = JSON.parse(str("scores") || "{}") as Record<string, unknown>;
-      const got = (t: { n: number; weight: number }) =>
-        str("scores") ? Math.min(t.weight, Math.max(0, Number(scores[t.n]) || 0)) : passedList.includes(t.n) ? t.weight : 0;
+      if (practice?.kind !== "practice" || !run?.startedAt || !run.endedAt) throw data(null, { status: 400 });
+      // Checked tasks count their scores; when the checks couldn't run, the tasks the learner marked as passed.
+      const results = run.results as Record<string, TaskResult | string>;
+      const graded = practice.tasks.every((t) => typeof results[t.n] === "object");
+      const got = (t: { n: number; weight: number }) => {
+        const r = results[t.n];
+        if (graded && typeof r === "object") return Math.min(t.weight, Math.max(0, r.score));
+        return run.passed.includes(t.n) ? t.weight : 0;
+      };
       addAttempt({
         topic: id,
-        startedAt: str("startedAt"),
-        seconds: Number(str("seconds")),
+        startedAt: run.startedAt,
+        seconds: Math.round((Date.parse(run.endedAt) - Date.parse(run.startedAt)) / 1000),
         budgetSeconds: practice.minutes ? practice.minutes * 60 : null,
         passed: practice.tasks.filter((t) => got(t) >= t.weight).map((t) => t.n),
         score: Math.round(practice.tasks.reduce((a, t) => a + got(t), 0)),
       });
+      endPracticeRun(id);
       break;
     }
     case "grade": {
       if (!hasGrader(params.domain, params.topic)) throw data(null, { status: 400 });
-      const now = await labState();
-      if (now.status !== "running" || now.lab !== exercise.lab) return { error: "Start the lab, then check again." };
       const task = str("task");
       if (!/^\d*$/.test(task)) throw data(null, { status: 400 });
-      const out = await gradeRun(path.join(REPO, id, "grade.sh"), task);
-      const results: TaskResult[] = parseGrade(out);
-      return results.length ? { results } : { error: out || "The check did not run." };
+      const out = (await labController().fresh()).owner === id ? await gradeRun(path.join(REPO, id, "grade.sh"), task) : null;
+      const results: TaskResult[] = out ? parseGrade(out) : [];
+      const error = out === null ? "Start the lab, then check again." : results.length ? null : out || "The check did not run.";
+      // A check during a practice exam is kept with it, so a reload shows it.
+      if (run?.startedAt) {
+        const kept = { ...run.results };
+        for (const r of results) kept[r.n] = r;
+        if (task) {
+          if (error) kept[task] = error;
+        } else if (error) kept.all = error;
+        else delete kept.all;
+        updatePracticeRun(id, { results: kept });
+      }
+      return error ? { error } : { results };
     }
     default:
       throw data(null, { status: 400 });
@@ -111,59 +166,64 @@ export async function action({ params, request }: Route.ActionArgs) {
   return null;
 }
 
+/** The lesson pane's scroll for each history entry, kept for the browser tab, so a reload or Back returns to it. */
+const SCROLL = "cka-scroll";
+function scrolls(): Record<string, number> {
+  try {
+    return JSON.parse(sessionStorage.getItem(SCROLL) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
 export default function Topic({ loaderData }: Route.ComponentProps) {
   const { id, exercise, lesson, prev, next, learnHtml, state, grader } = loaderData;
-  const [running, setRunning] = useState(false);
+  const prefs = useRouteLoaderData<typeof rootLoader>("root")!.prefs;
+  const running = !!state.run && lesson.kind === "practice";
   const [missedOnly, setMissedOnly] = useState(false);
-  const onRunning = useCallback((r: boolean) => setRunning(r), []);
+  useEffect(() => setMissedOnly(false), [id]);
   const check = exercise.sections.find((s) => s.slug === "check-your-work");
-  const lab = useLab(exercise.lab);
-  const [popped, setPopped] = useState(false);
+  const lab = useLab(id, exercise.lab);
+  const popout = usePopout(id);
+  // The terminals leave the panel while they have a window of their own, and come back when it closes.
+  const popped = popout.popped && lab.status === "running";
   const refs = useReferences(`${id}/${lesson.slug}`, !exercise.lab);
   // The panel beside the lesson, hidden and shown like the sidebar, and shown again when a reference opens.
-  const [paneHidden, setPaneHidden] = useState(false);
-  useEffect(() => {
-    try { setPaneHidden(localStorage.getItem("pane") === "hidden"); } catch {}
-  }, []);
+  const [paneHidden, setPaneHidden] = useState(prefs.pane);
   const togglePane = () => {
     setPaneHidden(!paneHidden);
-    try { localStorage.setItem("pane", paneHidden ? "shown" : "hidden"); } catch {}
+    setPref("pane", paneHidden ? "shown" : "hidden");
   };
   useEffect(() => {
     if (refs.reference) setPaneHidden(false);
   }, [refs.reference?.key]);
-  // The terminals leave the panel while they have a window of their own, and come back when it closes.
-  const popup = useRef<{ win: Window; timer: number } | null>(null);
-  useEffect(() => () => clearInterval(popup.current?.timer), []);
-  const popOut = () => {
-    const win = window.open("/terminal", "cka-terminal", "popup,width=960,height=640");
-    if (!win) return;
-    clearInterval(popup.current?.timer);
-    const timer = window.setInterval(() => {
-      if (!win.closed) return;
-      clearInterval(timer);
-      popup.current = null;
-      setPopped(false);
-    }, 1000);
-    popup.current = { win, timer };
-    setPopped(true);
-  };
 
   // The lesson scrolls in its own pane beside the lab, which stays put between lessons, so a new
-  // lesson starts at its top (or at the section a link names), and Back returns to where you were.
+  // lesson starts at its top (or at the section a link names), and Back or a reload returns to where you were.
   const location = useLocation();
   const navType = useNavigationType();
   useLayoutEffect(() => {
     const pane = document.getElementById("lesson");
     if (!pane) return;
-    const saved = paneScroll.get(location.key);
+    const saved = scrolls()[location.key];
     const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
     if (navType === "POP" && saved !== undefined) pane.scrollTop = saved;
     else if (target) target.scrollIntoView();
     else pane.scrollTop = 0;
-    const keep = () => paneScroll.set(location.key, pane.scrollTop);
+    let t = 0;
+    const keep = () => {
+      clearTimeout(t);
+      t = window.setTimeout(() => {
+        try {
+          sessionStorage.setItem(SCROLL, JSON.stringify({ ...scrolls(), [location.key]: pane.scrollTop }));
+        } catch {}
+      }, 150);
+    };
     pane.addEventListener("scroll", keep, { passive: true });
-    return () => pane.removeEventListener("scroll", keep);
+    return () => {
+      clearTimeout(t);
+      pane.removeEventListener("scroll", keep);
+    };
   }, [location.key]);
 
   const body = (
@@ -195,15 +255,17 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
               </Section>
             );
           case "recall": {
-            const missed = s.items.filter((i) => state.recall[i.key] === "missed").length;
-            const items = missedOnly ? s.items.filter((i) => state.recall[i.key] === "missed") : s.items;
+            const missedHere = s.items.filter((i) => state.recall[i.key] === "missed").length;
+            // Once nothing is missed, the filter goes with its checkbox, so the quiz never shows empty.
+            const onlyMissed = missedOnly && missedHere > 0;
+            const items = onlyMissed ? s.items.filter((i) => state.recall[i.key] === "missed") : s.items;
             return (
               <Section key={s.slug} s={s} hideTitle={own}>
-                {missed > 0 && (
+                {missedHere > 0 && (
                   <div className="mb-4 flex justify-end text-sm text-muted">
                     <label className="flex cursor-pointer items-center gap-2">
-                      <input type="checkbox" checked={missedOnly} onChange={(e) => setMissedOnly(e.target.checked)} />
-                      Show missed only ({missed})
+                      <input type="checkbox" checked={onlyMissed} onChange={(e) => setMissedOnly(e.target.checked)} />
+                      Show missed only ({missedHere})
                     </label>
                   </div>
                 )}
@@ -222,9 +284,9 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
                   practice={s}
                   checkHtml={check?.kind === "plain" ? check.html : null}
                   attempts={state.attempts}
+                  run={state.run}
                   grader={grader}
-                  onRunning={onRunning}
-                  onStart={exercise.lab ? lab.start : undefined}
+                  lab={exercise.lab ? lab : undefined}
                 />
               </Section>
             );
@@ -236,14 +298,6 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
             );
         }
       })}
-
-      {!running && <Notes key={id} body={state.note} />}
-      {!running && (
-        <nav aria-label="Lessons" className="mt-8 grid grid-cols-2 gap-4">
-          {prev ? <LessonLink to={lessonHref(id, prev.slug)} label="‹ Previous" title={prev.title} /> : <span />}
-          {next && <LessonLink to={lessonHref(id, next.slug)} label="Next ›" title={next.title} end />}
-        </nav>
-      )}
     </article>
   );
 
@@ -260,6 +314,13 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
         </header>
       )}
       {body}
+      {!running && <Notes key={id} action={`/note/${id}`} body={state.note} />}
+      {!running && (
+        <nav aria-label="Lessons" className="mt-8 grid grid-cols-2 gap-4">
+          {prev ? <LessonLink to={lessonHref(id, prev.slug)} label="‹ Previous" title={prev.title} /> : <span />}
+          {next && <LessonLink to={lessonHref(id, next.slug)} label="Next ›" title={next.title} end />}
+        </nav>
+      )}
     </div>
   );
 
@@ -269,13 +330,14 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <Split
+        name={exercise.lab ? "lab" : "doc"}
         left={page}
         right={
           <Pane
             lab={exercise.lab ? lab : undefined}
             terminals={!popped}
             reference={refs.reference}
-            onPopOut={popOut}
+            onPopOut={popout.open}
             onHide={exercise.lab && !popped ? togglePane : undefined}
           />
         }
@@ -292,8 +354,6 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
     </>
   );
 }
-
-const paneScroll = new Map<string, number>();
 
 function LessonLink({ to, label, title, end }: { to: string; label: string; title: string; end?: boolean }) {
   return (

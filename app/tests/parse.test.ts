@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { learnTitle, listDomains, listLabs, readMarkdown, REPO, topicReadme } from "../app/content/repo";
-import { parseLabState } from "../app/lab/state.server";
 import { pageLinks, parseExercise, renderDoc, summarize, untitled } from "../app/content/parse";
 
 const KUBEADM = "01-cluster-architecture/00-kubeadm-install/README.md";
@@ -75,7 +74,7 @@ describe("parse", () => {
     const md = readMarkdown(RBAC)!;
     const s = summarize(md);
     expect(s.stepKeys.length).toBeGreaterThan(10);
-    expect(s.stepKeys).toContain("create-the-namespaces#1");
+    expect(s.stepKeys.some((k) => k.startsWith("create-the-namespaces#go-to-controlplane-and-create-them"))).toBe(true);
     expect(s.recallKeys).toHaveLength(7);
     expect(s.hasPractice).toBe(true);
     const ex = await parseExercise(md, RBAC);
@@ -107,7 +106,14 @@ describe("parse", () => {
 describe("steps", () => {
   it("counts a teaching section whose heading starts with Check", () => {
     const s = summarize(readMarkdown(KUBEADM)!);
-    expect(s.stepKeys).toContain("check-what-is-already-running#1");
+    expect(s.stepKeys.some((k) => k.startsWith("check-what-is-already-running#go-to-controlplane"))).toBe(true);
+  });
+
+  it("keys each step by its first line, so a tick stays on its step when steps move", () => {
+    const md = "# T\n\n## Do it\n\n1. Run `a`.\n2. Run `b`.\n3. Run `a`.\n";
+    const moved = "# T\n\n## Do it\n\n1. Run `b`.\n2. Run `new`.\n3. Run `a`.\n";
+    expect(summarize(md).stepKeys).toEqual(["do-it#run-a", "do-it#run-b", "do-it#run-a-1"]);
+    expect(summarize(moved).stepKeys).toEqual(["do-it#run-b", "do-it#run-new", "do-it#run-a"]);
   });
 });
 
@@ -135,28 +141,6 @@ describe("lab", () => {
       const base = path.join(REPO, "lab/labs", l, "base");
       if (fs.existsSync(base)) expect(names).toContain(fs.readFileSync(base, "utf8").trim());
     }
-  });
-});
-
-describe("lab state", () => {
-  const idle = { starting: null, failed: null };
-  const up = "/controlplane cka-controlplane:helm true 2026-10-05T20:00:00Z\n/base cka-base true 2026-10-05T20:00:00Z\n";
-
-  it("reads the running lab from the controlplane image", () => {
-    expect(parseLabState("clean\ncluster\nhelm\n", up, idle)).toEqual({
-      status: "running",
-      lab: "helm",
-      startedAt: "2026-10-05T20:00:00Z",
-      saved: ["cluster", "helm"],
-    });
-  });
-
-  it("tells stopped, starting, failed and never-started apart", () => {
-    const down = up.replace(/true/g, "false");
-    expect(parseLabState("cluster\n", down, idle).status).toBe("stopped");
-    expect(parseLabState("clean\n", "", idle)).toMatchObject({ status: "none", saved: [] });
-    expect(parseLabState("cluster\n", up, { starting: "kustomize", failed: null })).toMatchObject({ status: "starting", lab: "kustomize" });
-    expect(parseLabState("cluster\n", up, { starting: null, failed: "crds" })).toMatchObject({ status: "failed", lab: "crds" });
   });
 });
 

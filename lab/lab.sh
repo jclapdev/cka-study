@@ -39,7 +39,7 @@ up() {
   for n in "${NODES[@]}"; do docker exec "$n" systemctl is-system-running --wait >/dev/null || true; done
   # A restored cluster first shows the node and pod statuses it was saved with, so wait until
   # the controllers, every node and every pod have reported since the start.
-  docker exec -i -u ubuntu -w /home/ubuntu controlplane bash -s "$since" <<'READY' || echo "the cluster was not ready within 5 minutes"
+  docker exec -i -u ubuntu -w /home/ubuntu controlplane bash -s "$since" <<'READY' || { echo "the cluster was not ready within 5 minutes" >&2; return 1; }
 test -f ~/.kube/config || exit 0
 since=${1:0:19}
 fresh() { [[ ! "${1:0:19}" < "$since" ]]; }
