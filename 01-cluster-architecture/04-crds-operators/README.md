@@ -49,7 +49,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the 
    customresourcedefinitions   crd,crds     apiextensions.k8s.io/v1   false        CustomResourceDefinition
    ```
 
-   Every type the cluster has is built into the apiserver.
+   Every type the cluster has is built into the apiserver, the control plane program that stores and serves objects.
 
 ## Create a CRD
 
@@ -197,10 +197,10 @@ With the CRD applied, objects of the new type are created, listed and checked li
 ## Install an operator
 
 An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. cert-manager issues [TLS certificates](../../references/certificates.md#client-and-serving-certificates), the files that let HTTPS servers prove who they are: you
-create a `Certificate` object, and its [controller](../../references/control-plane.md#components) writes the key and certificate into a [Secret](../../references/config.md#secrets), an object that holds sensitive data.
+create a `Certificate` object, and its [controller](../../references/control-plane.md#components), the part of the operator that watches those objects, writes the key and certificate into a [Secret](../../references/config.md#secrets), an object that holds sensitive data.
 [How TLS secures the cluster](../../learn/tls.md) explains what a certificate proves.
 
-1. Install cert-manager's Helm chart, with its CRDs.
+1. Install cert-manager's chart, its packaged manifests, with Helm, the tool that installs charts, along with its CRDs.
    `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
    a server that stores images and charts, so there is no `helm repo add` first. `--version v1.21.2` pins the chart version, and
    `--set crds.enabled=true` sets `crds.enabled`:
