@@ -8,7 +8,7 @@ Helm works with three things ([key components](https://helm.sh/docs/intro/introd
 
 | Thing | What it is | How you refer to it |
 | --- | --- | --- |
-| [Chart](https://helm.sh/docs/intro/introduction/#chart) | A package: templates, default values, and a `Chart.yaml` with its version. | `<repo>/<chart>`, such as `podinfo/podinfo` ([podinfo](#podinfo)), or a folder, a `.tgz` file (a packaged chart) or an `oci://` address. |
+| [Chart](https://helm.sh/docs/intro/introduction/#chart) | A package: templates, default values, and a `Chart.yaml` with its version. | `<repo>/<chart>`, such as `podinfo/podinfo`, the chart of a small sample web app ([podinfo](#podinfo)), or a folder, a `.tgz` file (a packaged chart) or an `oci://` address. |
 | [Repository](https://helm.sh/docs/intro/introduction/#repository) | A web server with an `index.yaml` listing charts and their versions. | The local name given in `helm repo add`. The name exists only on the machine that added it. |
 | [Release](https://helm.sh/docs/intro/introduction/#release) | An installed copy of a chart, with its own name, in a namespace. | Its release name plus `-n <namespace>`. |
 

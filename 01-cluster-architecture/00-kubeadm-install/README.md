@@ -265,7 +265,7 @@ CoreDNS pods stay [`Pending`](../../references/pod.md#on-a-new-cluster).
 > [!note]
 > The node goes `Ready` as soon as the file exists, even if the plugin is broken. If the pod
 > CIDR, the range given to `init` with `--pod-network-cidr`, does not match Flannel's `10.244.0.0/16`, or `init` was given none, the
-> node is still `Ready`, but the Flannel pod is in `CrashLoopBackOff` and CoreDNS stays in
+> node is still `Ready`, but the Flannel pod is in `CrashLoopBackOff`, crashing and restarting over and over, and CoreDNS stays in
 > `ContainerCreating`. `k logs -n kube-flannel -l app=flannel` names the mismatch.
 
 ## Join the workers
@@ -384,7 +384,7 @@ kube-system    kube-proxy-k7lwp                       Running           192.0.2.
 kube-system    kube-scheduler-controlplane            Running           192.0.2.10      controlplane
 ```
 
-Static pods are named `<component>-<node>`, such as `etcd-controlplane`. `kube-proxy` and
+Static pods are named `<component>-<node>`, such as `etcd-controlplane`. `kube-proxy`, which makes Service addresses work on each node, and
 `kube-flannel-ds` each have one pod per node, because both are
 [DaemonSets](../../references/daemonsets.md). Flannel installs into its own
 [namespace](../../references/namespaces.md), `kube-flannel`, so `-n kube-system` does not show

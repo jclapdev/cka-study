@@ -1,6 +1,6 @@
 # How TLS secures the cluster
 
-The parts of a cluster talk to each other over the network: `kubectl` to the apiserver, the apiserver to etcd and to every kubelet, each kubelet back to the apiserver. Each connection needs two things: nobody in between may read or change it, and each side must know who is on the other end. TLS (Transport Layer Security), the protocol behind HTTPS, provides both, and the apiserver accepts only TLS connections, on port 6443 by default ([transport security](https://kubernetes.io/docs/concepts/security/controlling-access/#transport-security)).
+The parts of a cluster talk to each other over the network: `kubectl` to the apiserver, the front door of the cluster; the apiserver to etcd, the cluster's database, and to every kubelet, the agent that runs pods on a node; and each kubelet back to the apiserver. Each connection needs two things: nobody in between may read or change it, and each side must know who is on the other end. TLS (Transport Layer Security), the protocol behind HTTPS, provides both, and the apiserver accepts only TLS connections, on port 6443 by default ([transport security](https://kubernetes.io/docs/concepts/security/controlling-access/#transport-security)).
 
 Kubernetes uses TLS for identity as well as privacy. A user that the apiserver knows from a certificate needs no password and no user object: the certificate says who they are.
 

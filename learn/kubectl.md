@@ -17,7 +17,7 @@ sequenceDiagram
   participant E as etcd
   K->>A: HTTPS request with a credential
   A->>A: authentication: who sent this?
-  A->>A: authorization: may they do it? (RBAC)
+  A->>A: authorization: may they do it? (RBAC, role-based access control)
   A->>A: admission: change or reject the object
   A->>A: validation against the type's schema
   A->>E: store the object

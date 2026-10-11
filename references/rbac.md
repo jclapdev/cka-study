@@ -35,7 +35,7 @@ Three kinds, named in a binding's `subjects` ([referring to subjects](https://ku
   ([ServiceAccounts](service-accounts.md)).
 - **User** — has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a [certificate](certificates.md) or token
   authenticates as that name ([authentication](authentication.md)). `kubeadm` writes `kubernetes-admin` into
-  `admin.conf`.
+  `admin.conf`, the admin [kubeconfig](kubeconfig.md) that `kubectl` reads.
 - **Group** — also has no object, and comes from the same credential. `kubeadm`
   puts `kubernetes-admin` in the group `kubeadm:cluster-admins`, and binds *that
   group* to `cluster-admin`.

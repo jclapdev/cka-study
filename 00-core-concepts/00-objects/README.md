@@ -5,7 +5,7 @@ it is an object: a record of what you want, which the cluster then works to make
 topic you run a [Pod](../../references/pod.md), write one in YAML, keep copies of it running with a [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) and a [Deployment](../../references/workloads.md), give
 them a stable address with a [Service](../../references/services.md), group objects in [namespaces](../../references/namespaces.md), and change objects with `kubectl`,
 the command that talks to the cluster.
-[How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components) that act on it, and
+[How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components), programs in the cluster that act on it, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command sends.
 
 <!-- lab: cluster -->

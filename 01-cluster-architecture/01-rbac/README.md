@@ -392,7 +392,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
 <details><summary>A Role and a RoleBinding both exist and the subject still cannot act. What is left?</summary>
 
 The four fields of the rule: verb, resource, API group, namespace. Impersonate a
-real request with `--as` and read the Forbidden message, which names all four.
+real request with `--as` and read the Forbidden message, which names the subject and all four.
 Most often the verb (`get` does not imply `list`) or the API group.
 </details>
 

@@ -475,7 +475,7 @@ A CKA task can ask for its answer in a file instead of as a change to the cluste
 
 <details><summary>What does creating a CRD add to the cluster, and what does it not add?</summary>
 
-A new resource type the apiserver stores and validates, at `/apis/<group>/<version>/<plural>`.
+A new resource type the apiserver stores and validates.
 It adds no behaviour: nothing acts on the objects until a controller watches them.
 </details>
 

@@ -28,7 +28,7 @@ A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namesp
 | --- | --- |
 | `default` | Anything created without `-n`. |
 | `kube-system` | The [control plane](control-plane.md) pods, [CoreDNS](pod-network.md#coredns) and [kube-proxy](control-plane.md#components). |
-| `kube-public` | The `cluster-info` [ConfigMap](config.md). kubeadm binds a Role that lets `system:anonymous` read it, so a joining node can read it before it has credentials. |
+| `kube-public` | The `cluster-info` [ConfigMap](config.md). kubeadm binds a Role that lets `system:anonymous`, the identity of a request with no credentials, read it, so a joining node can read it before it has credentials. |
 | `kube-node-lease` | One Lease per node. A Lease is a small object with a timestamp, and the kubelet renews its node's every few seconds as a heartbeat. |
 | `kube-flannel` | The Flannel pod network. |
 

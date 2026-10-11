@@ -10,7 +10,7 @@ A cluster needs more than its programs. The apiserver is the control plane's fro
 flowchart TD
   P[preflight<br/>check the machine] --> C[certs<br/>a cluster certificate authority signs a certificate for each component]
   C --> K[kubeconfig<br/>a file per component naming the apiserver and its identity]
-  K --> M[static pod manifests<br/>one per control plane component]
+  K --> M[a file per control plane program<br/>for the kubelet to start]
   M --> L[kubelet starts<br/>and runs those manifests]
   L --> A[addons<br/>CoreDNS for DNS names, kube-proxy for Service addresses]
 ```

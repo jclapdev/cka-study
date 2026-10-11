@@ -1,6 +1,6 @@
 # How access control works
 
-Every request to the apiserver, the part of the control plane that `kubectl` and every component talk to, answers two questions in order. Authentication asks who sent it, and turns the request's credential into a username and a list of groups. Authorization asks whether that identity may do what it asks, and on a kubeadm cluster RBAC, role-based access control, answers ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)). The two are separate: a request can be authenticated perfectly and still be refused.
+Every request to the apiserver, the part of the control plane that `kubectl` and every component talk to, answers two questions in order. Authentication asks who sent it, and turns the request's credential into a username and a list of groups. Authorization asks whether that identity may do what it asks, and on a cluster built with kubeadm, the tool that sets up a cluster, RBAC, role-based access control, answers ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)). The two are separate: a request can be authenticated perfectly and still be refused.
 
 ## Identities
 

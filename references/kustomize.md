@@ -34,7 +34,7 @@ The `labels` field adds labels to each object's own `metadata.labels` only ([Kus
 - `includeTemplates: true` also adds them to the [pod template](workloads.md#the-pod-template), so the pods carry them.
 - `includeSelectors: true` adds them to the pod template and to selectors.
 
-With `env: prod` and neither flag, `kubectl get deploy -l env=prod` finds the Deployment, and `kubectl get pods -l env=prod` finds none of its pods. A Deployment's selector cannot be changed after it is created, so turning on `includeSelectors` for a Deployment that already exists fails with `spec.selector: … field is immutable`. `commonLabels`, which older examples use, behaves like `includeSelectors: true` and is deprecated.
+With `env: prod` and neither flag, `kubectl get deploy -l env=prod` finds the Deployment, and `kubectl get pods -l env=prod` finds none of its pods. A Deployment's selector cannot be changed after it is created, so turning on `includeSelectors` for a Deployment that already exists fails with `spec.selector: … field is immutable`.
 
 ## Patches
 

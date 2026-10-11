@@ -1,6 +1,6 @@
 # Workers
 
-A node is a machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet, [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). The only difference is that it has no control plane [static pods](control-plane.md#static-pods).
+A node is a machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet, [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). Unlike the control plane node, it runs no control plane [static pods](control-plane.md#static-pods).
 
 ## What a worker runs
 
@@ -38,7 +38,7 @@ Tokens expire 24 hours after they are created ([bootstrap tokens](https://kubern
 sudo kubeadm token create --print-join-command
 ```
 
-`join` fails when the worker cannot reach the apiserver's advertise address on 6443, or when the node has state left from an earlier join (`sudo kubeadm reset -f` clears it). [kubeadm's failure modes](kubeadm.md#failure-modes) list the errors.
+`join` fails when the worker cannot reach the apiserver's [advertise address](kubeadm.md#the-advertise-address), the address `kubeadm init` set for it, on port 6443, or when the node has state left from an earlier join (`sudo kubeadm reset -f` clears it). [kubeadm's failure modes](kubeadm.md#failure-modes) list the errors.
 
 ## Node conditions
 
