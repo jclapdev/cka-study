@@ -271,8 +271,7 @@ create a `Certificate` object, and its [controller](../../references/control-pla
    ```
 
    An Issuer, which signs certificates, works in one namespace, and a ClusterIssuer in the whole
-   cluster, the same [split](../../references/namespaces.md#namespaced-and-cluster-scoped-resources) as a [Role](../../references/rbac.md#the-model) and a
-   ClusterRole.
+   cluster ([namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources)).
 
 ## Issue a certificate
 
