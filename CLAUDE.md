@@ -18,7 +18,7 @@ When the user flags a line that reads oddly, one example is enough: add an entry
 
 ## App
 
-Run `cd app && pnpm test` after changing the app, the README format it reads, or any page: it ends with Vale's style checks on every page. Then run `pnpm test:browser` against the running app (`CKA_URL=http://127.0.0.1:<port>` for a dev server) and `pnpm test:situations`, which starts its own copy with a stand-in lab, and look at the screenshots both save in `app/test-results/`.
+Run `cd app && pnpm test` after changing the app, the README format it reads, or any page: it ends with Vale's style checks on every page. Then run `pnpm test:browser` and `pnpm test:situations`, which each start a copy of the app of their own with a stand-in lab, and look at the screenshots both save in `app/test-results/`. `CKA_URL=http://localhost:5173 pnpm test:browser` checks the Docker app itself, but writes the tests' visits and check-offs into the learner's progress.
 
 [app/FEATURES.md](app/FEATURES.md) lists every part of the app and what it does in each situation (fresh open, reload, second window, switching topics, Reset lab, practice exam, pop-out, Docker stopped, idle, phone, dark mode). A sweep of the app walks every row through every situation in a real browser and fixes what it finds in the same change; `pnpm test` fails when the app has something the list doesn't name. Each change a learner can see gets a dated line in [CHANGELOG.md](CHANGELOG.md), shown as What's new.
 

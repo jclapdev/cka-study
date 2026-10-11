@@ -113,7 +113,10 @@ test("a done step folds to its first line and opens again", async ({ page }) => 
   const code = step.locator("pre").first();
   const toggle = step.locator("button[aria-expanded]");
 
+  // The tick is saved before the reload, as it would be for anyone slower than a test.
+  const saved = page.waitForResponse((r) => r.request().method() === "POST");
   await tick.click();
+  await saved;
   await expect(code).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await page.reload();
