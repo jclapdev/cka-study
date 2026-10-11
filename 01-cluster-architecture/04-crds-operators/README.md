@@ -5,7 +5,7 @@ Kubernetes comes with a fixed set of object types, such as [Pods](../../referenc
 request goes through, so you can create objects of that type like any other. An [operator](../../references/crds.md#operators) is a
 program running in the cluster that watches objects of such a type and does the work they
 describe. Installing an operator usually means installing its CRDs and the program together,
-often from a [chart](../../references/helm.md#charts-repositories-and-releases) installed with [Helm](../../references/helm.md), the tool that installs packaged applications into a cluster.
+often from a [chart](../../references/helm.md#charts-repositories-and-releases), a package of manifests, installed with [Helm](../../references/helm.md), the tool that installs packaged applications into a cluster.
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 <!-- lab: crds -->
@@ -369,7 +369,7 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    ```
 
    You created one object. The controller created the CertificateRequest and the Secret, as
-   its [ServiceAccount](../../references/service-accounts.md).
+   its [ServiceAccount](../../references/service-accounts.md), the identity a program in the cluster runs as.
 
 4. Read the certificate the Secret holds. `{.data.tls\.crt}` is the key `tls.crt` under
    `data`; the `\.` keeps the dot in the key's name from being read as a step down. Secret
