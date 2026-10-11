@@ -1,12 +1,12 @@
 # Workers
 
-A node is a machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet, [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). Unlike the control plane node, it runs no control plane [static pods](control-plane.md#static-pods).
+A node is a machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet (the agent that runs its pods), [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). Unlike the control plane node, it runs no control plane [static pods](control-plane.md#static-pods).
 
 ## What a worker runs
 
 - **kubelet**, a systemd service. It is the only agent that starts containers. It registers the node, watches the apiserver for pods assigned to it, and reports their status.
 - **The container runtime** is the program that pulls images and starts and stops containers. containerd is one such runtime. The CRI (container runtime interface) is the API the kubelet uses to give a runtime instructions, and containerd serves it at `/run/containerd/containerd.sock`. crictl is a command-line client for the CRI ([`crictl`](https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/)), so `sudo crictl ps` lists the node's containers.
-- **kube-proxy** and the pod network agent, both as [DaemonSet](daemonsets.md) pods.
+- **kube-proxy**, which makes [Service](services.md) addresses work on the node, and the pod network agent, which connects the node's pods to the others, both as [DaemonSet](daemonsets.md) pods.
 
 A worker has no admin [kubeconfig](kubeconfig.md), only `/etc/kubernetes/kubelet.conf` for the kubelet's own identity. `kubectl` on a worker fails with `The connection to the server localhost:8080 was refused`. Run `kubectl` on the control plane node.
 

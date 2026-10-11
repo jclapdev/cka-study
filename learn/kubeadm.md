@@ -39,7 +39,7 @@ The CA hash lets the node check that it reached the right cluster. The bootstrap
 
 ## What kubeadm leaves out
 
-kubeadm installs no pod network, so a new cluster's nodes stay `NotReady` until you install one ([how the pod network works](pod-network.md)). It also installs no storage, ingress or dashboard.
+kubeadm installs no pod network, the plugin that gives pods addresses and lets them reach each other across nodes, so a new cluster's nodes stay `NotReady` until you install one ([how the pod network works](pod-network.md)). It also installs no storage, ingress or dashboard.
 
 The [kubeadm](../references/kubeadm.md) reference has the phases, files, commands and errors, and the [workers](../references/workers.md#joining) reference has the join.
 

@@ -4,7 +4,7 @@ Every request to the apiserver, the part of the control plane that `kubectl` and
 
 ## Identities
 
-Kubernetes has no User or Group object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists only because a credential names one. For a client certificate, the common name becomes the username and each organisation becomes a group ([X509 client certificates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certificates)). So you cannot list users, and a permission can be granted to a name that no credential has ever used.
+Kubernetes has no User or Group object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists only because a credential names one. A client certificate is a signed file a client presents to prove who it is. Its common name (CN) field becomes the username and each organisation (O) field becomes a group ([X509 client certificates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certificates)). So you cannot list users, and a permission can be granted to a name that no credential has ever used.
 
 ServiceAccounts are the exception. They are objects, made for software running in the cluster, and the apiserver issues their tokens and mounts one into each pod ([service accounts](https://kubernetes.io/docs/concepts/security/service-accounts/)).
 

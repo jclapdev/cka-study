@@ -23,11 +23,11 @@ sequenceDiagram
   C->>A: encrypted request
 ```
 
-The client trusts the apiserver only if the serving certificate was signed by a CA in its kubeconfig and lists the name or IP address it connected to ([server certificates](https://kubernetes.io/docs/setup/best-practices/certificates/#server-certificates)). When the client also sends a certificate, both sides are checked, which is called mutual TLS. The apiserver then takes the user name from the certificate's common name (`CN`) and the groups from its organisation (`O`) fields, and [RBAC](../references/rbac.md) decides what that user may do ([client certificates](https://kubernetes.io/docs/setup/best-practices/certificates/#client-certificates)).
+The client trusts the apiserver only if the serving certificate was signed by a CA in its kubeconfig, the file that holds the cluster's address, that CA and the client's credential, and lists the name or IP address it connected to ([server certificates](https://kubernetes.io/docs/setup/best-practices/certificates/#server-certificates)). When the client also sends a certificate, both sides are checked, which is called mutual TLS. The apiserver then takes the user name from the certificate's common name (`CN`) and the groups from its organisation (`O`) fields, and [RBAC](../references/rbac.md), the cluster's permission rules, decides what that user may do ([client certificates](https://kubernetes.io/docs/setup/best-practices/certificates/#client-certificates)).
 
 ## How it fits in the cluster
 
-kubeadm creates three CAs and signs every other certificate with one of them ([single root CA](https://kubernetes.io/docs/setup/best-practices/certificates/#single-root-ca)):
+kubeadm, the tool that builds the cluster, creates three CAs and signs every other certificate with one of them ([single root CA](https://kubernetes.io/docs/setup/best-practices/certificates/#single-root-ca)):
 
 ```mermaid
 flowchart TD
@@ -37,7 +37,6 @@ flowchart TD
   CA --> CM[controller-manager and scheduler<br/>client certificates]
   ECA[etcd CA<br/>etcd/ca.crt] --> ES[etcd serving and peer certificates]
   ECA --> AE[apiserver-etcd-client<br/>the apiserver as etcd's client]
-  FCA[front-proxy CA] --> FP[front-proxy-client<br/>for API extensions]
 ```
 
 Each client of the apiserver carries the cluster CA's certificate to check it with: each kubeconfig holds a copy, and every pod gets one too, so a program in a pod can check the apiserver it calls. etcd has a CA of its own, so a certificate signed for the apiserver cannot be used to reach etcd directly. A new node gets its kubelet's client certificate when it joins, through a signing request that the cluster approves ([how kubeadm builds a cluster](kubeadm.md#joining-a-node)).

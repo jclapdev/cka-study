@@ -47,7 +47,7 @@ something if any binding allows it, and removing access means removing bindings.
 
 Most of a new [kubeadm](kubeadm.md) cluster's ClusterRoles start with `system:` and let the
 [control plane](control-plane.md) components talk to the apiserver. A [pod network](pod-network.md#plugins) such as Flannel adds its own, and
-`kubeadm:get-nodes` lets a new node [join](workers.md#joining). Four are meant for people: `cluster-admin`, `admin`, `edit`, `view` ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
+`kubeadm:get-nodes` lets a new node [join](workers.md#joining). Four are meant for people: `cluster-admin` allows everything, `admin` most things in a namespace, `edit` changing most objects, and `view` reading them ([user-facing roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles)).
 
 Three ClusterRoleBindings give every authenticated subject a few permissions
 before anyone grants it anything ([discovery roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#discovery-roles)).

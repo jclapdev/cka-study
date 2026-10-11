@@ -1,6 +1,6 @@
 # Namespaces
 
-A namespace is a named group of objects inside a cluster. Two objects of the same kind can share a name if they are in different namespaces, and a namespace is the boundary that a [Role](rbac.md#the-model) and a RoleBinding apply within. A ResourceQuota, which is a cap on the CPU, memory and number of objects a namespace may use, applies within a namespace too. So does a NetworkPolicy, which is a set of rules for which pods may talk to which ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
+A namespace is a named group of objects inside a cluster. Two objects of the same kind can share a name if they are in different namespaces, and a namespace is the boundary that a [Role](rbac.md#the-model), a list of permissions, and a RoleBinding, which grants a Role to users, apply within. A ResourceQuota, which is a cap on the CPU, memory and number of objects a namespace may use, applies within a namespace too. So does a NetworkPolicy, which is a set of rules for which pods may talk to which ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
 
 ## Namespaced and cluster-scoped resources
 

@@ -5,7 +5,7 @@ Kubernetes comes with a fixed set of object types, such as [Pods](../../referenc
 request goes through, so you can create objects of that type like any other. An [operator](../../references/crds.md#operators) is a
 program running in the cluster that watches objects of such a type and does the work they
 describe. Installing an operator usually means installing its CRDs and the program together,
-often from a [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases), a package Helm installs.
+often from a [chart](../../references/helm.md#charts-repositories-and-releases) installed with [Helm](../../references/helm.md), the tool that installs packaged applications into a cluster.
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 <!-- lab: crds -->
@@ -197,7 +197,7 @@ With the CRD applied, objects of the new type are created, listed and checked li
 ## Install an operator
 
 An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. cert-manager issues [TLS certificates](../../references/certificates.md#client-and-serving-certificates), the files that let HTTPS servers prove who they are: you
-create a `Certificate` object, and its [controller](../../references/control-plane.md#components) writes the key and certificate into a [Secret](../../references/config.md#secrets).
+create a `Certificate` object, and its [controller](../../references/control-plane.md#components) writes the key and certificate into a [Secret](../../references/config.md#secrets), an object that holds sensitive data.
 [How TLS secures the cluster](../../learn/tls.md) explains what a certificate proves.
 
 1. Install cert-manager's Helm chart, with its CRDs.
@@ -209,7 +209,7 @@ create a `Certificate` object, and its [controller](../../references/control-pla
    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
    ```
 
-   `STATUS: deployed` and `REVISION: 1` show the release is installed:
+   `STATUS: deployed` and `REVISION: 1` show the release, Helm's record of this install, is in place:
 
    ```
    Pulled: quay.io/jetstack/charts/cert-manager:v1.21.2
@@ -290,7 +290,7 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    k explain certificate.spec | grep -- '-required-'
    ```
 
-   The first five lines are the kinds of issuer, of which you set one. The last two are the
+   The first five lines are the kinds of issuer, of which you set one: `selfSigned` signs each certificate with its own key, `ca` with a [CA](../../references/certificates.md) key kept in a Secret, and `acme`, `vault` and `venafi` ask an outside service. The last two are the
    fields a Certificate must have:
 
    ```
