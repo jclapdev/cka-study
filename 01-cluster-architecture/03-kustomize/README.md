@@ -1,6 +1,6 @@
 # Kustomize
 
-[Kustomize](../../references/kustomize.md) takes plain YAML [manifests](../../references/kubectl.md#generating-yaml) and changes them for one use, such as a different
+[Kustomize](../../references/kustomize.md) takes plain YAML [manifests](../../references/kubectl.md#generating-yaml) and changes them for each use, such as a different
 namespace, a name prefix or an image tag, without editing the original files. A file named
 `kustomization.yaml` lists the manifests and the changes. Kustomize is built into `kubectl`, so
 nothing else needs installing.
@@ -25,7 +25,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
   pods when it does.
 * Apply and delete everything a kustomization produces with `-k`.
 
-Every YAML file in the steps comes from `k create --dry-run` or from the allowed docs.
+Every YAML file in the steps comes from `k create --dry-run` or from kubernetes.io, the docs the exam allows.
 The Kustomize snippets are all on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
@@ -65,7 +65,7 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
 
    A folder of manifests is not a kustomization until it has that file.
 
-3. On the Kustomize page, go to
+3. On the kubernetes.io page [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/), go to
    [Bases and Overlays](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#bases-and-overlays).
    The first example ends with a block that writes `base/kustomization.yaml`. Copy that block
    and paste it into the terminal as it is:
@@ -469,9 +469,8 @@ object it produces.
    k delete -k prod
    ```
 
-   `delete -k` deletes only what the kustomization renders now, which includes
-   `prod-web-config-hc7d4825hb` but not the older ConfigMap. That one goes too: the overlay
-   lists `namespace.yaml`, so `delete -k` deletes the `prod` [namespace](../../references/namespaces.md), and everything in it.
+   `delete -k` deletes what the kustomization renders now: `prod-web-config-hc7d4825hb`, not the
+   older ConfigMap. The overlay also lists `namespace.yaml`, so `delete -k` deletes the `prod` [namespace](../../references/namespaces.md), and everything in it.
 
 ## Quiz
 
@@ -521,7 +520,7 @@ template. `includeSelectors: true` adds it to the pod template and the selectors
 
 ## Practice
 
-Do it again without the steps, in **15 minutes**.
+Do these tasks in **15 minutes**.
 
 1. **Host `controlplane`, weight 25%.** In `~/shop/base`, create a kustomization with a
    Deployment `shop` running `nginx:1.27`, and a [ClusterIP](../../references/services.md#service-types) Service `shop` on port 80 for it.
@@ -597,8 +596,8 @@ kind: Deployment
 
 **Tasks 2 and 4.** `namespace: staging` only sets the field on each object, so the overlay also
 needs a Namespace manifest. The replica count and the environment variables are patches, built
-from `increase_replicas.yaml` on the Customizing section and the `envFrom` block on the ConfigMap
-task page. A patch names the base's Deployment, `shop`, and its container, `nginx`, which
+from `increase_replicas.yaml` in the Customizing section and the `envFrom` block on the
+[Configure a Pod to Use a ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/) page. A patch names the base's Deployment, `shop`, and its container, `nginx`, which
 `k create deployment` named after the image:
 
 ```shell
@@ -735,5 +734,6 @@ On `controlplane`:
 * The [Kustomize](../../references/kustomize.md) reference has the fields an overlay can set, patches,
   generated names and the failure modes.
 * [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
-  covers `secretGenerator`, `generatorOptions` and `replacements`, which copies a field from one
-  object into others.
+  covers `secretGenerator`, which generates a [Secret](../../references/config.md#secrets) the way `configMapGenerator` generates a
+  ConfigMap, `generatorOptions`, which sets options such as labels on generated objects, and
+  `replacements`, which copies a field from one object into others.

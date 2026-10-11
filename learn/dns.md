@@ -1,6 +1,6 @@
 # How DNS works in the cluster
 
-A pod reaches a Service by name, such as `web`, rather than by its IP address. DNS, the system that turns names into addresses, makes that work inside the cluster as it does on the internet. Kubernetes gives every Service a DNS name and points every pod at the cluster's own DNS server, [CoreDNS](../references/pod-network.md#coredns) ([DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)).
+A pod reaches a Service by name, such as `web`, rather than by its IP address. DNS, the system that turns names into addresses, makes that work inside the cluster as it does on the internet. Kubernetes gives every Service a DNS name and, by default, points every pod at the cluster's own DNS server, [CoreDNS](../references/pod-network.md#coredns) ([DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)).
 
 Without it, a client would need each Service's IP address, which is only known once the Service exists and changes if the Service is created again. A name stays the same.
 
@@ -42,9 +42,9 @@ flowchart LR
   C -->|any other name| U[the node's DNS server]
 ```
 
-A pod uses CoreDNS because its `dnsPolicy` is `ClusterFirst`, the policy a pod gets when none is set ([pod's DNS policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy)). CoreDNS needs a pod address like any other pod, so it does not start until the pod network works, and a cluster whose CoreDNS pods are not running cannot resolve any Service name ([how the pod network works](pod-network.md)).
+A pod uses CoreDNS because its `dnsPolicy` is `ClusterFirst`, the policy a pod gets when none is set ([pod's DNS policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy)). CoreDNS needs a pod address like any other pod, so it does not start until the pod network works. Until it runs, no Service name resolves ([how the pod network works](pod-network.md)).
 
-A pod's `resolv.conf`, the Corefile and the commands to look a name up are with CoreDNS on the pod network reference page, linked above, and Service names and their failures are on the [Services reference page](../references/services.md).
+A pod's `resolv.conf`, the Corefile and the commands to look a name up are in the CoreDNS section of the pod network reference page. Service names and their failures are on the [Services reference page](../references/services.md).
 
 ## Further reading
 

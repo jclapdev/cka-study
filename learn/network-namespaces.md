@@ -6,7 +6,7 @@ A network namespace is a separate copy of a Linux machine's network: its own int
 
 ## How it works
 
-When a pod starts, the container runtime, the program that starts containers, creates a network namespace for it, and every container in the pod joins that one namespace, which is why they share an IP address and reach each other on `localhost` ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). The runtime then calls the network plugin through [CNI](../references/pod-network.md), the standard interface for such plugins, and the plugin connects the new namespace to the node ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). With [Flannel](../references/pod-network.md#plugins), a common plugin, that takes three parts:
+When a pod starts, the container runtime, the program that starts containers, creates a network namespace for it. Every container in the pod joins that namespace, so they share an IP address and reach each other on `localhost` ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). The runtime then calls the network plugin through [CNI](../references/pod-network.md), the standard interface for such plugins, and the plugin connects the new namespace to the node ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). With [Flannel](../references/pod-network.md#plugins), a common plugin, that takes three parts:
 
 - A veth pair is two virtual network interfaces joined like the two ends of a cable: what goes in one end comes out of the other. One end goes inside the pod's namespace as `eth0`, and the other stays on the node.
 - A bridge is a virtual network switch inside the Linux kernel. Flannel's bridge on each node is `cni0`, and the node end of every pod's veth pair is plugged into it, so the pods on one node reach each other through it.
@@ -31,9 +31,9 @@ flowchart LR
 
 ## How it fits in the cluster
 
-Pods on one node talk through the bridge. For a pod on another node, the node's routing table sends the packet to `flannel.1`, a VXLAN interface: it wraps each pod packet inside a UDP packet addressed from one node to the other, on port 8472, and the receiving node unwraps it and hands it to its own bridge. The node network only ever sees node addresses, which is how pod addresses work across machines that know nothing about them ([how to implement the Kubernetes network model](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-network-model)).
+Pods on one node talk through the bridge. For a pod on another node, the node's routing table sends the packet to `flannel.1`, a VXLAN interface, which tunnels packets between nodes: it wraps each pod packet inside a UDP packet addressed from one node to the other, and the receiving node unwraps it and hands it to its own bridge. The node network sees only node addresses, so pod addresses work across machines that know nothing about them ([how to implement the Kubernetes network model](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-network-model)).
 
-Not every pod gets a namespace of its own. A pod with `hostNetwork: true`, such as the apiserver or kube-proxy, stays in the node's namespace and uses the node's address, which is how those pods run before any pod network exists ([how the pod network works](pod-network.md#when-the-network-is-missing)).
+Not every pod gets a namespace of its own. A pod with `hostNetwork: true`, such as the apiserver or kube-proxy, the program on each node that makes Service addresses work, stays in the node's namespace and uses the node's address, which is how those pods run before any pod network exists ([how the pod network works](pod-network.md#when-the-network-is-missing)).
 
 Service addresses take no part in this. No namespace or interface holds one; kube-proxy rewrites packets sent to a Service address on their way out of the pod's node ([Services](../references/services.md#how-a-service-ip-answers)).
 

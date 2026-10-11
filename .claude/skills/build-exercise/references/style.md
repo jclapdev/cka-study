@@ -25,6 +25,7 @@ Each entry's id is what the `style-reader` reports.
 **app-talk**. Text that describes the app itself, what it stores, or how its screens behave. Show the thing instead.
 - Fail: a start message "about 6 minutes, since it builds the machines first", and a Machines section beside the lesson.
 - Pass: "Your lab will be ready shortly.", and the machines named once in the topic's Introduction.
+- Keep: the Introduction's "The lab beside each lesson is a working Kubernetes cluster of three machines." It says what the learner is working on, and a test requires it.
 
 **invented-term** (Vale). A word made up while building. Use what a learner already says: lab, quiz, practice exam, score.
 - Fail: "starting state", "Recall", "timed run", "ticks"
@@ -43,7 +44,7 @@ Each entry's id is what the `style-reader` reports.
 ## Narration
 
 **narration** (Vale for known phrases). A sentence about the lesson, the reader, or how much something matters, instead of about Kubernetes. If deleting it loses no fact, delete it.
-- Fail: "In this lesson, you will…", "worth recognising on sight", "One role, one subject list."
+- Fail: "In this lesson, you will…", "Nothing here schedules a pod, so nothing waits.", "worth recognising on sight", "the single most common reason…", "One role, one subject list.", "kubectl says the quiet part out loud.", "Note that…", "This matters for RBAC."
 - Pass: delete the sentence.
 
 **coaching**. Telling the learner how to study, or explaining an edge case they didn't ask about.
@@ -61,8 +62,8 @@ Each entry's id is what the `style-reader` reports.
 - Pass: "kubeadm taints the control plane node `node-role.kubernetes.io/control-plane:NoSchedule`. Both of these DaemonSets tolerate every `NoSchedule` taint, so they run there too."
 
 **false-absolute**. "every", "nothing", "never", "only", "always" where the claim is not literally true, or where the absolute adds nothing.
-- Fail: "Every command runs on `controlplane`." (the reader logs in to `base` first)
-- Pass: "The steps run on `controlplane`, reached with `ssh controlplane`."
+- Fail: "Every command runs on `controlplane`." in a topic's Introduction, before anything said the reader logs in to `base` first.
+- Keep: an absolute that is literally true and is the point, such as "Helm runs only as a command-line tool" or the Practice section's "Every task runs on `controlplane`."
 
 ## Stock phrases
 

@@ -1,6 +1,6 @@
 # How kubectl talks to the cluster
 
-`kubectl` is a client for the Kubernetes API, an HTTP interface served by the apiserver, the control plane component every request goes through. Every command, from `get` to `apply` to `edit`, becomes one or more HTTP requests to the apiserver, and every other component works through the same API ([the Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/)). Knowing what happens to those requests explains most errors you will see.
+`kubectl` is a client for the Kubernetes API, an HTTP interface served by the apiserver, the control plane component every request goes through. Every command, from `get` to `apply` to `edit`, becomes one or more HTTP requests to the apiserver, and every other component works through the same API ([the Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/)).
 
 ## Finding the cluster
 
@@ -8,7 +8,7 @@
 
 ## What happens to a request
 
-The apiserver passes each request through the same stages ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)):
+The apiserver passes each request through the same stages, and stores the result in etcd, the database that holds every object ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)):
 
 ```mermaid
 sequenceDiagram

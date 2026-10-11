@@ -3,7 +3,7 @@
 `kubeadm` is the tool that turns a few machines into a working Kubernetes cluster. Each machine
 needs a [container runtime](../../references/workers.md#what-a-worker-runs), the program that starts containers, and the [kubelet](../../references/control-plane.md#components), the agent that
 runs pods on that machine. On the first machine, kubeadm creates the [certificates](../../references/certificates.md#client-and-serving-certificates) the cluster's
-parts use to prove who they are, starts the [control plane](../../references/control-plane.md), the parts that manage the cluster, and
+parts use to prove who they are. It then starts the [control plane](../../references/control-plane.md), the parts that manage the cluster, and
 prints a command that joins the other machines to it.
 [How a cluster works](../../learn/cluster-architecture.md) and [how kubeadm builds a cluster](../../learn/kubeadm.md) explain the parts.
 
@@ -70,10 +70,10 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
 `kubeadm init` builds the control plane on this machine: its certificates, the files that let
 clients reach it, and the pods that run it. It writes the machine's address into the apiserver's
 [certificate](../../learn/tls.md) and into every kubeconfig, the file that tells a client where the cluster is and
-who it is, and the workers are later told to trust that exact address. A wrong [address](../../references/kubeadm.md#the-advertise-address) is not
-fixable without `kubeadm reset`.
+who it is. The workers are later told to trust that exact address. A wrong [address](../../references/kubeadm.md#the-advertise-address) is not
+fixable without `kubeadm reset`, which removes the control plane so `init` can run again.
 
-1. Get `controlplane`'s address and keep it in a variable. `ip route get 1.1.1.1` asks which
+1. On `controlplane`, get its address and keep it in a variable. `ip route get 1.1.1.1` asks which
    route the machine would use to reach an address outside its own network, and prints a line
    such as `1.1.1.1 via 192.0.2.1 dev eth0 src 192.0.2.10`. `awk '{print $7; exit}'` prints the
    seventh word of that line, the address after `src`. `CP_IP=$(...)` stores the result in the
@@ -127,8 +127,8 @@ fixable without `kubeadm reset`.
    lists each phase and the files it leaves.
 
 > [!note]
-> If `kubeadm init` stops with `[ERROR Port-6443]: Port 6443 is in use` or `[ERROR
-> FileAvailable--etc-kubernetes-manifests-kube-apiserver.yaml]`, a control plane from an earlier
+> If `kubeadm init` stops with `[ERROR Port-6443]: Port 6443 is in use` or 
+> `[ERROR FileAvailable--etc-kubernetes-manifests-kube-apiserver.yaml]`, a control plane from an earlier
 > attempt is still there. `sudo kubeadm reset -f` removes it.
 
 ### If pods are created through the apiserver, how did the apiserver pod start?
@@ -153,9 +153,8 @@ kube-scheduler.yaml
 
 The kubelet watches that directory and starts whatever it finds there, without asking an
 apiserver or a scheduler. That is how the control plane starts before there is a cluster to
-start it. Because these pods come from files, editing one restarts that component within
-seconds, and `k delete pod` on one does nothing lasting, because the kubelet recreates it
-from the file ([static pods](../../references/control-plane.md#static-pods)).
+start it. Editing one of these files restarts that component within seconds. `k delete pod`
+on one of these pods does nothing lasting, because the kubelet recreates it from the file ([static pods](../../references/control-plane.md#static-pods)).
 
 ## Point kubectl at the cluster
 
@@ -265,13 +264,13 @@ CoreDNS pods stay [`Pending`](../../references/pod.md#on-a-new-cluster).
 
 > [!note]
 > The node goes `Ready` as soon as the file exists, even if the plugin is broken. If the pod
-> CIDR given to `init` does not match Flannel's `10.244.0.0/16`, or `init` was given none, the
+> CIDR, the range given to `init` with `--pod-network-cidr`, does not match Flannel's `10.244.0.0/16`, or `init` was given none, the
 > node is still `Ready`, but the Flannel pod is in `CrashLoopBackOff` and CoreDNS stays in
 > `ContainerCreating`. `k logs -n kube-flannel -l app=flannel` names the mismatch.
 
 ## Join the workers
 
-The [join line](../../references/workers.md#joining) printed by `init` contains a token that expires after 24 hours. `kubeadm token
+The [join line](../../references/workers.md#joining) printed by `init` contains a token, a short-lived secret that lets a new node ask the cluster for a certificate, and it expires after 24 hours. `kubeadm token
 create --print-join-command` prints a new one.
 
 1. On `controlplane`, list the existing token and print a fresh join command.
@@ -393,7 +392,7 @@ it. `PodInitializing` means that pod is still running the setup steps that come 
 container.
 
 The two CoreDNS pods have `10.244.x` addresses from the pod CIDR. Every other pod has its node's
-own address, because the control plane pods and both DaemonSets use the [host network](../../references/pod-network.md#pods-on-the-host-network).
+own address, because the control plane pods and both DaemonSets use the [host network](../../references/pod-network.md#pods-on-the-host-network): they share the node's own network and address.
 
 When the cluster is healthy, no pod is `CrashLoopBackOff`, `Error` or `Pending`. [Phases](../../references/pod.md#phases)
 says what each of those means.
@@ -439,7 +438,7 @@ reset.
 
 ## Practice
 
-Do it again without the steps, in **25 minutes**.
+Do these tasks in **25 minutes**.
 
 1. **Host `controlplane`, weight 19%.** Initialise a control plane with pod network CIDR
    `10.244.0.0/16`. The API server must advertise `controlplane`'s own IPv4 address.
@@ -562,8 +561,6 @@ NAME                       READY   STATUS    RESTARTS   AGE
 coredns-66bc5c9577-cdzfp   1/1     Running   0          23s
 coredns-66bc5c9577-rflwv   1/1     Running   0          23s
 ```
-
-[Calico](../../references/pod-network.md#plugins) defaults to `192.168.0.0/16`, so its manifest would need an edit to match.
 
 **Task 4.** The token in `init`'s join command expires after 24 hours, so print a new command,
 then run it with `sudo` on each worker. Each worker is reached from `base`:

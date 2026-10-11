@@ -101,7 +101,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
      Normal  Started    0s    kubelet            Started container web
    ```
 
-   The [scheduler](../../references/control-plane.md#components), the part of the control plane that picks a node for each pod, chose `node01` for the pod, `default/web` being its namespace and name.
+   The [scheduler](../../references/control-plane.md#components) is the part of the control plane that picks a node for each pod. It chose `node01` for `default/web`, the pod `web` in the namespace `default`.
    Then the kubelet on `node01`, the agent that runs pods on that machine, pulled the
    image, created the container and started it.
 
@@ -225,7 +225,7 @@ docs have one for each common type, ready to copy.
 ## Keep pods running with a ReplicaSet
 
 A [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) keeps a set number of identical pods running. It finds its pods by [label](../../references/labels.md), a
-key-value pair on an object, and creates new ones from its [pod template](../../references/workloads.md#the-pod-template), a pod manifest kept inside it, when there are too few. No
+key-value pair on an object. When there are too few, it creates new ones from its [pod template](../../references/workloads.md#the-pod-template), a pod manifest kept inside it. No
 `kubectl create` command writes a ReplicaSet, so copy it from the docs.
 
 1. Search kubernetes.io for `replicaset`, open
@@ -264,7 +264,7 @@ key-value pair on an object, and creates new ones from its [pod template](../../
            image: nginx:1.27
    ```
 
-   `apps/v1` means the type is in the `apps` [API group](../../references/api-groups.md). The labels under the top `metadata` are the
+   `apps/v1` means the type is in the `apps` [API group](../../references/api-groups.md), a named set of related types. The labels under the top `metadata` are the
    ReplicaSet's own. `replicas` is how many pods to keep. `selector` says which pods count as
    its own, those labelled `tier: frontend`. `template` is the pod to create, with the same
    `metadata` and `spec` as a pod manifest, and its labels must match the selector. A line
@@ -642,8 +642,8 @@ not.
    `Error from server (AlreadyExists): error when creating "api.yaml": deployments.apps "api" already exists`.
 
 5. See what `apply` keeps. `apply` stores the file it was given in an annotation, a note
-   kept on the object, named `kubectl.kubernetes.io/last-applied-configuration`. `-o jsonpath` prints that one
-   field, and `\.` keeps each dot in the annotation's name from being read as a step down:
+   kept on the object, named `kubectl.kubernetes.io/last-applied-configuration`. `-o jsonpath` prints that
+   field. `\.` keeps each dot in the annotation's name from being read as a step down:
 
    ```shell
    k get deploy api -o jsonpath='{.metadata.annotations.kubectl\.kubernetes\.io/last-applied-configuration}'
@@ -679,7 +679,7 @@ not.
 
    `k edit` keeps your edit in the file it names.
 
-7. Replace the pod from that file. `replace -f` replaces an object with the one in the file,
+7. Replace the pod from the file `k edit` named. Its number differs on every run, so use yours. `replace -f` replaces an object with the one in the file,
    and `--force` does it by deleting the object and creating it again, which is the only way to
    change a field that cannot be updated:
 
@@ -757,7 +757,7 @@ prints the whole tree below it.
 
 ## Practice
 
-Do it again without the steps, in **15 minutes**.
+Do these tasks in **15 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `store`, and in it a pod `front`
    running `nginx:1.27`.

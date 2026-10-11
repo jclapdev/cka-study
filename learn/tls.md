@@ -40,7 +40,7 @@ flowchart TD
   FCA[front-proxy CA] --> FP[front-proxy-client<br/>for API extensions]
 ```
 
-Everything that talks to the apiserver carries the cluster CA's certificate to check it with: each kubeconfig holds a copy, and every pod gets one too, so a program in a pod can check the apiserver it calls. etcd has a CA of its own, so a certificate signed for the apiserver cannot be used to reach etcd directly. A new node gets its kubelet's client certificate when it joins, through a signing request that the cluster approves ([how kubeadm builds a cluster](kubeadm.md#joining-a-node)).
+Each client of the apiserver carries the cluster CA's certificate to check it with: each kubeconfig holds a copy, and every pod gets one too, so a program in a pod can check the apiserver it calls. etcd has a CA of its own, so a certificate signed for the apiserver cannot be used to reach etcd directly. A new node gets its kubelet's client certificate when it joins, through a signing request that the cluster approves ([how kubeadm builds a cluster](kubeadm.md#joining-a-node)).
 
 Certificates expire. kubeadm signs the component certificates for one year and the CAs for ten, and `kubeadm certs renew` signs new ones ([certificate management with kubeadm](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)). An expired certificate fails the check like one from the wrong CA, so `kubectl` with an expired `admin.conf` no longer reaches the apiserver.
 

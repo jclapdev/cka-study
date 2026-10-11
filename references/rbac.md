@@ -63,9 +63,9 @@ Paths such as `/healthz` are non-resource URLs. They are not objects, so a rule
 names them in `nonResourceURLs` rather than `resources`, and only a ClusterRole
 can hold such a rule.
 
-Your `kubectl` works because `~/.kube/config` is a copy of `admin.conf`, whose
-certificate authenticates as `kubernetes-admin` in group `kubeadm:cluster-admins`,
-which the `kubeadm:cluster-admins` ClusterRoleBinding binds to `cluster-admin`.
+Your `kubectl` works because `~/.kube/config` is a copy of `admin.conf`. Its
+certificate authenticates as `kubernetes-admin` in group `kubeadm:cluster-admins`, and
+the `kubeadm:cluster-admins` ClusterRoleBinding binds that group to `cluster-admin`.
 
 ```bash
 kubectl auth whoami
@@ -92,7 +92,7 @@ Error from server (Forbidden): pods is forbidden: User
 ```
 
 The message names all five things a rule has to match: subject, verb, resource,
-API group and namespace. Whichever one is wrong is the one to fix. `""` is the
+API group and namespace. `""` is the
 core API group ([API groups](api-groups.md)).
 
 ## Failure modes

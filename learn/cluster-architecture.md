@@ -46,7 +46,7 @@ flowchart LR
 
 The apiserver is the centre. It is the only component that reads or writes etcd, the database that holds every object, and everything else, `kubectl` included, talks to the apiserver ([control-plane components](https://kubernetes.io/docs/concepts/overview/components/#control-plane-components)). The controller-manager runs the built-in controllers. The scheduler picks a node for each new pod and writes the node's name into the pod, and does nothing else.
 
-Every node, the control plane node included, runs a kubelet ([node components](https://kubernetes.io/docs/concepts/overview/components/#node-components)). The kubelet watches the apiserver for pods assigned to its node and asks the container runtime, such as containerd, to start their containers through the container runtime interface (CRI), a standard API that lets Kubernetes work with more than one runtime ([CRI](https://kubernetes.io/docs/concepts/architecture/cri/)). The kubelet is the only part that actually starts containers.
+Every node, the control plane node included, runs a kubelet ([node components](https://kubernetes.io/docs/concepts/overview/components/#node-components)). The kubelet watches the apiserver for pods assigned to its node. It asks the container runtime, such as containerd, to start their containers. The kubelet is the only part that actually starts containers.
 
 So a new pod passes through four components: `kubectl` sends it to the apiserver, the apiserver stores it in etcd, the scheduler assigns it a node, and that node's kubelet starts it.
 
@@ -64,7 +64,7 @@ sequenceDiagram
   D-->>K: etcd.yaml, kube-apiserver.yaml, …
   K->>C: start these containers
   C->>A: apiserver process starts
-  K->>A: register the node, show the static pods as mirror pods
+  K->>A: register the node and its static pods
 ```
 
 A mirror pod is the copy of a static pod that the kubelet shows through the apiserver, so `kubectl get pods` lists it. The file is the source of truth for a static pod. Editing it restarts the component, and deleting the pod through the apiserver only deletes the mirror, which the kubelet puts back.

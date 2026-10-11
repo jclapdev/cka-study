@@ -23,11 +23,9 @@ These fields change every object, or one named object, without a patch ([setting
 | `namePrefix`, `nameSuffix` | Adds to every object's name, and rewrites references to those names, such as a [Deployment](workloads.md)'s reference to a [ConfigMap](config.md). |
 | `labels` | Adds [labels](labels.md). See [labels](#labels) below. |
 | `images` | Changes the tag, digest or name of every container that uses the named image ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). |
-| `replicas` | Sets the replica count of the named Deployment, [ReplicaSet](workloads.md#deployments-and-replicasets) or [StatefulSet](workloads.md#other-workload-kinds). The allowed docs do not describe it, so use the `increase_replicas.yaml` patch from [customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing) instead. |
+| `replicas` | Sets the replica count of the named Deployment, [ReplicaSet](workloads.md#deployments-and-replicasets) or [StatefulSet](workloads.md#other-workload-kinds). kubernetes.io, the docs the exam allows, does not describe it, so in the exam use the `increase_replicas.yaml` patch from [customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing) instead. |
 
 `images` and `replicas` name their target as the base does: the image `nginx`, the Deployment `web`, not `prod-web`.
-
-Every field above has a copyable example on the allowed Kustomize page except `replicas`. Search kubernetes.io for `kustomize` to reach it.
 
 ## Labels
 
@@ -51,7 +49,7 @@ patches:
 
 `configMapGenerator` and `secretGenerator` write a ConfigMap or a [Secret](config.md#secrets) from literals or files ([generating resources](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#generating-resources)). A [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) holds key-value settings that a pod can read as environment variables or files.
 
-Kustomize adds a hash of the contents to the generated name, such as `web-config-f655md8fbd`, and rewrites every reference to `web-config` in the same build ([generatorOptions](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#generatoroptions)). When the contents change, the name changes, the Deployment's pod template changes with it, and the Deployment replaces its pods. A ConfigMap changed in place does not update the environment variables of running pods ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
+Kustomize adds a hash of the contents to the generated name, such as `web-config-f655md8fbd`, and rewrites every reference to `web-config` in the same build ([generatorOptions](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#generatoroptions)). When the contents change, the name changes. The Deployment's pod template changes with it, so the Deployment replaces its pods. A ConfigMap changed in place does not update the environment variables of running pods ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
 
 `kubectl apply` never deletes, so each change leaves the previous ConfigMap in the namespace.
 

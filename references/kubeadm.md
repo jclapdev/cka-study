@@ -10,8 +10,8 @@ kubeadm turns machines that already run a [container runtime](workers.md#what-a-
 | --- | --- |
 | `[preflight]` | Checks the machine and pulls the control plane images. A failed check stops `init` before it changes anything. |
 | `[certs]` | Creates a cluster [CA](certificates.md) and every certificate the components need, under `/etc/kubernetes/pki/`. |
-| `[kubeconfig]` | Writes `admin.conf`, `super-admin.conf`, `kubelet.conf`, `controller-manager.conf` and `scheduler.conf` to `/etc/kubernetes/`. |
-| `[etcd]`, `[control-plane]` | Writes the four [static pod](control-plane.md#static-pods) [manifests](kubectl.md#generating-yaml) to `/etc/kubernetes/manifests/`. |
+| `[kubeconfig]` | Writes the [kubeconfigs](kubeconfig.md) to `/etc/kubernetes/`: `admin.conf` for the administrator's `kubectl`, `super-admin.conf` for emergency access that bypasses [RBAC](rbac.md), `kubelet.conf` for this node's kubelet, and `controller-manager.conf` and `scheduler.conf` for those components. |
+| `[etcd]`, `[control-plane]` | Writes the [static pod](control-plane.md#static-pods) [manifests](kubectl.md#generating-yaml) `etcd.yaml`, `kube-apiserver.yaml`, `kube-controller-manager.yaml` and `kube-scheduler.yaml` to `/etc/kubernetes/manifests/`. |
 | `[kubelet-start]`, `[wait-control-plane]` | Starts the kubelet, which starts the static pods, and waits for them to be healthy. |
 | `[mark-control-plane]` | Labels and [taints](taints.md) the node as a control plane node. |
 | `[bootstrap-token]` | Creates the token that `kubeadm join` uses, valid for 24 hours. |
@@ -22,7 +22,7 @@ The files it leaves on the control plane node:
 | Path | Contents |
 | --- | --- |
 | `/etc/kubernetes/manifests/` | The static pod manifests. |
-| `/etc/kubernetes/*.conf` | The kubeconfigs, root-owned with mode `600` ([kubeconfig](kubeconfig.md)). |
+| `/etc/kubernetes/*.conf` | The kubeconfigs, root-owned with mode `600`. |
 | `/etc/kubernetes/pki/` | The CA and all component certificates ([which certificate is which](https://kubernetes.io/docs/setup/best-practices/certificates/#all-certificates)). |
 | `/var/lib/etcd/` | The etcd data directory. |
 | `/var/lib/kubelet/config.yaml` | The kubelet's configuration. |
@@ -46,13 +46,13 @@ Changing the address means `kubeadm reset` and a new `init`.
 ## Commands
 
 ```bash
-sudo kubeadm init --apiserver-advertise-address <ip> --pod-network-cidr 10.244.0.0/16
+sudo kubeadm init --apiserver-advertise-address <ip> --pod-network-cidr 10.244.0.0/16   # the range pod addresses come from
 sudo kubeadm token list
 sudo kubeadm token create --print-join-command   # a new join command with a new token
 sudo kubeadm reset -f                            # undo init or join on this machine
 ```
 
-`kubeadm reset` does not empty `/etc/cni/net.d/` ([cleanup of CNI configuration](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-reset/#cleanup-of-cni-configuration)). A plugin's leftover configuration there is used by the next cluster built on that machine.
+`kubeadm reset` does not empty `/etc/cni/net.d/`, where the pod network plugin keeps its configuration ([cleanup of CNI configuration](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-reset/#cleanup-of-cni-configuration)). A plugin's leftover configuration there is used by the next cluster built on that machine.
 
 ## Failure modes
 

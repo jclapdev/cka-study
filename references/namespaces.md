@@ -1,6 +1,6 @@
 # Namespaces
 
-A namespace is a named group of objects inside a cluster. Two objects of the same kind can share a name if they are in different namespaces, and a namespace is the boundary that a [Role](rbac.md#the-model) and a RoleBinding apply within. So do a ResourceQuota, which is a cap on the CPU, memory and number of objects a namespace may use, and a NetworkPolicy, which is a set of rules for which pods may talk to which ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
+A namespace is a named group of objects inside a cluster. Two objects of the same kind can share a name if they are in different namespaces, and a namespace is the boundary that a [Role](rbac.md#the-model) and a RoleBinding apply within. A ResourceQuota, which is a cap on the CPU, memory and number of objects a namespace may use, applies within a namespace too. So does a NetworkPolicy, which is a set of rules for which pods may talk to which ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
 
 ## Namespaced and cluster-scoped resources
 
@@ -18,7 +18,7 @@ kubectl api-resources --namespaced=false
 kubectl api-resources --namespaced=true
 ```
 
-This matters for [RBAC](rbac.md). A RoleBinding grants access inside its own namespace, so it can never reach a cluster-scoped resource. Access to nodes or PersistentVolumes, which are pieces of storage that belong to the whole cluster, needs a ClusterRoleBinding.
+In [RBAC](rbac.md), a RoleBinding grants access inside its own namespace, so it can never reach a cluster-scoped resource. Access to nodes or PersistentVolumes, which are pieces of storage that belong to the whole cluster, needs a ClusterRoleBinding.
 
 ## Initial namespaces
 
@@ -49,7 +49,7 @@ kubectl config set-context --current --namespace=dev  # make dev the default for
 | Symptom | Cause |
 | --- | --- |
 | `No resources found in default namespace.` | The objects are in another namespace. Add `-n <ns>` or `-A`. |
-| `kubectl auth can-i` prints `Warning: resource 'nodes' is not namespace scoped` | The question is about a cluster-scoped type, so any namespace in it, or in a RoleBinding for it, has no effect. |
+| `kubectl auth can-i` prints `Warning: resource 'nodes' is not namespace scoped` | The question is about a cluster-scoped type, which has no namespace, so a namespace in the question or in a RoleBinding has no effect. |
 
 ## Docs
 

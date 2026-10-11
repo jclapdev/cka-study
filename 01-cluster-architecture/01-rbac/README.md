@@ -37,8 +37,8 @@ namespaces, `dev` and `prod`, show where such a grant stops.
 
 ## Find out why your kubectl can do anything
 
-Your own `kubectl` is allowed every request. This lesson finds who the apiserver thinks you are,
-and the grant that allows it.
+Your own `kubectl` is allowed every request. Find who the apiserver thinks you are, and the
+grant that allows it.
 
 1. Ask the apiserver who you are. `auth whoami` sends your credentials and prints the user
    and groups the apiserver reads from them:
@@ -94,7 +94,7 @@ exist only in the credentials that sign a request.
    k create serviceaccount deploy-bot -n dev
    ```
 
-2. Ask what it is allowed to do. `k auth can-i` asks the apiserver's authoriser directly,
+2. Ask what it is allowed to do. `k auth can-i` asks the apiserver's authoriser, the part that checks permissions, directly,
    and `--as` impersonates without needing the subject's credentials
    ([impersonation](../../references/authentication.md#commands)). A ServiceAccount is named in full as
    `system:serviceaccount:<namespace>:<name>`. `list pods -n dev` is the request being asked
@@ -104,14 +104,15 @@ exist only in the credentials that sign a request.
    k auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The answer is `no`. The account exists and can authenticate, but it cannot do anything, because permissions in
-   Kubernetes are purely additive and it has been granted none
+   The answer is `no`. The account exists and can authenticate, but permissions in Kubernetes are
+   additive and it has been granted none
    ([subjects](../../references/rbac.md#subjects)).
 
 > [!note]
-> Bindings are not validated against their subjects. A binding that names a ServiceAccount
+> A RoleBinding, the object that grants a role to subjects, is not checked against those
+> subjects. A binding that names a ServiceAccount
 > which does not exist is created without complaint and grants nothing, so a typo in the name
-> fails silently. Compare `k get sa -n dev` against `k describe rolebinding` when a
+> fails silently. Compare `k get sa -n dev`, which lists the ServiceAccounts in `dev`, against `k describe rolebinding` when a
 > grant appears to do nothing at all.
 
 ## Write a Role
@@ -140,7 +141,7 @@ in one namespace and can only ever name resources in that namespace.
      pods       []                 []              [get list watch]
    ```
 
-   Note that `get`, `list` and `watch` are three separate verbs. Granting `get` does not let
+   `get`, `list` and `watch` are separate verbs. Granting `get` does not let
    anyone `list`: `get` fetches one named object, `list` enumerates them, and `k get pods`
    with no name needs `list`.
 
@@ -301,10 +302,9 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    no
    ```
 
-   The ClusterRole grants node access, and the RoleBinding grants it *in `dev`*. There is no
-   such thing as a node in `dev`, so the grant applies to nothing. A RoleBinding scopes to a
-   namespace, and a cluster-scoped resource has no namespace to be scoped into. The binding is
-   legal and does nothing.
+   The ClusterRole grants node access, and the RoleBinding grants it *in `dev`*. Nodes belong
+   to no namespace, so a grant scoped to `dev` applies to nothing. The binding is accepted and
+   does nothing.
 
 2. The only binding without a namespace is a ClusterRoleBinding. `create clusterrolebinding`
    takes the same flags as `create rolebinding`, with no `-n`:
@@ -356,8 +356,8 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
                                                    [/version]                             []               [get]
    ```
 
-   The three rows you created are `pods`, `configmaps` and `nodes`. They come from four
-   bindings across two namespaces, collapsed into one list of what the subject can do.
+   The three rows you created are `pods`, `configmaps` and `nodes`. They come from the
+   bindings you created, collapsed into one list of what the subject can do.
 
    Every other row was there before you started: every signed-in subject may ask what it is
    allowed to do, and read paths such as `/healthz` and `/version`, which are
@@ -371,7 +371,7 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    k get clusterrole --no-headers | grep -v '^system:'
    ```
 
-   Two are the ones you just wrote:
+   `configmap-reader` and `node-reader` are the ones you wrote:
 
    ```
    admin                                                                  2026-08-02T10:49:07Z
@@ -384,8 +384,8 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    view                                                                   2026-08-02T10:49:07Z
    ```
 
-   `flannel` belongs to the [pod network](../../references/pod-network.md#plugins), and `kubeadm:get-nodes` lets a new node
-   [join](../../references/workers.md#joining). The 4 meant for people are `cluster-admin`, `admin`, `edit` and `view`.
+   `flannel` belongs to the [pod network](../../references/pod-network.md#plugins), the plugin that gives pods their addresses, and `kubeadm:get-nodes` lets a new node
+   [join](../../references/workers.md#joining). The ones meant for people are `cluster-admin`, `admin`, `edit` and `view`.
 
 ## Quiz
 
@@ -410,8 +410,8 @@ grant cluster-wide. The pairing only crosses in the other direction.
 
 <details><summary>How do you take a permission away?</summary>
 
-Delete the binding. There are no deny rules — permissions are purely additive, so
-a subject can act if any binding allows it.
+Delete the binding. There are no deny rules. Permissions are additive, so a subject
+can act if any binding allows it.
 </details>
 
 <details><summary>Which subject kinds have no object in the cluster?</summary>
@@ -427,14 +427,14 @@ so a binding can reference a user that no one can create or delete.
 
 <details><summary>Why does your own kubectl have full access?</summary>
 
-`admin.conf`'s certificate authenticates as `kubernetes-admin` in the group
+`~/.kube/config` is a copy of `admin.conf`, the admin [kubeconfig](../../references/kubeconfig.md) [kubeadm](../../references/kubeadm.md) writes. Its certificate authenticates as `kubernetes-admin` in the group
 `kubeadm:cluster-admins`, and the ClusterRoleBinding of the same name binds that
 group to `cluster-admin`.
 </details>
 
 ## Practice
 
-Do it again without the steps, in **15 minutes**.
+Do these tasks in **15 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Create the namespace `web` and a ServiceAccount `ci` in
    it.

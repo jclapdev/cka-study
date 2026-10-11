@@ -1,6 +1,6 @@
 # How etcd stores the cluster
 
-Every object in a cluster, from a pod to a Role, exists only as an entry in etcd, a consistent and highly available key-value store that Kubernetes uses for all its data ([operating etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)). The other components keep nothing of their own that the cluster could not rebuild. Lose etcd's data and the cluster forgets every object it had, which is why it is the one thing in a cluster that needs a backup.
+Every object in a cluster, from a pod to a Role, exists only as an entry in etcd, a consistent and highly available key-value store that Kubernetes uses for all its data ([operating etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)). Lose etcd's data and the cluster forgets every object it had, so etcd is what you back up.
 
 Without etcd, each component would have to store the state it cares about and agree with the others on it. With etcd, there is one record that every change goes into and every component reads from, through the apiserver.
 
@@ -35,7 +35,7 @@ flowchart LR
   F2 -.->|stored| L
 ```
 
-Members talk to each other on port 2380 and to clients on port 2379, both over TLS, the encryption HTTPS uses, with certificates signed by etcd's own CA, the key that vouches for them ([securing etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#securing-etcd-clusters), [how TLS secures the cluster](tls.md)).
+Members talk to each other on port 2380 and to clients on port 2379, both over TLS, the encryption HTTPS uses, with certificates signed by etcd's own CA, the certificate authority that vouches for them ([securing etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#securing-etcd-clusters), [how TLS secures the cluster](tls.md)).
 
 ## How it fits in the cluster
 

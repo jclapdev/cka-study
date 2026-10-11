@@ -4,7 +4,7 @@ Helm is a package manager for Kubernetes. It installs a [chart](#charts-reposito
 
 ## Charts, repositories and releases
 
-Helm works with three things ([key components](https://helm.sh/docs/intro/introduction/#key-components)), and the names are easy to mix up:
+Helm works with three things ([key components](https://helm.sh/docs/intro/introduction/#key-components)):
 
 | Thing | What it is | How you refer to it |
 | --- | --- | --- |

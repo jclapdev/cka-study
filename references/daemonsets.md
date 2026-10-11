@@ -14,7 +14,7 @@ kube-system    kube-proxy        3         3         3       3            3     
 
 `DESIRED` is the number of nodes that should run a copy. Each pod is named `<daemonset>-<random>`, such as `kube-proxy-4wdrl`, and `kubectl get pods -o wide` shows which node it runs on.
 
-A DaemonSet's pods still obey [taints](taints.md) ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). Both of these DaemonSets tolerate every `NoSchedule` taint, so they also run on the control plane node, which kubeadm taints `node-role.kubernetes.io/control-plane:NoSchedule`.
+A DaemonSet's pods still obey [taints](taints.md) ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). kubeadm taints the control plane node `node-role.kubernetes.io/control-plane:NoSchedule`. Both of these DaemonSets tolerate every `NoSchedule` taint, so they run there too.
 
 ## Commands
 

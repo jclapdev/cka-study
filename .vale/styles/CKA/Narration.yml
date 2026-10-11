@@ -4,8 +4,13 @@ message: "'%s' is narration or exam framing. State the fact, or delete the sente
 level: error
 ignorecase: true
 tokens:
-  - in this lesson
+  - this lesson
   - this exercise
+  - note that
+  - worth knowing
+  - linked above
+  - without the steps
+  - easy to mix up
   - the steps above
   - the way the exam asks
   - every exam host

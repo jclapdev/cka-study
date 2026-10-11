@@ -28,7 +28,7 @@ CHECKOUT = "/Users/john/projects/cka-prep"
 APP_URL = "5199"
 STATE = os.environ.get("CKA_STATE", f"{CHECKOUT}/.claude/state")
 # Each reader that must clear a learner page before it is pushed, and its stamp file.
-READERS = {"cold-reader": "cold-read.json", "style-reader": "style-read.json"}
+READERS = {"cold-reader": "cold-read.json"}
 FOLDER = re.compile(r"^\d\d-[^/]+(/\d\d-[^/]+)?$")
 SKILL_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|lab/labs/.+)$")
 LEARNER_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|EXAM\.md|README\.md|lab/README\.md)$")
@@ -187,6 +187,11 @@ def stamp(data):
     hasn't changed since it was read. No verdict line, no stamps."""
     reader = data["agent_type"]
     message = data.get("last_assistant_message", "")
+    if "VERDICT:" not in message:
+        # A background reader delivers its report through a SubagentHandback call instead.
+        handbacks = [c["input"].get("message", "") for c in tool_calls(data["agent_transcript_path"])
+                     if c["name"] == "SubagentHandback"]
+        message = handbacks[-1] if handbacks else message
     if not re.search(r"^VERDICT: (clear|\d+ findings?)\s*$", message.strip().splitlines()[-1] if message.strip() else ""):
         return
     flagged = set(re.findall(r"^FINDING (\S+?):\d+ \| ", message, re.M))

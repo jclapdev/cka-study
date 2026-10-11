@@ -22,7 +22,7 @@ export function Step({ step, done, last }: { step: StepData; done: boolean; last
           type="submit"
           onClick={() => setOpen(checked)}
           aria-pressed={checked}
-          aria-label={`Step ${step.label}: ${checked ? "done, click to untick" : "mark done"}`}
+          aria-label={`Step ${step.label}: ${checked ? "done, click to uncheck" : "mark done"}`}
           className={`grid size-9 place-items-center rounded-full border-2 font-semibold transition-colors ${
             checked ? "border-done bg-done text-paper" : "border-line bg-surface text-muted hover:border-accent hover:text-accent"
           }`}

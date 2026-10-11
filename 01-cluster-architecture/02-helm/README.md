@@ -14,7 +14,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 
 ## Objectives
 
-* Add a chart repository, and find a chart and its versions in it.
+* Add a chart repository, a web server that lists charts and their versions, and find a chart in it.
 * Read the settings a chart accepts, called values, before installing it.
 * Install a chosen version of a chart into a new namespace, with a value changed.
 * Find the objects an install creates, and the record Helm keeps of it.
@@ -37,7 +37,7 @@ charts and their versions.
    helm list -A
    ```
 
-   Each row is one installed release, with the chart and revision it is on:
+   Each row is an installed release, with the chart and revision it is on:
 
    ```
    NAME  	NAMESPACE	REVISION	UPDATED                               	STATUS  	CHART         	APP VERSION
@@ -47,7 +47,8 @@ charts and their versions.
    `-A` means all namespaces, as it does for `kubectl`. One release, `legacy`, is already
    installed.
 
-2. Add a repository under a local name and download its index. `helm repo add podinfo
+2. Add the repository of [podinfo](../../references/helm.md#podinfo), a small sample web application, under a local name and
+   download its index. `helm repo add podinfo
    <url>` saves the repository's address under the name `podinfo`, and `helm repo update`
    downloads the list of charts and versions from every repository added:
 
@@ -84,8 +85,8 @@ charts and their versions.
 
 ## Read the values
 
-A chart's templates, its manifests with blanks to fill in, read settings from its [values](../../references/helm.md#values), and a default for each value ships in the
-chart.
+A chart's templates are manifests with blanks to fill in. They read settings from the chart's [values](../../references/helm.md#values), and the
+chart ships a default for each value.
 
 1. Print the defaults. `helm show values` prints the chart's `values.yaml` file, and
    `| head -20` keeps its first 20 lines:
@@ -432,7 +433,7 @@ No. The namespace is not part of the release, so it stays.
 
 ## Practice
 
-Do it again without the steps, in **15 minutes**.
+Do these tasks in **15 minutes**.
 
 1. **Host `controlplane`, weight 20%.** Add the chart repository
    `https://stefanprodan.github.io/podinfo` under the name `podinfo`. Install the chart

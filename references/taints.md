@@ -1,6 +1,6 @@
 # Taints and tolerations
 
-A taint is a mark on a node that keeps pods off it. A toleration is a matching entry in a pod's spec that lets that pod onto a tainted node anyway. A toleration only permits a node. It doesn't send the pod there, which is what a node selector does ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)).
+A taint is a mark on a node that keeps pods off it. A toleration is a matching entry in a pod's spec that lets that pod onto a tainted node anyway. A toleration only permits a node. It doesn't send the pod there, which is what a node selector, a set of node [labels](labels.md) a pod requires, does ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)).
 
 A taint has a key, an optional value and an effect, written `key=value:Effect`, such as `disk=slow:NoSchedule`. The effect is what the taint does ([effects](#effects)). A toleration matches it when the key, the value (or `operator: Exists` for any value) and the effect agree.
 
@@ -42,7 +42,7 @@ The [CoreDNS](pod-network.md#coredns) pods tolerate the control plane taint, so 
  {"effect":"NoExecute","key":"node.kubernetes.io/unreachable","operator":"Exists","tolerationSeconds":300}]
 ```
 
-A [Deployment](workloads.md) with 2 pods on each worker, after `node02` is tainted `disk=slow:NoSchedule` and the Deployment is scaled to 8, has all 4 new pods on `node01`. The 2 pods already on `node02` stay:
+Take a [Deployment](workloads.md) with 2 pods on each worker. After `node02` is tainted `disk=slow:NoSchedule` and the Deployment is scaled to 8, all 4 new pods are on `node01`. The 2 pods already on `node02` stay:
 
 ```
       6 node01

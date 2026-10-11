@@ -8,12 +8,12 @@ The cluster's components use certificates for two things: to prove who they are,
 
 TLS (Transport Layer Security) is the protocol that sets up an encrypted, authenticated connection using these certificates, the same one behind HTTPS. Each connection has two sides:
 
-- A **serving certificate** proves the server's identity to the client. The [apiserver](control-plane.md#components)'s lists every name and IP a client may use to reach it, so a client connecting to an address not on the list fails the check ([server certificates](https://kubernetes.io/docs/setup/best-practices/certificates/#server-certificates)).
+- A **serving certificate** proves the server's identity to the client. The [apiserver](control-plane.md#components)'s serving certificate lists every name and IP a client may use to reach it, so a client connecting to an address not on the list fails the check ([server certificates](https://kubernetes.io/docs/setup/best-practices/certificates/#server-certificates)).
 - A **client certificate** proves the client's identity to the server. The apiserver reads the user name from its `CN` (common name) and the groups from its `O` (organisation) fields ([authentication](authentication.md#client-certificates)).
 
 ## On a kubeadm cluster
 
-`kubeadm init` creates three CAs and signs every other certificate with one of them: the cluster CA signs most, etcd has its own, and so do API extensions, servers that add to the Kubernetes API from outside the apiserver. PKI (public key infrastructure) is the set of keys, certificates and CAs that a system's trust is built on. The cluster's PKI is these files, kept in `/etc/kubernetes/pki/` on the [control plane](control-plane.md) node ([where certificates are stored](https://kubernetes.io/docs/setup/best-practices/certificates/#where-certificates-are-stored)):
+`kubeadm init` creates three CAs and signs every other certificate with one of them. The cluster CA signs most of them. etcd has its own CA, and so do API extensions, which are servers that add to the Kubernetes API from outside the apiserver. PKI (public key infrastructure) is the set of keys, certificates and CAs that a system's trust is built on. The cluster's PKI is these files, kept in `/etc/kubernetes/pki/` on the [control plane](control-plane.md) node ([where certificates are stored](https://kubernetes.io/docs/setup/best-practices/certificates/#where-certificates-are-stored)):
 
 | File | What it is |
 | --- | --- |

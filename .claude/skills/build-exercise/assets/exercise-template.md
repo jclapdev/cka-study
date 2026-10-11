@@ -83,7 +83,7 @@ the term itself: A [<term>](../../references/<concept>.md#<section-anchor>) is .
 
 ## Practice
 
-Do it again without the steps, in **<N> minutes**.
+Do these tasks in **<N> minutes**.
 
 1. **Host `controlplane`, weight <N>%.** <Task in exam wording, no steps. Name any file the
    exam would hand over, such as `/opt/course/1/kustomization.yaml`, placed by `setup.sh`.>

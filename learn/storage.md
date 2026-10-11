@@ -15,7 +15,7 @@ A volume is declared once in the pod's `spec.volumes` and mounted by each contai
 | `configMap`, `secret` | the keys of a [ConfigMap](../references/config.md) or [Secret](../references/config.md#secrets), one file each | as long as the object exists ([configMap](https://kubernetes.io/docs/concepts/storage/volumes/#configmap)) |
 | `persistentVolumeClaim` | storage the cluster provides, such as a network disk | independently of any pod ([persistentVolumeClaim](https://kubernetes.io/docs/concepts/storage/volumes/#persistentvolumeclaim)) |
 
-A container that writes one line to a file in its own filesystem and one to a file in an `emptyDir`, then exits, finds one line in the first file and one more in the second on each restart: the first file starts over, the second keeps growing.
+Take a container that adds a line to a file in its own filesystem and a line to a file in an `emptyDir`, then exits. After each restart, the first file holds a single line, because it starts over, and the `emptyDir` file has gained another.
 
 ## How it fits in the cluster
 
@@ -31,7 +31,7 @@ flowchart LR
 
 A StorageClass names a kind of storage and the program that creates it, so a claim that names a class gets a new PersistentVolume made for it instead of waiting for an administrator ([dynamic provisioning](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#dynamic)). The programs that create and attach volumes for a storage system are mostly CSI drivers. CSI (Container Storage Interface) is the standard for storage plugins, as CNI is for network plugins, so a new storage system needs a driver and no change to Kubernetes ([CSI](https://kubernetes.io/docs/concepts/storage/volumes/#csi)).
 
-etcd holds these objects but none of the data in them, so a PersistentVolume's contents survive only as long as the storage behind it ([how etcd stores the cluster](etcd.md)).
+etcd, the cluster's database, holds these objects but none of the data in them, so a PersistentVolume's contents survive only as long as the storage behind it ([how etcd stores the cluster](etcd.md)).
 
 ## Further reading
 

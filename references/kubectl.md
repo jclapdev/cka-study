@@ -12,7 +12,7 @@ sudo -i         # root, for files under /etc, /opt or /var, or systemctl
 exit            # leave root; exit again to go back to base
 ```
 
-- `kubectl` needs a [kubeconfig](kubeconfig.md), the file that says where the cluster is and who you are. Only the [control plane](control-plane.md) host has one. On a worker, `k` exists but fails with `The connection to the server localhost:8080 was refused`, so a task on a worker is about that machine's files and services.
+- `kubectl` needs a [kubeconfig](kubeconfig.md), the file that says where the cluster is and who you are. Only the [control plane](control-plane.md) host has one. On a worker, `k`, the short form of `kubectl`, exists but fails with `The connection to the server localhost:8080 was refused`, so a task on a worker is about that machine's files and services.
 - ssh from one cluster machine to another, such as `ssh node02` from `node01`, is not supported. Go back to `base` first.
 - Each task is a new session. An alias, an exported variable or a `.vimrc` you set is gone in the next task.
 
@@ -77,7 +77,7 @@ k delete -f api.yaml                # delete what the file describes
 
 ## Snippets from the docs
 
-Some kinds have no `kubectl create` command, so their YAML comes from the docs. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The table lists where each one is, with other pages worth knowing. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
+Some kinds have no `kubectl create` command, so their YAML comes from the docs. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The table lists where each one is, with other pages that have snippets. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
 
 | Need | Page and section |
 | --- | --- |
@@ -132,7 +132,7 @@ Most of a running pod's spec cannot change ([pod update and replacement](https:/
 
 ## Checking your work
 
-Read back the exact value you changed:
+Read back the exact value you changed. `-o jsonpath` prints only the fields its template names:
 
 ```bash
 k get deploy web -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'

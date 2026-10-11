@@ -8,7 +8,7 @@ The type decides who can reach the Service ([service types](https://kubernetes.i
 
 | Type | Reachable from | Address |
 | --- | --- | --- |
-| ClusterIP | inside the cluster only | an IP from the service [CIDR](pod-network.md#pod-service-and-node-address-ranges), such as `10.99.69.98`. This is the default. |
+| ClusterIP | inside the cluster only | an IP from the service [CIDR](pod-network.md#pod-service-and-node-address-ranges), the range Service addresses come from, such as `10.99.69.98`. This is the default. |
 | NodePort | outside the cluster, on every node's IP | the ClusterIP plus a port from 30000 to 32767 opened on every node |
 | LoadBalancer | outside, through a cloud load balancer | a NodePort plus an external IP that a cloud provider fills in. With no cloud, `EXTERNAL-IP` stays `<pending>`. |
 
@@ -65,7 +65,7 @@ kubectl get svc,endpointslices
 | --- | --- |
 | `ENDPOINTS` is empty, and a client gets `wget: can't connect to remote host (10.106.236.200): Connection refused` | The selector matches no ready pods. Compare the Service's selector with `kubectl get pods --show-labels`. |
 | `wget: bad address 'web'` from a pod | No Service `web` exists in the pod's own namespace. A name without a namespace finds only those; use `web.<namespace>` for one in another namespace ([namespaces of Services](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services)). |
-| Connections time out or are refused on the right IP | `targetPort` doesn't match the port the container listens on. |
+| Connections time out or are refused on the right IP | The Service's `targetPort`, the container port it forwards to (`8080` in `--tcp 80:8080`), doesn't match the port the container listens on. |
 | `EXTERNAL-IP` stays `<pending>` | The Service is a LoadBalancer and no cloud provider exists to give it an address. |
 
 ## Docs

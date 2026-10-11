@@ -6,9 +6,9 @@ Helm adds three things on top of `kubectl`. It packages an application's manifes
 
 ## How it works
 
-A chart is a folder of templates, which are Kubernetes manifests with gaps in them, plus a `values.yaml` file that fills each gap with a default ([the chart file structure](https://helm.sh/docs/topics/charts/#the-chart-file-structure)). A release is an installed copy of a chart, with its own name, in a namespace.
+A chart is a folder of templates, which are Kubernetes manifests with gaps in them, plus a `values.yaml` file that fills each gap with a default ([the chart file structure](https://helm.sh/docs/topics/charts/#the-chart-file-structure)). A chart repository is a web server that hosts charts and an `index.yaml` listing them and their versions. A release is an installed copy of a chart, with its own name, in a namespace.
 
-When you run `helm install`, everything up to the last step happens on your own machine. Helm merges the chart's defaults with the values you give, fills in the templates, and sends the finished manifests to the apiserver. It then saves a record of the release (the chart, the values and the manifests) as a Secret in the release's namespace. From Helm 4 on, a new release is applied with server-side apply, in which the apiserver records which tool owns each field of an object ([server-side apply](https://helm.sh/docs/overview/#server-side-apply), [field management](https://kubernetes.io/docs/reference/using-api/server-side-apply/#field-management)).
+When you run `helm install`, everything up to the last step happens on your own machine. Helm merges the chart's defaults with the values you give, fills in the templates, and sends the finished manifests to the apiserver. It then saves a record of the release (the chart, the values and the manifests) as a Secret in the release's namespace.
 
 ```mermaid
 sequenceDiagram
@@ -39,9 +39,9 @@ flowchart LR
 
 ## How it fits in the cluster
 
-Helm has no part running inside the cluster. It is a command-line tool that talks to the apiserver with the same kubeconfig as `kubectl`, so it can do only what that kubeconfig's user is allowed to do ([architecture](https://helm.sh/docs/intro/introduction/#architecture), [RBAC](../references/rbac.md)).
+Helm has no part running inside the cluster. It is a command-line tool that talks to the apiserver with the same kubeconfig as `kubectl`, the file that holds the cluster's address and your credential, so it can do only what that kubeconfig's user is allowed to do ([architecture](https://helm.sh/docs/intro/introduction/#architecture), [RBAC](../references/rbac.md)).
 
-Helm creates objects and then stops. It does not watch them afterwards, so the Deployment's controller creates and replaces the pods, and if someone edits an object with `kubectl`, Helm does not notice until the next upgrade. An operator is different, because it runs in the cluster and keeps correcting its objects ([CRDs and operators](../references/crds.md)).
+Helm creates objects and then stops. It does not watch them afterwards. The Deployment's controller, not Helm, creates and replaces the pods. If someone edits an object with `kubectl`, Helm does not notice until the next upgrade. An operator, a program that runs in the cluster and manages objects of its own types, is different: it keeps correcting its objects ([CRDs and operators](../references/crds.md)).
 
 Kustomize solves a similar problem in a different way. It is built into `kubectl`, it changes plain YAML with patches instead of filling in templates, and it keeps no release history ([Kustomize](../references/kustomize.md)). Use Helm to install software someone else packaged as a chart, and use Kustomize to keep variants of your own manifests.
 

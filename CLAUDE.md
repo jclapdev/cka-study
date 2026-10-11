@@ -12,19 +12,14 @@ Everything about running the lab lives in `lab/README.md` and `lab/labs/` and no
 
 ## Wording
 
-Write the app's text and the pages it shows the way a course site such as KodeKloud does. Full sentences are fine. These six habits are not:
+Write the app's text and the pages it shows the way a course site such as KodeKloud does. Full sentences are fine. Before writing any text a learner sees, in a page or in `app/app`, read the style list, [.claude/skills/build-exercise/references/style.md](.claude/skills/build-exercise/references/style.md): every habit that has made a page read oddly, with a line that failed and its rewrite.
 
-- Text that describes the app itself, what it stores, or how its screens behave. Show the thing instead.
-- Terms invented while building. Use the words a learner already knows: lab, quiz, practice exam, score. Never "starting state", "Recall", "timed run" or "ticks".
-- Text from the author's side, such as "not written", "this exercise names no lab" or "The lab installed one release for the Practice section to find". Say what the learner sees: "Coming soon", "This topic has no lab.", "One release is already installed."
-- Headings that are phrases instead of names. Use "Dashboard", "Lab", "Practice", "Solution", not "Where you are" or "Practice it".
-- Coaching the learner or explaining edge cases they didn't ask about, such as "Answer each one in your head before you open it."
-- Framing lessons around the exam, such as "the way the exam asks" or "every exam host". Name the CKA only for a fact about it, and keep "practice exam".
+When the user flags a line that reads oddly, one example is enough: add an entry to the style list, add a Vale rule in `.vale/styles/CKA/` if a pattern catches it without catching good lines, and fix every page that has it, in the same change. `cd app && pnpm overused` lists the phrases the pages use far more often than the Kubernetes docs do, which finds habits nobody has named yet.
 
 ## App
 
-Run `cd app && pnpm test` after changing the app or the README format it reads. Then run `pnpm test:browser` against the running app (`CKA_URL=http://127.0.0.1:<port>` for a dev server) and look at the screenshots it saves in `app/test-results/`.
+Run `cd app && pnpm test` after changing the app, the README format it reads, or any page: it ends with Vale's style checks on every page. Then run `pnpm test:browser` against the running app (`CKA_URL=http://127.0.0.1:<port>` for a dev server) and look at the screenshots it saves in `app/test-results/`.
 
-## Cold-reader
+## Readers
 
-Before pushing a changed topic README, Learn page, reference page, `EXAM.md`, `lab/README.md` or `README.md`, run the `cold-reader` agent on those pages, fix what it finds, and run it again until each page is clear. Git refuses the push otherwise (`.githooks/pre-push`, enabled once per checkout with `git config core.hooksPath .githooks`).
+Before pushing a changed topic README, Learn page, reference page, `EXAM.md`, `lab/README.md` or `README.md`, run the `cold-reader` agent (can a newcomer follow it) and the `style-reader` agent (does it follow the style list) on those pages, fix what they find, and run them again until each page is clear. Run the `style-reader` on changed `app/app` files too. Git refuses the push otherwise, and also when Vale fails (`.githooks/pre-push`, enabled once per checkout with `git config core.hooksPath .githooks`).

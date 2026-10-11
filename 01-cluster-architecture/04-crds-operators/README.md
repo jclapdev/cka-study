@@ -33,7 +33,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the 
 
 1. Go to `controlplane` and list the CRDs, and the type that holds them. `k get crd` lists the
    CRDs, and
-   `api-resources --api-group=apiextensions.k8s.io` lists only the types in that [API group](../../references/api-groups.md):
+   `api-resources --api-group=apiextensions.k8s.io` lists only the types in that [API group](../../references/api-groups.md), a named set of related types:
 
    ```shell
    ssh controlplane
@@ -115,7 +115,7 @@ schedule. Nothing acts on it; it shows what a CRD adds.
    ```
 
    `k explain` reads the CRD's schema. Run straight after `k apply`, it can fail with
-   `couldn't find resource`, until the CRD is [`Established`](../../references/crds.md#failure-modes).
+   `couldn't find resource`, until the CRD is [`Established`](../../references/crds.md#failure-modes), the condition the apiserver sets once it serves the new type.
 
 ## Create custom objects
 
@@ -196,7 +196,7 @@ With the CRD applied, objects of the new type are created, listed and checked li
 
 ## Install an operator
 
-An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. cert-manager issues [TLS](../../references/certificates.md#client-and-serving-certificates) [certificates], the files that let HTTPS servers prove who they are(../../references/certificates.md): you
+An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. cert-manager issues [TLS certificates](../../references/certificates.md#client-and-serving-certificates), the files that let HTTPS servers prove who they are: you
 create a `Certificate` object, and its [controller](../../references/control-plane.md#components) writes the key and certificate into a [Secret](../../references/config.md#secrets).
 [How TLS secures the cluster](../../learn/tls.md) explains what a certificate proves.
 
@@ -509,7 +509,7 @@ result, change the custom resource.
 
 ## Practice
 
-Do it again without the steps, in **18 minutes**.
+Do these tasks in **18 minutes**.
 
 1. **Host `controlplane`, weight 15%.** Install cert-manager with Helm from the chart
    `oci://quay.io/jetstack/charts/cert-manager`, version `v1.21.2`, as the release

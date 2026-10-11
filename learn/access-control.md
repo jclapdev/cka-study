@@ -10,7 +10,7 @@ ServiceAccounts are the exception. They are objects, made for software running i
 
 ## RBAC
 
-RBAC has four objects in two pairs. A Role or ClusterRole lists permissions, each a set of verbs, such as `get` or `delete`, on resources, such as pods, in API groups. A RoleBinding or ClusterRoleBinding grants a role to subjects, which are users, groups or ServiceAccounts ([RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole)). A role that is never bound grants nothing.
+RBAC has four objects in two pairs. A Role or ClusterRole lists permissions, each a set of verbs, such as `get` or `delete`, on resources, such as pods, in API groups, the named sets that resource types belong to. A RoleBinding or ClusterRoleBinding grants a role to subjects, which are users, groups or ServiceAccounts ([RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole)). A role that is never bound grants nothing.
 
 ```mermaid
 flowchart LR
@@ -36,7 +36,7 @@ flowchart LR
   R --> P[every verb on every resource]
 ```
 
-The certificate in the kubeconfig authenticates you. A binding names your group, not your user, and grants a role. Changing any link changes what you can do.
+`admin.conf` is a kubeconfig, the file `kubectl` reads to find the cluster and the credential to send. Its certificate authenticates you. A binding names your group, not your user, and grants a role.
 
 The roles, commands and errors are on the reference pages: [RBAC](../references/rbac.md), [authentication](../references/authentication.md), [ServiceAccounts](../references/service-accounts.md) and [API groups](../references/api-groups.md).
 
