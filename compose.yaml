@@ -19,6 +19,8 @@ services:
     build: app
     image: cka-app
     container_name: cka-app
+    # A dev server that stops on an error comes back by itself, as the lab's machines do.
+    restart: unless-stopped
     ports: ["127.0.0.1:5173:5173"]
     volumes:
       - .:/repo

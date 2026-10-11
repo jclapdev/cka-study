@@ -23,7 +23,7 @@ Each has a test in `tests/browser/app.situations.ts` whose name starts with it, 
 - **notes**: typing, then leaving or closing at once.
 - **lesson ticks**: the ✓ beside each lesson.
 - **a request from another site**: a POST whose Origin isn't the app.
-- **dev server restart** (no browser test): checked by hand (tabs come back as one fresh tab, a start under way is marked failed); a browser test can't restart the server it runs against.
+- **dev server restart** (no browser test): checked by hand (tabs come back as one fresh tab, a start under way is marked failed); a browser test can't restart the server it runs against. The Docker app has `restart: unless-stopped`, so a server that stops on an error comes back.
 - **two servers** (no browser test): the Docker app on 5173 and a dev server both drive the same machines. Each re-reads `lab.json` and `lab.lock` on every check, a start from one shows as starting in the other and gives its windows fresh terminals, and neither stops a lab the other has a terminal open on.
 - **second person** (no browser test): progress is saved on the learner's computer (Getting started says so), and the app answers only on that computer. Terminals accept only `localhost` and `127.0.0.1`, and `compose.yaml` publishes the app on `127.0.0.1` only. KK and KC give each learner an account ("Users wanting to use your scenarios will just need to register for free on Killercoda.").
 

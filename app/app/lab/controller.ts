@@ -85,11 +85,21 @@ class LabController {
   /** Changes each time the machines are recreated or stopped, so terminal tabs from before start over. */
   gen = Date.now();
 
-  constructor() {
+  private readonly timers: ReturnType<typeof setInterval>[] = [];
+
+  /** `version` is this file's modification time, so a controller from older code can be told apart. */
+  constructor(readonly version: number) {
     fs.mkdirSync(this.dir, { recursive: true });
     this.sync();
-    setInterval(() => this.listeners.size && this.probe(), 5000).unref();
-    setInterval(() => this.idle(), Math.min(60_000, IDLE_MINUTES * 30_000)).unref();
+    this.timers.push(
+      setInterval(() => this.listeners.size && this.probe(), 5000).unref(),
+      setInterval(() => this.idle(), Math.min(60_000, IDLE_MINUTES * 30_000)).unref(),
+    );
+  }
+
+  /** Stops this controller's timers, when newer code replaces it. */
+  dispose() {
+    this.timers.forEach(clearInterval);
   }
 
   /**
@@ -283,8 +293,22 @@ class LabController {
 }
 
 const KEY = Symbol.for("cka.lab");
-/** The one lab controller for this server. */
+const SOURCE = path.join(REPO, "app/app/lab/controller.ts");
+
+/**
+ * The one lab controller for this server. The server keeps running while this file changes during
+ * development, so a controller made by older code is replaced, and its timers stopped; what it knew
+ * is in data/ for the new one to read.
+ */
 export function labController(): LabController {
   const g = globalThis as { [KEY]?: LabController };
-  return (g[KEY] ??= new LabController());
+  let version = 0;
+  try {
+    version = fs.statSync(SOURCE).mtimeMs;
+  } catch {}
+  const old = g[KEY];
+  if (old?.version === version) return old;
+  // A controller from before `version` and `dispose` existed: leave its timers nothing to do.
+  if (old) typeof old.dispose === "function" ? old.dispose() : Object.assign(old, { idle: async () => {}, probe: async () => {} });
+  return (g[KEY] = new LabController(version));
 }
