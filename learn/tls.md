@@ -27,7 +27,7 @@ The client trusts the apiserver only if the serving certificate was signed by a 
 
 ## How it fits in the cluster
 
-kubeadm, the tool that builds the cluster, creates three CAs and signs every other certificate with one of them ([single root CA](https://kubernetes.io/docs/setup/best-practices/certificates/#single-root-ca)):
+kubeadm, the tool that builds the cluster, creates three CAs and signs every other certificate with one of them. The diagram shows the two that matter here; the third, the front-proxy CA, signs a certificate for servers that extend the Kubernetes API ([single root CA](https://kubernetes.io/docs/setup/best-practices/certificates/#single-root-ca)):
 
 ```mermaid
 flowchart TD

@@ -1,6 +1,6 @@
 # How kubeadm builds a cluster
 
-A cluster needs more than its programs. The apiserver is the control plane's front door that everything talks to. Every component needs a certificate, a signed file that proves who it is, so the others can trust it. Every component needs a kubeconfig, a file that says where the apiserver is. And the control plane needs a way to start before the apiserver exists. kubeadm does that setup. It turns machines that already have a container runtime, the program that starts containers, and a kubelet, the agent that runs pods on a machine, into a cluster, and it leaves out everything a cluster can choose for itself, such as the pod network ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)).
+A cluster needs more than its programs. The apiserver is the control plane's front door that everything talks to. Every component needs a certificate, a signed file that proves who it is, so the others can trust it. Every component needs a kubeconfig, a file that says where the apiserver is. And the control plane needs a way to start before the apiserver exists. kubeadm does that setup. It turns machines that already have a container runtime, the program that starts containers, and a kubelet, the agent that runs pods on a machine, into a cluster, and it leaves out everything a cluster can choose for itself, such as the pod network, which connects pods across machines ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)).
 
 ## Building the control plane
 
@@ -39,7 +39,7 @@ The CA hash lets the node check that it reached the right cluster. The bootstrap
 
 ## What kubeadm leaves out
 
-kubeadm installs no pod network, the plugin that gives pods addresses and lets them reach each other across nodes, so a new cluster's nodes stay `NotReady` until you install one ([how the pod network works](pod-network.md)). It also installs no storage, ingress or dashboard.
+kubeadm installs no pod network, the plugin that gives pods addresses and lets them reach each other across nodes, so a new cluster's nodes stay `NotReady` until you install one ([how the pod network works](pod-network.md)).
 
 The [kubeadm](../references/kubeadm.md) reference has the phases, files, commands and errors, and the [workers](../references/workers.md#joining) reference has the join.
 

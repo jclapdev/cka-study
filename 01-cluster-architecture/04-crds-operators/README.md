@@ -290,7 +290,7 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    k explain certificate.spec | grep -- '-required-'
    ```
 
-   The first five lines are the kinds of issuer, of which you set one: `selfSigned` signs each certificate with its own key, `ca` with a [CA](../../references/certificates.md) key kept in a Secret, and `acme`, `vault` and `venafi` ask an outside service. The last two are the
+   The first five lines are the kinds of issuer, of which you set one: `selfSigned` signs each certificate with its own key, `ca` with the key of a [CA](../../references/certificates.md), a certificate authority, kept in a Secret, and `acme`, `vault` and `venafi` ask an outside service. The last two are the
    fields a Certificate must have:
 
    ```

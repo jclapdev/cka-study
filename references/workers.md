@@ -30,7 +30,7 @@ Active: activating (auto-restart) (Result: exit-code)
 
 `kubeadm join <apiserver>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>`
 
-At the start neither side trusts the other, so the join line carries one secret in each direction. The [CA](certificates.md) hash lets the node check that it reached the right apiserver. The token lets the apiserver accept the node for long enough to sign a client certificate for it ([TLS bootstrapping](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/)). After the join, the node authenticates with that certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem`. [Joining a node](../learn/kubeadm.md#joining-a-node) shows the sequence.
+At the start neither side trusts the other, so the join line carries one secret in each direction. The hash of the [CA](certificates.md), the certificate authority that signed the apiserver's certificate, lets the node check that it reached the right apiserver. The token lets the apiserver accept the node for long enough to sign a client certificate for it ([TLS bootstrapping](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/)). After the join, the node authenticates with that certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem`. [Joining a node](../learn/kubeadm.md#joining-a-node) shows the sequence.
 
 Tokens expire 24 hours after they are created ([bootstrap tokens](https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/)), so the join line printed by `kubeadm init` stops working after a day. Print a new one on the control plane node:
 
@@ -54,7 +54,7 @@ When a node goes `NotReady` or unreachable, its pods are evicted after 300 secon
 
 ## Roles
 
-A node has no role field. The ROLES column is built from [labels](labels.md) named [`node-role.kubernetes.io/<role>`](https://kubernetes.io/docs/reference/labels-annotations-taints/#node-role-kubernetes-io), which by convention have an empty value:
+A node has no role field. The ROLES column of `kubectl get nodes` is built from [labels](labels.md) named [`node-role.kubernetes.io/<role>`](https://kubernetes.io/docs/reference/labels-annotations-taints/#node-role-kubernetes-io), which by convention have an empty value:
 
 ```bash
 kubectl label node node01 node02 node-role.kubernetes.io/worker=
