@@ -11,7 +11,7 @@ Changes to the app, newest first. The lab is the set of practice machines beside
 - A lab stops after an hour with no terminal open.
 - **Open in new window**, beside **Reset lab**, puts a topic's terminal tabs in their own window. The window closes when the topic's lab ends. The button shows only on wide screens.
 - Each topic ends with a practice exam, a timed set of tasks done in the lab. Its clock now starts once the lab is ready, and reloading the page or opening another lesson no longer ends the exam.
-- The sidebar lists each topic's lessons. A lesson gets a ✓ there once it is done, and a topic is finished when all its lessons are.
+- The sidebar lists each topic's lessons. A lesson gets a ✓ there when it is done, and a topic is finished when all its lessons are.
 - The notes box at the bottom of each lesson now saves as soon as you click away or leave the page.
 - Each topic's quiz has a **Show missed only** box, which lists the questions you marked **Missed it**. It now turns off once no missed questions are left.
 - The terminal and diagrams follow a switch between light and dark mode.
