@@ -61,9 +61,11 @@ assert stop(transcript(app_edit), msg="Still working on it.") == {}
 os.environ["CKA_STATE"] = state = tempfile.mkdtemp()
 pages = transcript(("Read", {"file_path": f"{CWD}/references/pod.md"}), ("Read", {"file_path": f"{CWD}/references/rbac.md"}))
 verdict = 'FINDING references/rbac.md:3 | counts | "one" | why\nVERDICT: 1 findings'
-run("SubagentStop", agent_type="cold-reader", agent_transcript_path=pages, last_assistant_message=verdict)
-cold = json.load(open(f"{state}/cold-read.json"))
-assert "references/pod.md" in cold and "references/rbac.md" not in cold
+for reader in ("cold-reader", "style-reader"):
+    run("SubagentStop", agent_type=reader, agent_transcript_path=pages, last_assistant_message=verdict)
+style = json.load(open(f"{state}/style-read.json"))
+assert "references/pod.md" in style and "references/rbac.md" not in style
+assert json.load(open(f"{state}/cold-read.json")) == style
 
 # A background reader's report arrives in its SubagentHandback call, not its last message.
 os.remove(f"{state}/cold-read.json")

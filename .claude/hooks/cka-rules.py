@@ -28,7 +28,7 @@ CHECKOUT = "/Users/john/projects/cka-prep"
 APP_URL = "5199"
 STATE = os.environ.get("CKA_STATE", f"{CHECKOUT}/.claude/state")
 # Each reader that must clear a learner page before it is pushed, and its stamp file.
-READERS = {"cold-reader": "cold-read.json"}
+READERS = {"cold-reader": "cold-read.json", "style-reader": "style-read.json"}
 FOLDER = re.compile(r"^\d\d-[^/]+(/\d\d-[^/]+)?$")
 SKILL_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|lab/labs/.+)$")
 LEARNER_PAGES = re.compile(r"^(\d\d-[^/]+/\d\d-[^/]+/README\.md|learn/.+\.md|references/.+\.md|EXAM\.md|README\.md|lab/README\.md)$")
