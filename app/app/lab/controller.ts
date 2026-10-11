@@ -1,5 +1,6 @@
 import { execFile, spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import Database from "better-sqlite3";
@@ -18,7 +19,17 @@ export type Machines = { docker: boolean; lab: string | null; up: boolean };
 /** Kept in data/lab.json: the topic whose lab is on the machines, or whose start failed. */
 export type Owner = { topic: string; lab: string };
 export type LabRecord = { owner: Owner | null; failed: Owner | null };
-type Starting = Owner & { pid: number };
+/** Kept in data/lab.lock while lab.sh runs: its process, the machine it runs on, and when it began. */
+type Starting = Owner & { pid: number; host: string; at: number };
+
+const alive = (pid: number) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 /** What every page knows about the lab. Topics are ids such as 01-cluster-architecture/01-rbac. */
 export type LabView = { docker: boolean; owner: string | null; starting: string | null; failed: string | null };
@@ -56,9 +67,12 @@ class LabController {
   private readonly dir = path.dirname(process.env.CKA_DB ?? path.join(process.cwd(), "data", "progress.db"));
   private readonly recordFile = path.join(this.dir, "lab.json");
   private readonly lockFile = path.join(this.dir, "lab.lock");
+  private readonly activeFile = path.join(this.dir, "lab.active");
 
   private record: LabRecord = { owner: null, failed: null };
   private starting: Starting | null = null;
+  /** Whether the start under way is this process's own. */
+  private own = false;
   private machines: Machines = { docker: true, lab: null, up: false };
   private probedAt = 0;
   private probing: Promise<void> | null = null;
@@ -73,43 +87,42 @@ class LabController {
 
   constructor() {
     fs.mkdirSync(this.dir, { recursive: true });
-    try {
-      this.record = { owner: null, failed: null, ...JSON.parse(fs.readFileSync(this.recordFile, "utf8")) };
-    } catch {}
-    this.resume();
+    this.sync();
     setInterval(() => this.listeners.size && this.probe(), 5000).unref();
     setInterval(() => this.idle(), Math.min(60_000, IDLE_MINUTES * 30_000)).unref();
   }
 
-  /** A start this process didn't see finish counts as failed, unless its lab.sh is still running. */
-  private resume() {
+  /**
+   * Reads the record and the start under way from data/, which another server on this computer may
+   * have changed: the Docker app and a dev server both drive the same machines. A start this process
+   * didn't see finish counts as failed once its lab.sh has gone. Another machine's process numbers
+   * mean nothing here (the Docker app runs in a container), so its start counts as under way for
+   * 15 minutes, longer than any start takes.
+   */
+  private sync() {
+    try {
+      this.record = { owner: null, failed: null, ...JSON.parse(fs.readFileSync(this.recordFile, "utf8")) };
+    } catch {
+      this.record = { owner: null, failed: null };
+    }
+    if (this.own) return;
     let lock: Starting;
     try {
       lock = JSON.parse(fs.readFileSync(this.lockFile, "utf8"));
     } catch {
+      this.starting = null;
       return;
     }
-    const alive = () => {
-      try {
-        process.kill(lock.pid, 0);
-        return true;
-      } catch {
-        return false;
-      }
-    };
-    const fail = () => {
-      this.starting = null;
-      fs.rmSync(this.lockFile, { force: true });
-      this.save({ owner: null, failed: { topic: lock.topic, lab: lock.lab } });
-      this.probe();
-    };
-    if (!alive()) return fail();
-    this.starting = lock;
-    const t = setInterval(() => {
-      if (alive()) return;
-      clearInterval(t);
-      fail();
-    }, 2000);
+    const live = lock.host === os.hostname() ? alive(lock.pid) : Date.now() - lock.at < 15 * 60_000;
+    if (live) {
+      // Another server is recreating the machines, so the shells this one serves end with them.
+      if (!this.starting) this.reset();
+      this.starting = lock;
+      return;
+    }
+    this.starting = null;
+    fs.rmSync(this.lockFile, { force: true });
+    this.save({ owner: null, failed: { topic: lock.topic, lab: lock.lab } });
   }
 
   private save(record: LabRecord) {
@@ -130,6 +143,7 @@ class LabController {
   probe(): Promise<void> {
     this.probing ??= this.readMachines()
       .then((m) => {
+        this.sync();
         this.machines = m;
         this.probedAt = Date.now();
         this.emit();
@@ -186,9 +200,11 @@ class LabController {
    * with that code before pages hear the outcome, so what it records shows with it.
    */
   start(topic: string, lab: string, done?: (code: number) => void): Promise<number> {
+    this.sync();
     if (this.starting) throw new BusyError();
     const child = spawn(this.script, ["start", lab], { cwd: REPO });
-    this.starting = { topic, lab, pid: child.pid ?? 0 };
+    this.own = true;
+    this.starting = { topic, lab, pid: child.pid ?? 0, host: os.hostname(), at: Date.now() };
     fs.writeFileSync(this.lockFile, JSON.stringify(this.starting));
     this.save({ owner: null, failed: null });
     this.reset();
@@ -201,6 +217,7 @@ class LabController {
       const finish = async (code: number) => {
         if (over) return;
         over = true;
+        this.own = false;
         this.starting = null;
         fs.rmSync(this.lockFile, { force: true });
         this.save(code === 0 ? { owner: { topic, lab }, failed: null } : { owner: null, failed: { topic, lab } });
@@ -229,10 +246,22 @@ class LabController {
     this.activeAt = Date.now();
   }
 
+  /**
+   * Stops the lab once no server has had a terminal open on it for IDLE_MINUTES. Each server marks
+   * data/lab.active while it has one, so a server with no terminals doesn't stop a lab in use through
+   * another.
+   */
   private async idle() {
-    if (this.attached) return this.touch();
+    if (this.attached) {
+      this.touch();
+      return fs.writeFileSync(this.activeFile, "");
+    }
     if (this.starting || !this.view().owner) return;
-    if (Date.now() - this.activeAt < IDLE_MINUTES * 60_000 || this.examOpen()) return;
+    let shared = 0;
+    try {
+      shared = fs.statSync(this.activeFile).mtimeMs;
+    } catch {}
+    if (Date.now() - Math.max(this.activeAt, shared) < IDLE_MINUTES * 60_000 || this.examOpen()) return;
     this.reset();
     await run(this.script, ["stop"], { cwd: REPO }).catch(() => {});
     await this.probe();

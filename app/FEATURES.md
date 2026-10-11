@@ -24,6 +24,7 @@ Each has a test in `tests/browser/app.situations.ts` whose name starts with it, 
 - **lesson ticks**: the ✓ beside each lesson.
 - **a request from another site**: a POST whose Origin isn't the app.
 - **dev server restart** (no browser test): checked by hand (tabs come back as one fresh tab, a start under way is marked failed); a browser test can't restart the server it runs against.
+- **two servers** (no browser test): the Docker app on 5173 and a dev server both drive the same machines. Each re-reads `lab.json` and `lab.lock` on every check, a start from one shows as starting in the other and gives its windows fresh terminals, and neither stops a lab the other has a terminal open on.
 - **second person** (no browser test): progress is saved on the learner's computer (Getting started says so), and the app answers only on that computer. Terminals accept only `localhost` and `127.0.0.1`, and `compose.yaml` publishes the app on `127.0.0.1` only. KK and KC give each learner an account ("Users wanting to use your scenarios will just need to register for free on Killercoda.").
 
 ## Routes
@@ -70,7 +71,8 @@ Each has a test in `tests/browser/app.situations.ts` whose name starts with it, 
 | `visit` | table: each lesson opened and when | topic, lesson |
 | `practice_run` | table: the practice exam under way, until Save score or Quit | topic |
 | `lab.json` | file in `data/`: the topic whose lab is on the machines, or whose start failed | whole app |
-| `lab.lock` | file in `data/`: the start under way and its process, so a restart can tell it finished | whole app |
+| `lab.lock` | file in `data/`: the start under way, its process, the machine it runs on and when it began, so a restart or another server can tell whether it is still running | whole app |
+| `lab.active` | file in `data/`: touched each minute while a server has a terminal open, so no server stops a lab in use through another | whole app |
 
 ## Lab controller and sockets
 
