@@ -120,7 +120,7 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
 An [overlay](../../references/kustomize.md#bases-and-overlays) is a kustomization whose resources include another kustomization, the base, and
 which changes what the base produces. An overlay does not edit the base files.
 
-1. In the same Bases and Overlays section, copy the `prod` overlay block, paste it, and build
+1. In the same Bases and Overlays section, copy the `prod` overlay block, paste it in `~/web`, and build
    it:
 
    ```shell
@@ -130,10 +130,10 @@ which changes what the base produces. An overlay does not edit the base files.
    - ../base
    namePrefix: prod-
    EOF
-   k kustomize prod | grep -E '^kind|^  name:'
+   k kustomize prod
    ```
 
-   Both objects now start with `prod-`:
+   Both objects' names now start with `prod-`. Their `kind` and `name` lines read:
 
    ```
    kind: Service
@@ -143,8 +143,7 @@ which changes what the base produces. An overlay does not edit the base files.
    ```
 
    `- ../base` under `resources` includes the base folder's kustomization, and
-   `namePrefix: prod-` puts `prod-` in front of every name. `grep -E '^kind|^  name:'` keeps the
-   `kind` lines and each object's own `name`. The files in `base` are unchanged. The prefix
+   `namePrefix: prod-` puts `prod-` in front of every name. The files in `base` are unchanged. The prefix
    exists only in what Kustomize prints.
 
 2. Add a namespace, a label and a new image tag. Go to
@@ -330,20 +329,23 @@ the fields to add or replace.
      - path: set_memory.yaml
    ```
 
-3. Apply the overlay and check the Deployment. `-o jsonpath` prints the replica count, the
+3. Apply the overlay and check the Deployment. `describe` shows the replica count, the
    image and the memory limit, which the patches and `images` set:
 
    ```shell
    cd ~/web
    k apply -k prod
    k rollout status deploy/prod-web -n prod
-   k get deploy prod-web -n prod -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image} {.spec.template.spec.containers[0].resources.limits}{"\n"}'
+   k describe deploy prod-web -n prod
    ```
 
-   The live Deployment shows the replica count, image and memory limit the overlay set:
+   In the output, the `Replicas` line, and `Image` and `Limits` under `Containers`, have the values the overlay set:
 
    ```
-   3 nginx:1.28 {"memory":"128Mi"}
+   Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+       Image:      nginx:1.28
+       Limits:
+         memory:  128Mi
    ```
 
 4. Select by the label the overlay added. `-l env=prod` lists only the objects that carry the
@@ -374,7 +376,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    [configMapGenerator](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#configmapgenerator)
    section uses `literals`. Its block would overwrite the whole `kustomization.yaml`, so don't
    paste it into the terminal. Copy only its four `configMapGenerator` lines into the end of
-   `vim base/kustomization.yaml`, and change the name and the value. `literals` lists the
+   `vim base/kustomization.yaml` in `~/web`, and change the name and the value. `literals` lists the
    ConfigMap's keys as `KEY=value`. The whole file now reads:
 
    ```yaml
@@ -433,16 +435,24 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
 
    The pod prints `hello`.
 
-5. In `vim base/kustomization.yaml`, change `GREETING=hello` to `GREETING=hi`. Then see what
-   would change in the cluster. `k diff -k prod` compares what the kustomization produces with
-   what is in the cluster, and prints removed lines with `-` and new lines with `+`. The `grep`
-   keeps the ConfigMap's name lines:
+5. In `vim base/kustomization.yaml`, change `GREETING=hello` to `GREETING=hi`, so the generator reads:
 
-   ```shell
-   k diff -k prod | grep -E '^[-+] +name: prod-web-config'
+   ```yaml
+   configMapGenerator:
+   - name: web-config
+     literals:
+     - GREETING=hi
    ```
 
-   The `-` line is the name in use now, and the `+` lines are the new one:
+   Then see what
+   would change in the cluster. `k diff -k prod` compares what the kustomization produces with
+   what is in the cluster, and prints removed lines with `-` and new lines with `+`:
+
+   ```shell
+   k diff -k prod
+   ```
+
+   The output also shows the `GREETING` change and the lines around each change. Look for the ConfigMap's name. The `-` line is the name in use now, and the `+` lines are the new name:
 
    ```
    -            name: prod-web-config-f655md8fbd
@@ -601,10 +611,10 @@ resources:
 - deployment.yaml
 - service.yaml
 EOF
-k kustomize base | grep -E '^kind|^  name:'
+k kustomize base
 ```
 
-The base builds both objects, each named `shop`:
+The base builds both objects, each named `shop`. Their `kind` and `name` lines read:
 
 ```
 kind: Service
@@ -748,15 +758,17 @@ tools-api   2/2     2            2           20s
 
 On `controlplane`:
 
-1. The `staging` Deployment runs 2 replicas of `nginx:1.28` and reads the generated ConfigMap:
+1. The `staging` Deployment runs 2 replicas of `nginx:1.28` and reads the generated ConfigMap.
+   `-o wide` adds the image to the usual columns:
 
    ```shell
-   k get deploy staging-shop -n staging -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image} {.spec.template.spec.containers[0].envFrom[0].configMapRef.name}{"\n"}'
+   k get deploy staging-shop -n staging -o wide
    k exec -n staging deploy/staging-shop -- printenv MODE
    ```
 
    ```
-   2 nginx:1.28 staging-shop-settings-7t6ch9d7dd
+   NAME           READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES       SELECTOR
+   staging-shop   2/2     2            2           2m    nginx        nginx:1.28   app=shop
    staging
    ```
 

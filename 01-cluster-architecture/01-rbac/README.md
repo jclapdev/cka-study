@@ -593,12 +593,15 @@ k auth can-i list pods -n default --as=anyone --as-group=auditors
 
 On `controlplane`:
 
-1. `ci` has the Deployment, Secret and PersistentVolume rules in `web`. `grep -v '\[/'` drops
-   the URL rows every subject gets:
+1. `ci` has the Deployment, Secret and PersistentVolume rules in `web`:
 
    ```shell
-   k auth can-i --list -n web --as=system:serviceaccount:web:ci | grep -v '\[/'
+   k auth can-i --list -n web --as=system:serviceaccount:web:ci
    ```
+
+   `can-i --list` also prints rows for read paths under `Non-Resource URLs`, left out here. Every
+   subject also gets the three `selfsubject` rows. The `deployments.apps`, `secrets` and
+   `persistentvolumes` rows are the ones you created:
 
    ```
    Resources                                       Non-Resource URLs                      Resource Names   Verbs

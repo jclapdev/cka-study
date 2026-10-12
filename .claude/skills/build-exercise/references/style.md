@@ -87,6 +87,13 @@ Each entry's id is what the `style-reader` reports.
 - Fail: "[Customising CoreDNS](…/dns-custom-nameservers/)"
 - Pass: "[Customizing DNS Service](…/dns-custom-nameservers/)"
 
+## Commands
+
+**filter-command**. A command nobody would type from memory: a `grep -E` pattern or a list of names, or `-o jsonpath` for fields that `-o wide`, `describe` or `-o yaml` already show. The reader types every command to build muscle memory. Run the plain command and say which lines to read. A `grep` searches for one thing, such as `| grep deploy` or `grep '^kind:'`.
+- Fail: "`k api-resources | grep -wE 'NAME|pods|replicasets|deployments|services|namespaces'`"
+- Pass: "`k api-resources`", then "These are the rows for the types this topic used:"
+- Keep: `-o jsonpath` when the value itself is the point, such as a Secret's data piped to `base64 -d`.
+
 ## Stock phrases
 
 **stock-phrase** (Vale). Phrases from Wikipedia's "Signs of AI writing" that course text never needs: "serves as", "stands as", "plays a key role", "delve", "seamless", "leverage", "a testament to", and "not just X but Y" or "not only X but also Y". None is in the pages; Vale keeps them out.

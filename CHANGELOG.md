@@ -4,6 +4,7 @@ Changes to the app, newest first.
 
 ## 12 October 2026
 
+- Lessons now check your work with short commands such as `k api-resources`, `k describe` and `k get … -o wide`, then say which lines of the output to read.
 - **Quit** and **Finish** on a practice exam, the timed set of tasks at the end of each topic, now ask first. **Start** and **Reset lab**, which starts the practice machines over, already did.
 - Every lesson can now get its ✓, the mark in the sidebar for a finished lesson.
 - When a lab doesn't start, the message links Troubleshooting in Getting started.

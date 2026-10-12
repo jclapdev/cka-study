@@ -301,17 +301,17 @@ returns the release to an earlier one.
    A rollback does not remove [revisions](../../references/helm.md#revisions-and-where-releases-are-stored) 2 and 3. It writes revision 4 with the chart and
    values of revision 1.
 
-3. Confirm the cluster matches revision 1. `-o jsonpath` prints only the replica count and
-   the first container's image:
+3. Confirm the cluster matches revision 1. `-o wide` adds the image to the usual columns:
 
    ```shell
-   k get deploy web-podinfo -n apps -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
+   k get deploy web-podinfo -n apps -o wide
    ```
 
-   The Deployment is back to revision 1's settings, 2 replicas of image 6.14.1:
+   The Deployment is back to revision 1's settings: `READY` is `2/2`, and the image under `IMAGES` is 6.14.1:
 
    ```
-   2 ghcr.io/stefanprodan/podinfo:6.14.1
+   NAME          READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                SELECTOR
+   web-podinfo   2/2     2            2           9m    podinfo      ghcr.io/stefanprodan/podinfo:6.14.1   app.kubernetes.io/name=web-podinfo
    ```
 
    The `ui.message` from revision 2 is gone too, because revision 1 never had it.
@@ -584,13 +584,14 @@ On `controlplane`:
 
    ```shell
    helm list -A
-   k get deploy shop-podinfo -n store -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
+   k get deploy shop-podinfo -n store -o wide
    ```
 
    ```
    NAME	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART         	APP VERSION
    shop	store    	3       	2026-09-27 20:02:25.936142095 -0400 EDT	deployed	podinfo-6.14.1	6.14.1
-   3 ghcr.io/stefanprodan/podinfo:6.14.1
+   NAME           READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                SELECTOR
+   shop-podinfo   3/3     3            3           6m    podinfo      ghcr.io/stefanprodan/podinfo:6.14.1   app.kubernetes.io/name=shop-podinfo
    ```
 
 2. The rendered file holds only the Service and the Deployment:

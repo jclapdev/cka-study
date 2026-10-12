@@ -167,15 +167,14 @@ kubernetes.io, which has an example of each common type.
 
    It prints `pod/nginx created`.
 
-4. Read the pod back as the cluster stores it. `get pod nginx -o yaml` prints the whole
-   object, and `grep -E '^[a-z]'` keeps the lines that start with a letter, the top-level
-   fields:
+4. Read the pod back as the cluster stores it. `-o yaml` prints the whole object:
 
    ```shell
-   k get pod nginx -o yaml | grep -E '^[a-z]'
+   k get pod nginx -o yaml
    ```
 
-   The cluster added a fifth field:
+   The top-level fields start at the left edge. With the lines under them left out, they are the
+   four fields you wrote and a fifth the cluster added:
 
    ```
    apiVersion: v1
@@ -185,8 +184,9 @@ kubernetes.io, which has an example of each common type.
    status:
    ```
 
-   `status` is what the cluster last saw, and the cluster writes it, never you. Once the pod
-   runs, its `phase` is `Running` and `podIP` holds the pod's address.
+   `status` is what the cluster last saw, and the cluster writes it, never you. It is at the
+   bottom of the output. Once the pod runs, `phase:` under it is `Running`, and `podIP:` holds
+   the pod's address.
 
 5. Look up a field the docs' example leaves out. A container's `resources` field sets how much
    CPU and memory it asks for and may use, and the example file has none. [`explain`](../../references/kubectl.md#kubectl-explain) prints the
@@ -589,16 +589,14 @@ command named a namespace.
    one in another namespace. `terminated (Error)` means `wget` exited with an error.
 
 4. List which types live in a namespace, and their short names. `api-resources` prints every
-   type the cluster knows, one per line. `grep -wE` keeps only the lines
-   that contain one of the names between the `|` signs as a whole word: the types this topic
-   used, and `NAME` for the header line:
+   type the cluster knows, one per line:
 
    ```shell
-   k api-resources | grep -wE 'NAME|pods|replicasets|deployments|services|namespaces'
+   k api-resources
    ```
 
    `SHORTNAMES` is what you can type instead of the full name, and `NAMESPACED` says whether
-   the object lives in a namespace:
+   the object lives in a namespace. These are the rows for the types this topic used:
 
    ```
    NAME                                SHORTNAMES   APIVERSION                        NAMESPACED   KIND
@@ -608,6 +606,8 @@ command named a namespace.
    deployments                         deploy       apps/v1                           true         Deployment
    replicasets                         rs           apps/v1                           true         ReplicaSet
    ```
+
+   To find one type, `grep` for its name, such as `k api-resources | grep deploy`.
 
    A namespace is not itself in a namespace, so its `NAMESPACED` is `false`. `APIVERSION` is what
    a manifest of that type puts in its `apiVersion` line, and `KIND` is what it puts in `kind`.
@@ -695,17 +695,20 @@ not.
    `Error from server (AlreadyExists): error when creating "api.yaml": deployments.apps "api" already exists`.
 
 5. See what `apply` keeps. `apply` stores the file it was given in an annotation, a note
-   kept on the object, named `kubectl.kubernetes.io/last-applied-configuration`. `-o jsonpath` prints that
-   field. `\.` keeps each dot in the annotation's name from being read as a step down:
+   kept on the object, named `kubectl.kubernetes.io/last-applied-configuration`:
 
    ```shell
-   k get deploy api -o jsonpath='{.metadata.annotations.kubectl\.kubernetes\.io/last-applied-configuration}'
+   k get deploy api -o yaml
    ```
 
-   It is your file, written as JSON:
+   Near the top, under `metadata` and `annotations`, is your file, written as JSON:
 
    ```
-   {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"api"},"name":"api","namespace":"default"},"spec":{"replicas":3,"selector":{"matchLabels":{"app":"api"}},"strategy":{},"template":{"metadata":{"labels":{"app":"api"}},"spec":{"containers":[{"image":"nginx:1.27","name":"nginx","resources":{}}]}}},"status":{}}
+   metadata:
+     annotations:
+       deployment.kubernetes.io/revision: "1"
+       kubectl.kubernetes.io/last-applied-configuration: |
+         {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"api"},"name":"api","namespace":"default"},"spec":{"replicas":3,"selector":{"matchLabels":{"app":"api"}},"strategy":{},"template":{"metadata":{"labels":{"app":"api"}},"spec":{"containers":[{"image":"nginx:1.27","name":"nginx","resources":{}}]}}},"status":{}}
    ```
 
    The next `apply` compares the file with this copy and with the live object, so a field you
@@ -1009,14 +1012,13 @@ On `controlplane`:
    All 7 pods are `Running`: `front`, 2 from `cache` and 4 from `api`. `cache` has 2 ready pods,
    `api` shows `4/4`, and the Service `api` has a `CLUSTER-IP` on `80/TCP`.
 
-2. The replicas in the file and in the cluster:
+2. The replicas in the file:
 
    ```shell
    grep replicas ~/api.yaml
-   k get deploy api -n store -o jsonpath='{.spec.replicas}{"\n"}'
    ```
 
-   Both say 4.
+   It says 4, the same as the `4/4` above.
 
 ## Further reading
 

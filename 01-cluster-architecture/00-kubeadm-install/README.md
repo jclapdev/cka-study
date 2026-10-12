@@ -221,22 +221,19 @@ for [Services](../../references/services.md), the stable addresses in front of p
 
 Check the node, the pods, and `/etc/cni/net.d/`, where a network plugin writes its configuration file
 in the [CNI](../../references/pod-network.md) format, the standard for such plugins. `describe node` prints the
-node's conditions, and `grep -A3 'Ready '` shows the `Ready` line and the 3 lines after it.
+node's conditions, with a `Ready` row under `Conditions`.
 `-n kube-system` lists the namespace where the cluster's own components run:
 
 ```shell
-k describe node controlplane | grep -A3 'Ready '
+k describe node controlplane
 k get pods -n kube-system
 sudo ls /etc/cni/net.d/
 ```
 
-The node is `NotReady`, both `coredns` pods, the cluster's DNS server, are `Pending`, and `/etc/cni/net.d/` prints nothing:
+The node's `Ready` row says `False`, which is what `NotReady` means, and the message at its end says why. Both `coredns` pods, the cluster's DNS server, are `Pending`, and `/etc/cni/net.d/` prints nothing:
 
 ```
   Ready            False   Sun, 27 Sep 2026 17:14:37 -0400   Sun, 27 Sep 2026 17:14:34 -0400   KubeletNotReady              container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized
-Addresses:
-  InternalIP:  192.0.2.10
-  Hostname:    controlplane
 NAME                                   READY   STATUS    RESTARTS   AGE
 coredns-66bc5c9577-7s2xq               0/1     Pending   0          5s
 coredns-66bc5c9577-wst66               0/1     Pending   0          5s
@@ -681,12 +678,15 @@ Run these on `controlplane` as your normal user, without `sudo` on the `kubectl`
 2. `controlplane`'s pod addresses come from the range you gave `init`:
 
    ```shell
-   k get node controlplane -o jsonpath='{.spec.podCIDR}{"\n"}'
+   k describe node controlplane | grep PodCIDR
    ```
 
    ```
-   10.244.0.0/24
+   PodCIDR:                      10.244.0.0/24
+   PodCIDRs:                     10.244.0.0/24
    ```
+
+   Read `PodCIDR`. `PodCIDRs` is the same value as a list.
 
    The cluster splits the `/16` you gave `init` into one `/24`, 256 addresses, per node, so this
    is `controlplane`'s slice of `10.244.0.0/16`. `node01` gets `10.244.1.0/24`, and `node02`

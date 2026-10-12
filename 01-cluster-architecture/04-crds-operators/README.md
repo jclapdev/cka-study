@@ -347,20 +347,14 @@ cert-manager acts on two kinds of object: an Issuer, which says how certificates
 a [Certificate](../../references/crds.md#operators), which asks for one. `kubectl create` has no command for these objects and kubernetes.io has no
 example of them, so `k explain` shows their fields from the CRDs and marks the [required ones](../../references/kubectl.md#kubectl-explain).
 
-1. Find what an Issuer can be, and what a Certificate needs. `grep -E '^  [a-zA-Z]'` keeps the
-   lines indented by exactly two spaces, which are the fields directly under `spec`.
-   `grep -- '-required-'` keeps the lines marked `-required-`, and `--` stops `grep` from
-   reading `-required-` as an option:
+1. Find what an Issuer can be. `explain` lists the fields under `FIELDS`, each with its type and a
+   paragraph about it:
 
    ```shell
-   k explain issuer.spec | grep -E '^  [a-zA-Z]'
-   k explain certificate.spec | grep -- '-required-'
+   k explain issuer.spec
    ```
 
-   The first five lines are the kinds of issuer, and an Issuer sets one of them. `selfSigned`
-   signs each certificate with its own key. `ca` signs with the key of a [CA](../../references/certificates.md), a certificate
-   authority, kept in a Secret. `acme`, `vault` and `venafi` ask an outside service. The last
-   two lines are the fields a Certificate must have:
+   The field names, without their paragraphs, are the kinds of issuer, and an Issuer sets one of them:
 
    ```
      acme	<Object>
@@ -368,11 +362,25 @@ example of them, so `k explain` shows their fields from the CRDs and marks the [
      selfSigned	<Object>
      vault	<Object>
      venafi	<Object>
+   ```
+
+   `selfSigned` signs each certificate with its own key. `ca` signs with the key of a [CA](../../references/certificates.md), a certificate
+   authority, kept in a Secret. `acme`, `vault` and `venafi` ask an outside service.
+
+2. Find what a Certificate needs:
+
+   ```shell
+   k explain certificate.spec
+   ```
+
+   Among its fields, two are marked `-required-`, the ones a Certificate must have:
+
+   ```
      issuerRef	<Object> -required-
      secretName	<string> -required-
    ```
 
-2. Create a namespace, then write the smallest Issuer that works, a self-signed one, in
+3. Create a namespace, then write the smallest Issuer that works, a self-signed one, in
    `vim issuer.yaml`. `selfSigned: {}` picks the kind of issuer that signs each certificate
    with the certificate's own key, and it needs no settings:
 
@@ -402,7 +410,7 @@ example of them, so `k explain` shows their fields from the CRDs and marks the [
    `apiVersion` and `kind` come from `k api-resources`. `READY True` is the operator's report,
    written into the object's `status`.
 
-3. Write a Certificate with the two required fields and a DNS name, in `vim cert.yaml`.
+4. Write a Certificate with the two required fields and a DNS name, in `vim cert.yaml`.
    `secretName` is the Secret to write the certificate into, `dnsNames` lists the names it is
    valid for, and `issuerRef` names the Issuer that signs it:
 
@@ -443,7 +451,7 @@ example of them, so `k explain` shows their fields from the CRDs and marks the [
    `tls.crt`, the certificate; `tls.key`, its private key; and `ca.crt`, the certificate of
    the CA that signed it. Here that is the same certificate, because it signed itself.
 
-4. Read the certificate the Secret holds. `{.data.tls\.crt}` is the key `tls.crt` under
+5. Read the certificate the Secret holds. `{.data.tls\.crt}` is the key `tls.crt` under
    `data`; the `\.` keeps the dot in the key's name from being read as a step down. Secret
    values are base64-encoded, so `base64 -d` decodes it. `openssl x509 -noout` reads a
    certificate without printing it, `-ext subjectAltName` prints the names it is valid for, and
@@ -464,7 +472,7 @@ example of them, so `k explain` shows their fields from the CRDs and marks the [
    `notAfter` is the expiry date. cert-manager renews the certificate before then without
    being asked.
 
-5. Delete the Secret, and look again a few seconds later. `delete secret demo-tls` deletes it
+6. Delete the Secret, and look again a few seconds later. `delete secret demo-tls` deletes it
    by name:
 
    ```shell
@@ -481,7 +489,7 @@ example of them, so `k explain` shows their fields from the CRDs and marks the [
 
    The controller saw the Certificate's Secret missing and issued a new one.
 
-6. Leave out a required field. In `vim cert.yaml`, change the name to `nope` and delete the
+7. Leave out a required field. In `vim cert.yaml`, change the name to `nope` and delete the
    `secretName` line, so the file reads:
 
    ```yaml
@@ -748,8 +756,8 @@ NAME                                   READY   SECRET    AGE
 certificate.cert-manager.io/web-cert   True    web-tls   8s
 ```
 
-**Task 5.** Paste the docs' `CronTab` CRD into `vim backup-crd.yaml`, and change the group, the
-two fields and the names. The CRD's own name must be `<plural>.<group>`:
+**Task 5.** Paste the docs' `CronTab` CRD into `vim backup-crd.yaml`, replace the docs'
+`spec` fields with `schedule`, a string, and `retentionDays`, an integer, and change the names. The CRD's own name must be `<plural>.<group>`:
 
 ```yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -798,11 +806,17 @@ spec:
 ```shell
 k apply -f backup-crd.yaml
 k apply -f nightly.yaml
-k get bk nightly -o jsonpath='{.spec.schedule} {.spec.retentionDays}{"\n"}'
+k get bk nightly -o yaml
 ```
 
-`k get bk` works because of the short name, and `0 2 * * * 7` confirms both fields were stored
-with their values.
+`k get bk` works because of the short name, and the `spec` at the end of the output confirms both
+fields were stored with their values:
+
+```
+spec:
+  retentionDays: 7
+  schedule: 0 2 * * *
+```
 
 </details>
 

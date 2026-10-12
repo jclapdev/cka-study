@@ -111,7 +111,7 @@ Paste in the terminal is Ctrl+Shift+V, and copy is Ctrl+Shift+C, as in the CKA. 
 
 ## kubectl explain
 
-`k explain <type>.<field>` prints a field's type and description from the cluster's own schema, and `--recursive` prints the whole subtree with the same nesting as the YAML ([kubectl explain](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_explain/)). Use it when you know a field exists but not where it goes:
+`k explain <type>.<field>` prints a field's type and description from the cluster's own schema, and `--recursive` prints the whole subtree with the same nesting as the YAML ([kubectl explain](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_explain/)). A field marked `-required-` after its type must be in the object. Use it when you know a field exists but not where it goes:
 
 ```bash
 k explain pod.spec.containers.resources
@@ -134,16 +134,22 @@ Most of a running pod's spec cannot change ([pod update and replacement](https:/
 
 ## Reading values back
 
-`-o jsonpath` prints only the fields its template names:
+`-o wide` adds columns, such as a Deployment's image. `describe` prints an object's settings and recent events: for a Deployment, read `Replicas`, then `Image` and `Limits` under `Containers`. `-o yaml` prints every field, and `grep -A3 resources` shows a container's `resources` line and the 3 after it. `auth can-i` asks whether a subject may do something and prints `yes` or `no`. `--as` asks as another subject, here a ServiceAccount:
 
 ```bash
-k get deploy web -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
+k get deploy web -o wide
+k describe deploy web
 k get deploy web -o yaml | grep -A3 resources
-k describe deploy web | grep -E '^Replicas|Image'
 k auth can-i list pods --as=system:serviceaccount:dev:bot -n dev
 ```
 
-jsonpath is a way to pick fields out of an object's JSON, such as `{.spec.replicas}`. Examples are in the [quick reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/#formatting-output).
+`-o jsonpath` prints only the fields its template names, for when the value itself is needed, such as a Secret's data to decode. jsonpath is a way to pick fields out of an object's JSON, such as `{.data.TOKEN}`:
+
+```bash
+k get secret sec -o jsonpath='{.data.TOKEN}' | base64 -d
+```
+
+Examples are in the [quick reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/#formatting-output).
 
 ## Failure modes
 

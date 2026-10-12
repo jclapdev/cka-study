@@ -31,10 +31,10 @@ cannot list resource "deployments" in API group "apps" in the namespace "dev"
 `kubectl api-resources` prints every type with its group and version in the `APIVERSION` column:
 
 ```bash
-kubectl api-resources | grep -E '^(NAME|pods|deployments|roles) '
+kubectl api-resources
 ```
 
-The `APIVERSION` column is `<group>/<version>`, or only the version for the core group:
+The `APIVERSION` column is `<group>/<version>`, or only the version for the core group. Three of its rows:
 
 ```
 NAME                                SHORTNAMES   APIVERSION                        NAMESPACED   KIND
