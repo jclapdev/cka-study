@@ -17,3 +17,4 @@ app/playwright-report/
 
 # The Kubernetes docs sample that app/scripts/overused.ts compares the pages against
 app/.cache/
+__pycache__/
