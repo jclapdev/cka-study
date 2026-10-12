@@ -47,8 +47,8 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    yet. Wherever `kubectl` works, [`k`](../../references/kubectl.md#the-k-alias-and-short-names) is the same command with Tab completion: type `k get po`
    and press Tab twice, and it lists the types whose names start with `po`, such as `pods`.
 
-2. List the pods. `get pods` lists every pod in `default`, the namespace, or named group of objects, that a command uses when it
-   names none:
+2. List the pods. `get pods` lists the pods in `default`. A namespace is a named group of
+   objects, and `default` is the one a command uses when it names none:
 
    ```shell
    k get pods
@@ -80,7 +80,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    web    1/1     Running   0          2s    10.244.1.3   node01   <none>           <none>
    ```
 
-   Every pod gets its own IP from the pod network, the part of the cluster that gives pods
+   A pod gets its own IP from the pod network, the part of the cluster that gives pods
    their addresses. `NOMINATED NODE` and `READINESS GATES` belong to scheduling features that
    an ordinary pod doesn't use, so they show `<none>`.
 
@@ -122,8 +122,8 @@ placed together on one [node](../../references/workers.md), a machine in the clu
 
 Any object can be written as a [manifest](../../references/kubectl.md#generating-yaml), a YAML file that `kubectl` sends to the cluster. A
 manifest can be kept, edited and applied again, which a one-off command can't. Some types, such
-as the ReplicaSet in the next lesson, have no command that writes their YAML, so it comes from
-kubernetes.io, which has an example of each common type, ready to copy.
+as the ReplicaSet in the next lesson, have no command that writes their YAML. Copy it from
+kubernetes.io, which has an example of each common type.
 
 1. Search kubernetes.io for `pods`, open
    [Pods](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods), and find the example
@@ -288,7 +288,7 @@ key-value pair on an object. When there are too few, it creates new ones from it
 
 2. Create it, then list the ReplicaSet and its pods. `apply -f frontend.yaml` creates what the
    file describes, as `create -f` did for the pod. Unlike `create`, it can also change the
-   object later from the same file, which the Create or apply lesson shows. `get rs` lists ReplicaSets, `rs` being short for `replicasets`, and
+   object later from the same file. `get rs` lists ReplicaSets, `rs` being short for `replicasets`, and
    `--show-labels` adds a column with each pod's labels:
 
    ```shell
@@ -365,7 +365,7 @@ of creating ReplicaSets yourself.
 
 1. Create a Deployment with three pods. `create deployment web` makes a Deployment named
    `web`, `--image=nginx:1.27` is the image of its container, and `--replicas=3` is how many
-   pods it keeps. `deploy/web` names one object as `<type>/<name>`, and `rollout status
+   pods it keeps. `deploy/web` names an object as `<type>/<name>`, and `rollout status
    deploy/web` waits until all three of its pods are ready:
 
    ```shell
@@ -536,13 +536,14 @@ command named a namespace.
    ```
 
    `kube-node-lease` holds each node's heartbeat, and `kube-public` a little information anyone may
-   read. The four pods ending in `-controlplane` are the control plane, running on `controlplane`:
-   `kube-apiserver` receives every request, including your `kubectl` commands; `etcd` is the
-   database that stores every object; `kube-controller-manager` runs the controllers, such as the
-   one that kept your ReplicaSet at three pods; and `kube-scheduler` picks a node for each new pod.
+   read. The four pods ending in `-controlplane` are the control plane, running on `controlplane`.
+   `kube-apiserver` receives every request, including your `kubectl` commands. `etcd` is the
+   database that stores every object. `kube-controller-manager` runs the controllers, such as the
+   one that kept your ReplicaSet at three pods. `kube-scheduler` picks a node for each new pod.
    `kube-proxy` makes Service IPs work on its node, so there is one `kube-proxy` pod per node.
-   The two `coredns` pods are the DNS server that turned `web` into an address. `1 (2m41s ago)` means the container restarted once, 2 minutes 41 seconds
-   ago, when the machines last started.
+   The two `coredns` pods are the DNS server that turned `web` into an address.
+
+   `1 (2m41s ago)` means the container restarted once, 2 minutes 41 seconds ago.
 
 2. Create a namespace, and a Deployment in it with the same name as the one in `default`.
    `create namespace dev` makes the namespace `dev`, and `-n dev` puts the Deployment there.
@@ -567,7 +568,7 @@ command named a namespace.
    the two `coredns` pods.
 
 3. Reach the Service in `default` from a pod in `dev`, first by `web.default`, then by `web`.
-   This is the same short-lived `busybox` client as in Reach pods through a Service. `-n dev` starts it in
+   This is the same short-lived `busybox` client you used to reach the Service by name. `-n dev` starts it in
    `dev`, and `-T 3` makes `wget` give up after 3 seconds:
 
    ```shell
@@ -610,7 +611,7 @@ command named a namespace.
 
    A namespace is not itself in a namespace, so its `NAMESPACED` is `false`. `APIVERSION` is what
    a manifest of that type puts in its `apiVersion` line, and `KIND` is what it puts in `kind`.
-   Run the command without `grep` to see every type, including ones later topics teach.
+  
 
 ## Create or apply
 
@@ -712,7 +713,7 @@ not.
 
 6. Most of a running pod cannot be changed in place, whether from a file or by editing the live
    object. To see it, start a pod that stays up, then try to change what it runs with `k edit`.
-   The pod uses the `busybox` image from Reach pods through a Service, because it has `sleep`.
+   The pod uses the `busybox` image you used to reach the Service, because it has `sleep`.
    Everything after `--` becomes the container's arguments, stored under `args`: here
    `sleep 3600`, which keeps it running for an hour. `k edit` opens the live object in vim and
    sends your change when you save:
@@ -746,8 +747,8 @@ not.
    `k edit` keeps your edit in the file it names.
 
 7. Replace the pod from the file `k edit` named. Its number differs on every run, so use yours. `replace -f` replaces an object with the one in the file,
-   and `--force` does it by deleting the object and creating it again, which is the only way to
-   change a field that cannot be updated:
+   and `--force` does it by deleting the object and creating it again, which is how you change
+   a field that cannot be updated:
 
    ```shell
    k replace --force -f /tmp/kubectl-edit-2739834084.yaml
@@ -985,7 +986,7 @@ k get deploy api -n store
 ```
 
 `apply` first warns that `api` is missing the `last-applied-configuration` annotation, because
-`create` made it, and says it will be patched automatically. It then prints
+`create` made it. It says it will add the annotation automatically, then prints
 `deployment.apps/api configured`, and the Deployment runs four pods:
 
 ```

@@ -56,7 +56,7 @@ grant that allows it.
    ```
 
    `kubernetes-admin` is a name written in the client
-   [certificate](../../references/certificates.md#client-and-serving-certificates) that `kubectl` signs in with, kept in `~/.kube/config`, and `kubeadm:cluster-admins` is a group named in the
+   [certificate](../../references/certificates.md#client-and-serving-certificates) that `kubectl` signs in with. It is kept in `~/.kube/config`, a copy of `admin.conf`, the admin [kubeconfig](../../references/kubeconfig.md) [kubeadm](../../references/kubeadm.md) wrote when it built the cluster. `kubeadm:cluster-admins` is a group named in the
    same certificate. Neither is an object in the cluster: there is no user you could list or
    delete. [Client certificates](../../references/authentication.md#client-certificates)
    explains how a certificate becomes a user and groups, and [how TLS secures the cluster](../../learn/tls.md)
@@ -433,8 +433,7 @@ ClusterRole is being reused as a definition, not applied cluster-wide.
 
 <details><summary>Why can't a ClusterRoleBinding reference a Role?</summary>
 
-A Role's rules are scoped to its own namespace, so there is nothing coherent to
-grant cluster-wide. The pairing only crosses in the other direction.
+A Role's rules belong to one namespace, so they can't apply cluster-wide.
 </details>
 
 <details><summary>How do you take a permission away?</summary>

@@ -26,7 +26,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
   pods when it does.
 * Apply and delete everything a kustomization produces with `-k`.
 
-The Kustomize snippets are all on one page,
+Most of the Kustomize snippets are on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
 [paste straight into the terminal](../../references/kubectl.md#snippets-from-the-docs).
@@ -308,8 +308,7 @@ the fields to add or replace.
 
    `increase_replicas.yaml` sets `replicas` to 3. `set_memory.yaml` sets a memory limit of
    128 mebibytes on the container, the most memory it may use. A patch uses the base's name,
-   `web`, not `prod-web`. The container is matched by its `name`. Then run `cd ~/web` to go back
-   to the folder the other steps run in.
+   `web`, not `prod-web`. The container is matched by its `name`. Then run `cd ~/web` to go back.
 
 2. In `vim prod/kustomization.yaml`, add the `patches` list from the same docs block. Each
    `path` names a patch file. The file now reads:
@@ -376,9 +375,12 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    section uses `literals`. Its block would overwrite the whole `kustomization.yaml`, so don't
    paste it into the terminal. Copy only its four `configMapGenerator` lines into the end of
    `vim base/kustomization.yaml`, and change the name and the value. `literals` lists the
-   ConfigMap's keys as `KEY=value`:
+   ConfigMap's keys as `KEY=value`. The whole file now reads:
 
    ```yaml
+   resources:
+   - deployment.yaml
+   - service.yaml
    configMapGenerator:
    - name: web-config
      literals:
@@ -470,7 +472,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    prod-web-config-hc7d4825hb   1      2s
    ```
 
-   The old ConfigMap is still there. `k apply` creates and updates, and never deletes an object
+   The old ConfigMap is still there. `k apply` creates and updates, and doesn't delete an object
    the kustomization no longer produces. `kube-root-ca.crt` is not yours: the cluster puts
    this [ConfigMap](../../references/config.md#kube-root-cacrt) in every namespace, holding the [certificate](../../references/certificates.md) pods use to check the [apiserver](../../references/control-plane.md#components).
 
@@ -712,7 +714,8 @@ error: no resource matches strategic merge patch "Deployment.v1.apps/tools-api.[
 ```
 
 The patch names the prefixed `tools-api`, but a patch is matched against the base's names,
-before `namePrefix` is added. In `vim /opt/course/3/overlay/replicas.yaml`, change the name to
+before `namePrefix` is added. `cat /opt/course/3/overlay/kustomization.yaml` shows that the patch
+is in `replicas.yaml`. In `vim /opt/course/3/overlay/replicas.yaml`, change the name to
 `api`, so the patch reads:
 
 ```yaml

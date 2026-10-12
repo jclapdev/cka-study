@@ -29,9 +29,9 @@ kubectl get events -n <ns> --sort-by=.lastTimestamp
 
 `Pending` with `FailedScheduling` and `0/1 nodes are available` in the events is a scheduling problem: [taints](taints.md), resources or selectors. `CrashLoopBackOff` means the container's process keeps failing, and `kubectl logs` shows why.
 
-## On a new cluster
+## CoreDNS after kubeadm init
 
-After `kubeadm init`, the two pods of [CoreDNS](pod-network.md#coredns), the cluster's DNS server, are `Pending`. The node is `NotReady` until a pod network is installed, so it carries the `node.kubernetes.io/not-ready:NoSchedule` taint, and CoreDNS does not tolerate it. `kubectl describe pod` shows it in the events:
+After `kubeadm init`, the two pods of [CoreDNS](pod-network.md#coredns), the cluster's DNS server, are `Pending`. The node is `NotReady` until a pod network is installed, so it carries the `node.kubernetes.io/not-ready:NoSchedule` taint, a mark that keeps off every pod without a matching toleration. CoreDNS has none for it. `kubectl describe pod` shows it in the events:
 
 ```
 Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 node(s) had untolerated taint(s).

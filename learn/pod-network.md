@@ -6,7 +6,7 @@ Kubernetes sets three rules for networking: every pod gets its own IP address, a
 
 The container network interface (CNI) is a standard for how a container runtime asks a plugin to connect a container to a network ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). When the kubelet, the agent on each node that runs its pods, starts a pod, the container runtime, the program that starts containers, calls the plugin named in `/etc/cni/net.d/`, and the plugin gives the pod an address and connects it.
 
-A plugin usually comes in two parts: that configuration file on every node, and an agent pod on every node, installed as a DaemonSet, which carries traffic between nodes. Flannel connects pods and nothing more, while Calico also enforces NetworkPolicy, the rules that limit which pods may talk to which.
+A plugin usually comes in two parts: that configuration file on every node, and an agent pod on every node, which carries traffic between nodes. The agent is installed as a DaemonSet, an object that runs one copy of a pod on every node. Flannel connects pods and nothing more, while Calico also enforces NetworkPolicy, the rules that limit which pods may talk to which.
 
 ## Address ranges
 
@@ -45,7 +45,7 @@ stateDiagram-v2
   Ready --> NotReady: the configuration file is removed, or the kubelet stops reporting
 ```
 
-Some pods do not wait. The control plane's static pods, which the kubelet starts from files on the node, kube-proxy and the plugin's own agent use the node's network instead of a pod address (`hostNetwork: true`), which is how they run before the pod network exists. CoreDNS, the cluster's DNS server, needs a pod address, so it is the first pod to show whether the network works.
+Some pods do not wait. The kubelet starts the control plane's static pods from files on the node. These pods, kube-proxy and the plugin's own agent use the node's network instead of a pod address (`hostNetwork: true`). That is how they run before the pod network exists. CoreDNS, the cluster's DNS server, needs a pod address, so it is the first pod to show whether the network works.
 
 The ranges, the readiness messages and the plugin commands are on the [pod network reference page](../references/pod-network.md).
 

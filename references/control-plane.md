@@ -17,7 +17,7 @@ make the nodes match it. Workloads run on nodes.
 A controller is a loop that compares the state an object asks for with what exists, and acts on
 the difference, such as creating a pod when a [Deployment](workloads.md) has too few.
 
-The control plane node is also a node, so it runs the same two programs as every worker: the kubelet, which starts the node's pods, and kube-proxy, which makes [Service](services.md) addresses work on the node. `kubectl get pods -n kube-system` shows the four components above
+The control plane node is also a node, so it runs the same two programs as every worker. The kubelet starts the node's pods. kube-proxy makes [Service](services.md) addresses work on the node. `kubectl get pods -n kube-system` shows the four components above
 and kube-proxy. The kubelet is a systemd service, not a pod, so `systemctl status kubelet` and
 `journalctl -u kubelet` show it instead.
 
@@ -45,7 +45,7 @@ Because the kubelet reads the files directly:
 
 `kubeadm init` [taints](taints.md) the control plane node
 `node-role.kubernetes.io/control-plane:NoSchedule` so ordinary workloads stay
-off it ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)). The pod network's pods, installed through [CNI](pod-network.md) (Container Network Interface), and the kube-proxy pods must run on every node. They tolerate the taint, so they still land
+off it ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)). The pod network's pods, installed through [CNI](pod-network.md) (Container Network Interface), and the kube-proxy pods must run on every node. They carry a toleration for the taint, an entry that lets a pod onto a tainted node, so they still land
 there. Removing the taint is how a single-node cluster runs workloads:
 
 ```bash

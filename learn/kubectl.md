@@ -4,7 +4,7 @@
 
 ## Finding the cluster
 
-`kubectl` reads a kubeconfig file to learn three things: the apiserver's address, the credential to send, and a CA certificate to check the apiserver with. A CA, certificate authority, is the signer of the apiserver's certificate, and its certificate proves the apiserver is genuine. The file holds clusters, users and contexts, where a context pairs a cluster with a user and a default namespace ([organizing cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)). Without a kubeconfig, `kubectl` tries `localhost:8080` and fails, which is the error on any machine that has none.
+`kubectl` reads a kubeconfig file to learn three things: the apiserver's address, the credential to send, and a CA certificate to check the apiserver with. A CA, certificate authority, is the signer of the apiserver's certificate, and its certificate proves the apiserver is genuine. The file holds clusters, users and contexts, where a context pairs a cluster with a user and a default namespace ([organizing cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)). Without a kubeconfig, `kubectl` tries `localhost:8080` and fails.
 
 ## What happens to a request
 

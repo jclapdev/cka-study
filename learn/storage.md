@@ -19,7 +19,7 @@ Take a container that adds a line to a file in its own filesystem and a line to 
 
 ## How it fits in the cluster
 
-Storage that outlives pods is split into two objects, so that the people who run a cluster and the people who run applications each deal with their own half ([persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction)). A PersistentVolume is a piece of storage in the cluster, such as one network disk, created by an administrator or on demand. A PersistentVolumeClaim is a pod's request for storage of a size and access mode. The access mode says how many nodes may use the storage at once, such as `ReadWriteOnce`, read and write from one node at a time. Kubernetes binds each claim to one volume that fits it, and the pod mounts the claim, never the volume directly ([binding](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#binding)).
+Storage that outlives pods is split into two objects, so that the people who run a cluster and the people who run applications each deal with their own half ([persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction)). A PersistentVolume is a piece of storage in the cluster, such as a network disk, created by an administrator or on demand. A PersistentVolumeClaim is a pod's request for storage of a size and access mode. The access mode says how many nodes may use the storage at once, such as `ReadWriteOnce`, read and write from one node at a time. Kubernetes binds each claim to one volume that fits it, and the pod mounts the claim, never the volume directly ([binding](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#binding)).
 
 ```mermaid
 flowchart LR
@@ -29,7 +29,7 @@ flowchart LR
   SC[StorageClass] -.->|creates on demand| V
 ```
 
-A StorageClass names a kind of storage and the program that creates it, so a claim that names a class gets a new PersistentVolume made for it instead of waiting for an administrator ([dynamic provisioning](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#dynamic)). The programs that create and attach volumes for a storage system are mostly CSI drivers. CSI (Container Storage Interface) is the standard for storage plugins, as CNI (Container Network Interface) is for the plugins that give pods their network, so a new storage system needs a driver and no change to Kubernetes ([CSI](https://kubernetes.io/docs/concepts/storage/volumes/#csi)).
+A StorageClass names a kind of storage and the program that creates it, so a claim that names a class gets a new PersistentVolume made for it instead of waiting for an administrator ([dynamic provisioning](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#dynamic)). The programs that create and attach volumes for a storage system are mostly CSI drivers. CSI (Container Storage Interface) is the standard for storage plugins. A new storage system needs a CSI driver and no change to Kubernetes ([CSI](https://kubernetes.io/docs/concepts/storage/volumes/#csi)).
 
 etcd, the cluster's database, holds these objects but none of the data in them, so a PersistentVolume's contents survive only as long as the storage behind it ([how etcd stores the cluster](etcd.md)).
 

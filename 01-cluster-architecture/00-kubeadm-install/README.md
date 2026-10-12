@@ -149,10 +149,10 @@ fixable without `kubeadm reset`, which removes the control plane so `init` can r
 
 ### Static pods
 
-List the [manifests](../../references/kubectl.md#generating-yaml) `init` wrote. The folder belongs to root, so `ls` needs `sudo`:
+List the [manifests](../../references/kubectl.md#generating-yaml) `init` wrote:
 
 ```shell
-sudo ls /etc/kubernetes/manifests/
+ls /etc/kubernetes/manifests/
 ```
 
 A pod is created through the apiserver, yet the apiserver itself runs as a pod. This folder holds one manifest for each control plane component. The apiserver receives
@@ -215,7 +215,7 @@ kubectl reads its kubeconfig from `~/.kube/config`. `kubeadm init` wrote an admi
 
 Kubernetes needs a [network plugin](../../learn/pod-network.md) to [give pods addresses](../../learn/network-namespaces.md), and kubeadm installs none. The
 plugin hands out pod addresses from the range you give `init`. The controller-manager, the control plane part that runs the cluster's controllers, splits that range into one `/24` per node. Each node's pods get addresses from its own slice. The range must not overlap the one
-for [Services](../../references/services.md), the stable addresses in front of pods, or the machines' own network ([three address ranges](../../references/pod-network.md#pod-service-and-node-address-ranges)).
+for [Services](../../references/services.md), the stable addresses in front of pods, or the machines' own network ([address ranges for pods, Services and nodes](../../references/pod-network.md#pod-service-and-node-address-ranges)).
 
 ### A NotReady node
 
@@ -250,7 +250,7 @@ kube-scheduler-controlplane            0/1     Running   0          14s
 `/etc/cni/net.d/` is empty, so the kubelet reports `cni plugin not initialized` and keeps the
 node `NotReady`. A `NotReady` node carries the [taint](../../references/taints.md) `node.kubernetes.io/not-ready:NoSchedule`, a mark
 that keeps off every pod not set to tolerate it. The [CoreDNS](../../references/pod-network.md#coredns) pods don't tolerate it, so
-both stay [`Pending`](../../references/pod.md#on-a-new-cluster).
+both stay [`Pending`](../../references/pod.md#coredns-after-kubeadm-init).
 
 1. Install [Flannel](../../references/pod-network.md#plugins), a common network plugin. It hands out addresses from `10.244.0.0/16` by default, the range you gave `init`. `k apply -f`
    reads a manifest from a URL as well as from a file. This one creates the `kube-flannel`
@@ -352,7 +352,7 @@ create --print-join-command` prints a new one.
 3. Join `node02` the same way, with `ssh node02` from `base`.
 
 Workers get no admin kubeconfig, so `kubectl` on `node01` fails with the same `localhost:8080`
-error. Run every `kubectl` command on `controlplane`.
+error. Run `kubectl` on `controlplane`.
 
 ## Label the workers
 
@@ -388,7 +388,8 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
 
 ## Check the control plane
 
-With every node joined, check that each part of the cluster runs where it should.
+A healthy cluster runs the four control plane pods on `controlplane`, and kube-proxy and Flannel
+on every node.
 
 1. List everything the cluster is running. `-A` lists every namespace, and `-o wide` adds
    columns such as each pod's `IP` and `NODE`:
@@ -416,7 +417,8 @@ With every node joined, check that each part of the cluster runs where it should
    kube-system    kube-scheduler-controlplane            Running           192.0.2.10      controlplane
    ```
 
-   Static pods are named `<component>-<node>`, such as `etcd-controlplane`. `kube-proxy`, which
+   The control plane pods are static pods, which the kubelet starts from files on the node. They
+   are named `<component>-<node>`, such as `etcd-controlplane`. `kube-proxy`, which
    makes Service addresses work on each node, and `kube-flannel-ds` each have one pod per node,
    because both are [DaemonSets](../../references/daemonsets.md). Flannel installs into its own
    [namespace](../../references/namespaces.md), `kube-flannel`, so `-n kube-system` does not show

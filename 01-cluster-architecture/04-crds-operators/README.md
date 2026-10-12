@@ -2,9 +2,9 @@
 
 Kubernetes comes with a fixed set of object types, such as [Pods](../../references/pod.md) and [Deployments](../../references/workloads.md), each written as a [manifest](../../references/kubectl.md#generating-yaml). A
 [CustomResourceDefinition](../../references/crds.md) (CRD) adds a new type to the [apiserver](../../references/control-plane.md#components), so you can create objects of that type
-like any other. An [operator](../../references/crds.md#operators) is a program running in the cluster that watches objects of such a
+like any other. The apiserver is the program every request to the cluster goes through. An [operator](../../references/crds.md#operators) is a program running in the cluster that watches objects of such a
 type and does the work they describe. Installing an operator usually means installing its CRDs
-and the program together. They often come as one [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases), a package of manifests that Helm installs.
+and the program together. They often come as a [chart](../../references/helm.md#charts-repositories-and-releases), a package of manifests that [Helm](../../references/helm.md), a command-line tool, installs into a cluster.
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 <!-- lab: crds -->
@@ -27,8 +27,9 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 
 ## Look for custom resources
 
-A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the cluster. It is itself an object, of the type
-`customresourcedefinitions`, which belongs to the whole cluster rather than a namespace.
+A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the cluster, and a custom resource is an object of
+a type a CRD added. A CRD is itself an object, of the type `customresourcedefinitions`, which
+belongs to the whole cluster rather than a namespace.
 
 1. Go to `controlplane` and list the CRDs, and the type that holds them. `k get crd` lists the
    CRDs, and
@@ -40,7 +41,7 @@ A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the 
    k api-resources --api-group=apiextensions.k8s.io
    ```
 
-   There are no CRDs yet, and `crd` and `crds` are the short names for the type itself:
+   There are no CRDs yet. `crd` and `crds` are the short names for the type itself:
 
    ```
    No resources found
@@ -48,18 +49,18 @@ A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the 
    customresourcedefinitions   crd,crds     apiextensions.k8s.io/v1   false        CustomResourceDefinition
    ```
 
-   So far, every type the cluster has is built into the apiserver, the program every request
-   goes through.
+   Every type the cluster has so far is built into the apiserver.
 
 ## Create a CRD
 
 The docs' example CRD adds a made-up type, `CronTab`, which describes a job to run on a
-schedule. Nothing acts on it; it shows what a CRD adds.
+schedule. Nothing acts on it.
 
 1. Search kubernetes.io for `customresourcedefinition`, open
    [Extend the Kubernetes API with CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition),
    and copy the `CronTab` CustomResourceDefinition under "Create a CustomResourceDefinition".
-   Paste it into `vim resourcedefinition.yaml` with `:set paste`, and save. Without the docs'
+   Open `vim resourcedefinition.yaml`, run `:set paste` so vim keeps the pasted indentation, then
+   paste it and save. Without the docs'
    comments, the file reads:
 
    ```yaml
@@ -154,14 +155,13 @@ schedule. Nothing acts on it; it shows what a CRD adds.
        <no description>
    ```
 
-   `k explain` reads the CRD's schema. Run straight after `k apply`, it can fail with
-   `couldn't find resource`, until the CRD is [`Established`](../../references/crds.md#failure-modes), the condition the apiserver sets once it serves the new type.
+   `k explain` reads the CRD's schema.
 
 ## Create custom objects
 
-With the CRD applied, objects of the new type are created, listed and checked like any other.
+An object of the new type puts the CRD's group and version in `apiVersion` and the CRD's kind in `kind`.
 
-1. On the same page, copy the `CronTab` object under
+1. On the kubernetes.io page you copied the `CronTab` CRD from, copy the `CronTab` object under
    [Create custom objects](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-custom-objects)
    into `vim my-crontab.yaml`:
 
@@ -267,16 +267,17 @@ those objects, then writes the key and certificate into a [Secret](../../referen
 
 1. Install cert-manager's chart with Helm, along with its CRDs.
    `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
-   a server that stores images and, here, charts. `oci://` names that kind of address, after
-   [OCI](../../references/helm.md#charts-repositories-and-releases), the standard such registries follow. Helm installs from it directly, so there is no
-   `helm repo add` first. `--version v1.21.2` pins the chart version, and
-   `--set crds.enabled=true` sets `crds.enabled`:
+   a server that stores images and, here, charts. `oci://` names that kind of address. Helm
+   installs from it directly, so there is no `helm repo add` first. A release is Helm's record
+   of an install, and the first `cert-manager` is its name. `--version v1.21.2` pins the chart version, `-n cert-manager` installs
+   into the namespace `cert-manager`, `--create-namespace` creates it, and
+   `--set crds.enabled=true` makes the chart install its CRDs:
 
    ```shell
    helm install cert-manager oci://quay.io/jetstack/charts/cert-manager --version v1.21.2 -n cert-manager --create-namespace --set crds.enabled=true
    ```
 
-   `STATUS: deployed` and `REVISION: 1` show the release, Helm's record of this install, is in place:
+   `STATUS: deployed` and `REVISION: 1` show the release is in place:
 
    ```
    Pulled: quay.io/jetstack/charts/cert-manager:v1.21.2
@@ -289,8 +290,7 @@ those objects, then writes the key and certificate into a [Secret](../../referen
    DESCRIPTION: Install complete
    ```
 
-   `crds.enabled=true` makes the chart install the CRDs as normal objects. Without it, this
-   chart installs [no CRDs](../../references/crds.md#crds-from-helm-charts).
+   Without `crds.enabled=true`, this chart installs [no CRDs](../../references/crds.md#crds-from-helm-charts).
 
 2. Wait for the controller, then list what the chart added. `k wait
    --for=condition=Available deploy --all` waits until every [Deployment](../../references/workloads.md) in the namespace
@@ -318,8 +318,8 @@ those objects, then writes the key and certificate into a [Secret](../../referen
    orders.acme.cert-manager.io           2026-09-28T00:16:50Z
    ```
 
-   `cert-manager` is the controller that does the work. `webhook` is a webhook, a server the
-   apiserver calls to check an object before storing it, and it checks cert-manager's objects.
+   `cert-manager` is the controller that does the work. `webhook` is a server the apiserver
+   calls to check cert-manager's objects before storing them.
    `cainjector` copies the certificates of a [CA](../../references/certificates.md), a certificate authority, into other objects that need them.
 
 3. List the new types in the `cert-manager.io` group, with `--api-group`:
@@ -344,8 +344,8 @@ those objects, then writes the key and certificate into a [Secret](../../referen
 ## Issue a certificate
 
 cert-manager acts on two kinds of object: an Issuer, which says how certificates are signed, and
-a [Certificate](../../references/crds.md#operators), which asks for one. No `kubectl create` command and no kubernetes.io page writes
-them, so `k explain` reads their fields from the CRDs and marks the [required ones](../../references/kubectl.md#kubectl-explain).
+a [Certificate](../../references/crds.md#operators), which asks for one. `kubectl create` has no command for these objects and kubernetes.io has no
+example of them, so `k explain` shows their fields from the CRDs and marks the [required ones](../../references/kubectl.md#kubectl-explain).
 
 1. Find what an Issuer can be, and what a Certificate needs. `grep -E '^  [a-zA-Z]'` keeps the
    lines indented by exactly two spaces, which are the fields directly under `spec`.
@@ -438,7 +438,7 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    demo-tls   kubernetes.io/tls   3      5s
    ```
 
-   You created one object. The controller created the CertificateRequest and the Secret, as
+   You created one object. The controller created the CertificateRequest and the Secret using
    its [ServiceAccount](../../references/service-accounts.md), the identity a program in the cluster runs as. The Secret's 3 keys are
    `tls.crt`, the certificate; `tls.key`, its private key; and `ca.crt`, the certificate of
    the CA that signed it. Here that is the same certificate, because it signed itself.
@@ -479,9 +479,7 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    demo-tls   kubernetes.io/tls   3      5s
    ```
 
-   The controller saw the Certificate's Secret missing and issued a new one. A custom resource is
-   an object of a type a CRD added, such as the Certificate. Changing what an operator manages
-   means changing its custom resource, not the objects it creates.
+   The controller saw the Certificate's Secret missing and issued a new one.
 
 6. Leave out a required field. In `vim cert.yaml`, change the name to `nope` and delete the
    `secretName` line, so the file reads:
@@ -590,8 +588,7 @@ They are all deleted, in every namespace.
 
 <details><summary>You delete the Secret an operator created. What happens, and why?</summary>
 
-The operator creates it again, because its custom resource still asks for it. To change the
-result, change the custom resource.
+The operator creates it again, because its custom resource still asks for it.
 </details>
 
 ## Practice
