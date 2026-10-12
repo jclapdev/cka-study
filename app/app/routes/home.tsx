@@ -11,6 +11,8 @@ const score = (t: Topic) =>
 /** A topic is finished when every one of its lessons has its tick. */
 const finished = (t: Topic) => !!t.progress?.lessons && t.progress.lessonsDone === t.progress.lessons;
 
+export const meta = () => [{ title: "Dashboard · CKA Prep" }];
+
 export default function Home() {
   const { domains, last } = useRouteLoaderData<typeof rootLoader>("root")!;
   const written = domains.flatMap((d) => d.topics).filter((t) => t.progress);
@@ -58,6 +60,7 @@ export default function Home() {
               const scores = d.topics.filter((t) => t.progress?.hasPractice).map((t) => t.progress?.bestScore ?? 0);
               const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
               const done = d.topics.filter(finished).length;
+              const available = d.topics.some((t) => t.progress);
               return (
                 <li key={d.name}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm">
@@ -65,13 +68,16 @@ export default function Home() {
                       {d.name} <span className="font-normal text-muted">{d.weight}% of the exam</span>
                     </span>
                     <span className="tabular-nums text-muted">
-                      {done} of {d.topics.length} topics finished
+                      {!available ? "Coming soon" : <>{done} of {d.topics.length} topics finished</>}
                       {scores.length > 0 && <> · practice average {avg}% · pass mark {PASS_MARK}%</>}
                     </span>
                   </div>
-                  <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-line">
-                    <span className={`block h-full rounded-full ${avg >= PASS_MARK ? "bg-done" : "bg-accent"}`} style={{ width: `${avg}%` }} />
-                  </span>
+                  {/* The bar is the practice average, so it shows once a topic here has a practice exam. */}
+                  {scores.length > 0 && (
+                    <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-line" title={`Practice average ${avg}%`}>
+                      <span className={`block h-full rounded-full ${avg >= PASS_MARK ? "bg-done" : "bg-accent"}`} style={{ width: `${avg}%` }} />
+                    </span>
+                  )}
                 </li>
               );
             })}

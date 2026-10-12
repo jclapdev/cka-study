@@ -9,9 +9,9 @@ Kustomize builds a set of [manifests](kubectl.md#generating-yaml) from plain YAM
 A kustomization is a folder with a `kustomization.yaml`. Its `resources` lists manifest files and other kustomization folders ([bases and overlays](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#bases-and-overlays)):
 
 - A **base** lists manifests and is complete on its own.
-- An **overlay** lists a base, usually as `../../base`, and changes what the base produces. Several overlays, such as `dev` and `prod`, can share one base.
+- An **overlay** lists a base, such as `../base`, and changes what the base produces. Several overlays, such as `dev` and `prod`, can share one base.
 
-The base files are never edited by an overlay. Everything is applied when the overlay is built.
+An overlay does not edit the base files. `kubectl kustomize` reads the base, applies the overlay's changes to the result and prints it.
 
 ## What an overlay can set
 
@@ -38,11 +38,28 @@ With `env: prod` and neither flag, `kubectl get deploy -l env=prod` finds the De
 
 ## Patches
 
-A patch is a partial manifest with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. This kind of patch is a strategic merge patch, which is merged into the object field by field. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container:
+A patch is a partial manifest with the `apiVersion`, `kind` and `metadata.name` of the object it changes, and only the fields to add or replace ([customizing](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#customizing)). It uses the base's name for the object. This kind of patch is a strategic merge patch, which is merged into the object field by field. Lists of containers are matched by each container's `name`, so a patch that names `nginx` and sets `resources` keeps the rest of that container. This one, `set_memory.yaml`, sets a memory limit on the Deployment `web`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        resources:
+          limits:
+            memory: 128Mi
+```
+
+The kustomization lists each patch file under `patches`:
 
 ```yaml
 patches:
-- path: resources-patch.yaml
+- path: set_memory.yaml
 ```
 
 ## Generated names
@@ -51,7 +68,7 @@ patches:
 
 Kustomize adds a hash of the contents to the generated name, such as `web-config-f655md8fbd`, and rewrites every reference to `web-config` in the same build ([generatorOptions](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#generatoroptions)). When the contents change, the name changes. The Deployment's pod template changes with it, so the Deployment replaces its pods. A ConfigMap changed in place does not update the environment variables of running pods ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
 
-`kubectl apply` never deletes, so each change leaves the previous ConfigMap in the namespace.
+`kubectl apply` does not delete objects that left the build, so each change leaves the previous ConfigMap in the namespace.
 
 ## `-f` and `-k`
 
@@ -68,12 +85,12 @@ Kustomize adds a hash of the contents to the generated name, such as `web-config
 ## Commands
 
 ```bash
-kubectl kustomize overlays/prod                   # print the result
-kubectl kustomize overlays/prod > out.yaml        # save it
-kubectl apply -k overlays/prod
-kubectl diff -k overlays/prod                     # what apply would change
-kubectl delete -k overlays/prod
-kubectl create namespace prod --dry-run=client -o yaml > overlays/prod/namespace.yaml
+kubectl kustomize prod                            # print the result
+kubectl kustomize prod > out.yaml                 # save it
+kubectl apply -k prod
+kubectl diff -k prod                              # what apply would change
+kubectl delete -k prod
+kubectl create namespace prod --dry-run=client -o yaml > prod/namespace.yaml
 kubectl create deployment web --image=nginx:1.27 --dry-run=client -o yaml > base/deployment.yaml
 ```
 
@@ -83,10 +100,10 @@ kubectl create deployment web --image=nginx:1.27 --dry-run=client -o yaml > base
 | --- | --- |
 | `error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory …` | The folder given to `kustomize` or `-k` has no kustomization file. |
 | `error validating "base/kustomization.yaml": error validating data: [apiVersion not set, kind not set]` | `kubectl apply -f` was run on a kustomization folder. Use `-k`. The other files in the folder were applied before the error. |
-| `Error from server (NotFound): error when creating "overlays/prod": namespaces "prod" not found` | `namespace:` does not create the namespace. Add a [Namespace](namespaces.md) manifest to `resources`. |
+| `Error from server (NotFound): error when creating "prod": namespaces "prod" not found` | `namespace:` does not create the namespace. Add a [Namespace](namespaces.md) manifest to `resources`. |
 | `kubectl get pods -l <label>` finds nothing after adding `labels` | The label is on the Deployment only. Add `includeTemplates: true`. |
 | `error: no resource matches strategic merge patch "Deployment.v1.apps/prod-web.[noNs]"` | The patch names the object with the overlay's prefix. Use the base's name. |
-| Old `…-config-<hash>` ConfigMaps pile up | Each content change creates a new one, and `apply` never deletes. |
+| Old `…-config-<hash>` ConfigMaps pile up | Each content change creates a new one, and `apply` does not delete the old one. |
 
 ## Docs
 

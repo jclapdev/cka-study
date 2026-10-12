@@ -9,18 +9,17 @@ make the nodes match it. Workloads run on nodes.
 
 | Component | What it does | Where kubeadm puts it |
 | --- | --- | --- |
-| [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else — kubectl, kubelets, controllers — talks to it and never to etcd. Serves on 6443. | [static pod](#static-pods) |
-| [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | Key-value store holding all cluster state. | static pod |
-| `kube-controller-manager` | One process running many [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), each a loop comparing desired to actual and acting on the gap (node health, replica counts, service accounts). | static pod |
-| [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes: it drops the nodes a pod cannot run on, then picks the best of the rest. Only writes `spec.nodeName`; the kubelet does the starting. | static pod |
-| [`kubelet`](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) | On *every* node, control plane included. Starts containers, reports node and pod status. | systemd unit, not a pod |
-| [`kube-proxy`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) | On every node. Writes packet-forwarding rules (iptables or [IPVS](services.md#how-a-service-ip-answers)) so [Service](services.md) IPs work. | [DaemonSet](daemonsets.md) |
+| [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else, from `kubectl` to [kubelets](workers.md#what-a-worker-runs) and controllers, talks to it and never to etcd. Serves on port 6443. | [static pod](#static-pods) |
+| [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | The key-value store that holds every object. | static pod |
+| `kube-controller-manager` | One process running many [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), such as the ones for node health, replica counts and [ServiceAccounts](service-accounts.md). | static pod |
+| [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes: it drops the nodes a pod cannot run on, then picks the best of the rest. It only writes `spec.nodeName`; the kubelet, the agent on each node, starts the pod. | static pod |
 
 A controller is a loop that compares the state an object asks for with what exists, and acts on
 the difference, such as creating a pod when a [Deployment](workloads.md) has too few.
 
-`kubectl get pods -n kube-system` shows all of these except the kubelet, which
-`systemctl status kubelet` and `journalctl -u kubelet` show.
+The control plane node is also a node, so it runs the kubelet, which starts the node's pods, and kube-proxy, which makes [Service](services.md) addresses work on the node, like every worker. `kubectl get pods -n kube-system` shows the four components above
+and kube-proxy. The kubelet is a systemd service, not a pod, so `systemctl status kubelet` and
+`journalctl -u kubelet` show it instead.
 
 ## Static pods
 
@@ -46,7 +45,7 @@ Because the kubelet reads the files directly:
 
 `kubeadm init` [taints](taints.md) the control plane node
 `node-role.kubernetes.io/control-plane:NoSchedule` so ordinary workloads stay
-off it ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)). [CNI](pod-network.md) and kube-proxy pods tolerate the taint, which is why they still land
+off it ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)). The pod network's pods, installed through [CNI](pod-network.md) (Container Network Interface), and the kube-proxy pods must run on every node. They tolerate the taint, so they still land
 there. Removing the taint is how a single-node cluster runs workloads:
 
 ```bash

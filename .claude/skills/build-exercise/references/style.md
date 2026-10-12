@@ -65,6 +65,28 @@ Each entry's id is what the `style-reader` reports.
 - Fail: "Every command runs on `controlplane`." in a topic's Introduction, before anything said the reader logs in to `base` first.
 - Keep: an absolute that is literally true and is the point, such as "Helm runs only as a command-line tool" or the Practice section's "Every task runs on `controlplane`."
 
+## Explaining
+
+**named-without-purpose**. A tool, image, command or object named with what it is but not why this step uses it, or with neither. Every name gets both, where it first appears on the page.
+- Fail: "`run tmp` starts a pod from the small `busybox` image."
+- Pass: "The name `web` works only inside the cluster, from a pod, because only pods use the cluster's DNS server. So start a short-lived pod to act as the client. Its image is `busybox`, a few megabytes that hold a shell and small versions of everyday Linux tools such as `wget`."
+
+**quiz-untaught**. A quiz question, hint or Practice task that needs a fact no lesson in the topic taught. Teach it in the lesson, or cut the question.
+- Fail: "Why can't a ClusterRoleBinding reference a Role?" when no step mentions it.
+- Pass: the step that creates the ClusterRoleBinding says "It grants only a ClusterRole: it has no `--role` flag, because a Role's rules belong to one namespace."
+
+**shown-not-pasted**. A step that tells the reader to paste, copy or edit a file without showing what the file holds afterwards.
+- Fail: "copy the `CronTab` CustomResourceDefinition … Paste it into `vim resourcedefinition.yaml`", with no YAML on the page.
+- Pass: the same step, then the file as it reads after pasting, then a sentence on its fields.
+
+**false-secret**. Calling something secret that isn't. In a `kubeadm join` line only the token is secret; the CA hash is public. (Vale)
+- Fail: "The join line carries one secret in each direction."
+- Pass: "The CA hash lets the node check that it reached the right cluster, and anyone may see it. The bootstrap token is the secret part."
+
+**renamed-title**. Link text that names a docs page differently from its own title, such as British spellings of an American page. (Vale)
+- Fail: "[Customising CoreDNS](…/dns-custom-nameservers/)"
+- Pass: "[Customizing DNS Service](…/dns-custom-nameservers/)"
+
 ## Stock phrases
 
 **stock-phrase** (Vale). Phrases from Wikipedia's "Signs of AI writing" that course text never needs: "serves as", "stands as", "plays a key role", "delve", "seamless", "leverage", "a testament to", and "not just X but Y" or "not only X but also Y". None is in the pages; Vale keeps them out.

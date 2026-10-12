@@ -6,7 +6,7 @@ Without it, a client would need each Service's IP address, which is only known o
 
 ## How it works
 
-The kubelet writes each pod's `/etc/resolv.conf`, the file Linux programs read to find their DNS server. A pod in `default` gets:
+The kubelet, the agent on each node that runs its pods, writes each pod's `/etc/resolv.conf`, the file Linux programs read to find their DNS server. A pod in `default` gets:
 
 ```
 search default.svc.cluster.local svc.cluster.local cluster.local
@@ -29,11 +29,11 @@ sequenceDiagram
   S-->>P: answer from one of its pods
 ```
 
-Each Service gets a record `<service>.<namespace>.svc.cluster.local` that points to its ClusterIP ([A/AAAA records](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records)). The same `web` from a pod in `dev` becomes `web.dev.svc.cluster.local`, which does not exist, so a pod reaches a Service in another namespace as `web.default`.
+Each Service gets a record `<service>.<namespace>.svc.cluster.local` that points to its ClusterIP, the Service's stable address inside the cluster ([A/AAAA records](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records)). The same `web` from a pod in `dev` becomes `web.dev.svc.cluster.local`, which does not exist. To reach a Service in another namespace, a pod uses `web.default`.
 
 ## How it fits in the cluster
 
-CoreDNS is a Deployment in `kube-system`, behind the Service `kube-dns`. Its configuration, the Corefile, is in the ConfigMap `coredns` ([CoreDNS ConfigMap options](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#coredns-configmap-options)). Two of its lines do most of the work: `kubernetes cluster.local` answers names in the cluster domain from the Services and pods the apiserver holds, and `forward . /etc/resolv.conf` passes every other name, such as `kubernetes.io`, to the DNS server of the node CoreDNS runs on.
+CoreDNS is a Deployment in `kube-system`, behind the Service `kube-dns`. The Service's name differs from the pods' on purpose: tools that look for a `kube-dns` Service find the cluster's DNS server whichever program runs it. Its configuration, the Corefile, is in the ConfigMap `coredns` ([CoreDNS ConfigMap options](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#coredns-configmap-options)). Two of its lines do most of the work: `kubernetes cluster.local` answers names in the cluster domain from the Services and pods the apiserver holds, and `forward . /etc/resolv.conf` passes every other name, such as `kubernetes.io`, to the DNS server of the node CoreDNS runs on.
 
 ```mermaid
 flowchart LR

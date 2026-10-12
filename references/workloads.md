@@ -62,7 +62,7 @@ web-fbdc6fc8c    2         2         2       17s
 | --- | --- | --- |
 | Deployment | a number of interchangeable pods | web servers and other stateless applications |
 | StatefulSet | pods with fixed names (`db-0`, `db-1`) and their own storage each, started in order | databases and other applications where each copy keeps its own data ([StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)) |
-| [DaemonSet](daemonsets.md) | one pod on each node | node agents such as [kube-proxy](control-plane.md#components) |
+| [DaemonSet](daemonsets.md) | one pod on each node | node agents such as [kube-proxy](workers.md#what-a-worker-runs) |
 | Job | pods until one finishes successfully, then stops | one-off tasks such as a migration ([Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/)) |
 | CronJob | a Job on a schedule | backups and other repeated tasks |
 
@@ -80,15 +80,17 @@ A finished Job's pod stays with `STATUS` `Completed`, so its logs can still be r
 
 ## Commands
 
+The Job and CronJob below run `busybox`, a small image with a shell and basic Linux tools, enough to run `echo`.
+
 ```bash
-kubectl create deployment web --image nginx:1.27 --replicas 2
-kubectl scale deployment web --replicas 4
+kubectl create deployment web --image=nginx:1.27 --replicas=2
+kubectl scale deployment web --replicas=4
 kubectl set image deployment/web nginx=nginx:1.28     # <container>=<image>, starts a rollout
 kubectl rollout status deployment/web
 kubectl rollout history deployment/web
 kubectl rollout undo deployment/web
-kubectl create job once --image busybox:1.36 -- echo done
-kubectl create cronjob nightly --image busybox:1.36 --schedule "0 2 * * *" -- echo hi
+kubectl create job once --image=busybox:1.37 -- echo done
+kubectl create cronjob nightly --image=busybox:1.37 --schedule="0 2 * * *" -- echo hi
 ```
 
 ## Docs

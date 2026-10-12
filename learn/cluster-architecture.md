@@ -1,6 +1,6 @@
 # How a Kubernetes cluster works
 
-Kubernetes runs containers across a group of machines and keeps them running the way you asked. You never tell it to start a container on a machine. You write down the state you want, such as "three copies of this web server", and the cluster works out the rest and keeps correcting it when something breaks.
+Kubernetes runs containers across a group of machines and keeps them running the way you asked. You don't usually tell it to start a container on a particular machine. You write down the state you want, such as "three copies of this web server", and the cluster works out the rest and keeps correcting it when something breaks.
 
 ## Desired state and controllers
 
@@ -29,6 +29,8 @@ flowchart LR
     cm["controller-manager"]
     sched["scheduler"]
     k1["kubelet"]
+    rt1["container runtime"]
+    kp1["kube-proxy"]
   end
   subgraph w["worker node"]
     k2["kubelet"]
@@ -41,12 +43,13 @@ flowchart LR
   k1 --> api
   k2 --> api
   api --> etcd
+  k1 --> rt1
   k2 --> rt
 ```
 
 The apiserver is the centre. It is the only component that reads or writes etcd, the database that holds every object, and everything else, `kubectl` included, talks to the apiserver ([control-plane components](https://kubernetes.io/docs/concepts/overview/components/#control-plane-components)). The controller-manager runs the built-in controllers. The scheduler picks a node for each new pod and writes the node's name into the pod, and does nothing else.
 
-Every node, the control plane node included, runs a kubelet ([node components](https://kubernetes.io/docs/concepts/overview/components/#node-components)). The kubelet watches the apiserver for pods assigned to its node. It asks the container runtime, such as containerd, to start their containers. The kubelet is the only part that actually starts containers.
+Every node, the control plane node included, runs a kubelet ([node components](https://kubernetes.io/docs/concepts/overview/components/#node-components)). The kubelet watches the apiserver for pods assigned to its node. It asks the container runtime, such as containerd, to start their containers. No other component asks the runtime to start containers.
 
 So a new pod passes through four components: `kubectl` sends it to the apiserver, the apiserver stores it in etcd, the scheduler assigns it a node, and that node's kubelet starts it.
 

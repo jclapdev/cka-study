@@ -1,6 +1,6 @@
 # kubeadm
 
-kubeadm turns machines that already run a [container runtime](workers.md#what-a-worker-runs) and a [kubelet](control-plane.md#components) into a cluster. `kubeadm init` builds the [control plane](control-plane.md) on a machine, and `kubeadm join` adds more machines to it ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)). It does not install a [pod network](pod-network.md).
+kubeadm turns machines that already run a [container runtime](workers.md#what-a-worker-runs) and a kubelet into a cluster. `kubeadm init` builds the [control plane](control-plane.md) on a machine, and `kubeadm join` adds more machines to it ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)). It does not install a [pod network](pod-network.md).
 
 ## What `kubeadm init` does
 
@@ -9,7 +9,7 @@ kubeadm turns machines that already run a [container runtime](workers.md#what-a-
 | Phase | What it does |
 | --- | --- |
 | `[preflight]` | Checks the machine and pulls the control plane images. A failed check stops `init` before it changes anything. |
-| `[certs]` | Creates a cluster [CA](certificates.md) and every certificate the components need, under `/etc/kubernetes/pki/`. |
+| `[certs]` | Creates a cluster [CA](certificates.md), the certificate authority that signs the cluster's certificates, and every certificate the components need, under `/etc/kubernetes/pki/`. |
 | `[kubeconfig]` | Writes the [kubeconfigs](kubeconfig.md) to `/etc/kubernetes/`: `admin.conf` for the administrator's `kubectl`, `super-admin.conf` for emergency access that bypasses [RBAC](rbac.md), `kubelet.conf` for this node's kubelet, and `controller-manager.conf` and `scheduler.conf` for those components. |
 | `[etcd]`, `[control-plane]` | Writes the [static pod](control-plane.md#static-pods) [manifests](kubectl.md#generating-yaml) `etcd.yaml`, `kube-apiserver.yaml`, `kube-controller-manager.yaml` and `kube-scheduler.yaml` to `/etc/kubernetes/manifests/`. |
 | `[kubelet-start]`, `[wait-control-plane]` | Starts the kubelet, which starts the static pods, and waits for them to be healthy. |
@@ -24,7 +24,7 @@ The files it leaves on the control plane node:
 | `/etc/kubernetes/manifests/` | The static pod manifests. |
 | `/etc/kubernetes/*.conf` | The kubeconfigs, root-owned with mode `600`. |
 | `/etc/kubernetes/pki/` | The CA and all component certificates ([which certificate is which](https://kubernetes.io/docs/setup/best-practices/certificates/#all-certificates)). |
-| `/var/lib/etcd/` | The etcd data directory. |
+| `/var/lib/etcd/` | The [etcd](control-plane.md#components) data directory. |
 | `/var/lib/kubelet/config.yaml` | The kubelet's configuration. |
 
 ## The advertise address

@@ -4,7 +4,7 @@ A container's files are lost when the container stops. That suits a web server t
 
 ## How it works
 
-A container's filesystem is built from its image's read-only layers with one writable layer on top. Everything the container writes goes into that top layer, and a restarted container starts again from the image with an empty one. So a file written inside a container is gone after it crashes and the kubelet restarts it ([why volumes are important](https://kubernetes.io/docs/concepts/storage/volumes/#why-volumes-are-important)).
+A container's filesystem is built from its image's read-only layers with one writable layer on top. Everything the container writes goes into that top layer, and a restarted container starts again from the image with an empty one. So a file written inside a container is gone after it crashes and the kubelet, the agent on each node that runs its pods, restarts it ([why volumes are important](https://kubernetes.io/docs/concepts/storage/volumes/#why-volumes-are-important)).
 
 A volume is declared once in the pod's `spec.volumes` and mounted by each container that needs it under `volumeMounts`, at a path such as `/data` ([how volumes work](https://kubernetes.io/docs/concepts/storage/volumes/#how-volumes-work)). What happens to its contents depends on its kind:
 
@@ -19,13 +19,13 @@ Take a container that adds a line to a file in its own filesystem and a line to 
 
 ## How it fits in the cluster
 
-Storage that outlives pods is split into two objects, so that the people who run a cluster and the people who run applications each deal with their own half ([persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction)). A PersistentVolume is a piece of storage in the cluster, such as one network disk, created by an administrator or on demand. A PersistentVolumeClaim is a pod's request for storage of a size and access mode. Kubernetes binds each claim to one volume that fits it, and the pod mounts the claim, never the volume directly ([binding](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#binding)).
+Storage that outlives pods is split into two objects, so that the people who run a cluster and the people who run applications each deal with their own half ([persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction)). A PersistentVolume is a piece of storage in the cluster, such as one network disk, created by an administrator or on demand. A PersistentVolumeClaim is a pod's request for storage of a size and access mode. The access mode says how many nodes may use the storage at once, such as `ReadWriteOnce`, read and write from one node at a time. Kubernetes binds each claim to one volume that fits it, and the pod mounts the claim, never the volume directly ([binding](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#binding)).
 
 ```mermaid
 flowchart LR
   P[pod] -->|mounts| C[PersistentVolumeClaim<br/>10Gi, ReadWriteOnce]
   C -->|bound to| V[PersistentVolume]
-  V --> D[(disk, NFS share<br/>or cloud volume)]
+  V --> D[(disk, network share<br/>or cloud volume)]
   SC[StorageClass] -.->|creates on demand| V
 ```
 

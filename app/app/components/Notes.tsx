@@ -49,7 +49,12 @@ export function Notes({ action, body }: { action: string; body: string }) {
     timer.current = setTimeout(save, 1000);
   };
 
-  const status = saving ? "Saving" : unsaved.current === null ? "Saved" : "";
+  // "Saved" only once this box has saved something; an untouched box says nothing.
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    if (saving) setSaved(true);
+  }, [saving]);
+  const status = saving ? "Saving" : saved && unsaved.current === null ? "Saved" : "";
   return (
     <details className="group mt-14 rounded-md border border-line bg-surface">
       <summary className="flex cursor-pointer list-none items-baseline justify-between px-4 py-3 font-semibold">

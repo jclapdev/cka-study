@@ -35,6 +35,8 @@ Short names save typing, and `k api-resources` lists them all ([kubectl quick re
 
 A manifest is a YAML file that describes one or more objects, which `kubectl apply -f` creates or updates. An imperative command is one such as `kubectl create` that makes an object directly from flags. With `--dry-run=client -o yaml`, it prints the manifest for the object it would create and creates nothing ([creating objects](https://kubernetes.io/docs/reference/kubectl/quick-reference/#creating-objects)). Apply the output directly, or redirect it to a file and edit it first.
 
+The `create job` and `create cronjob` lines use `busybox`, a small image with a shell and basic Linux tools, enough to run `date`.
+
 ```bash
 k run web --image=nginx:1.27 --dry-run=client -o yaml > pod.yaml
 k create deployment web --image=nginx:1.27 --replicas=2 --dry-run=client -o yaml > deploy.yaml
@@ -77,7 +79,7 @@ k delete -f api.yaml                # delete what the file describes
 
 ## Snippets from the docs
 
-Some kinds have no `kubectl create` command, so their YAML comes from the docs. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. The table lists where each one is, with other pages that have snippets. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
+Some kinds have no `kubectl create` command, so their YAML comes from the docs. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. An Ingress is a set of rules that routes outside web traffic to [Services](services.md). The table lists where each one is, with other pages that have snippets. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
 
 | Need | Page and section |
 | --- | --- |
@@ -130,9 +132,9 @@ k replace --force -f /tmp/kubectl-edit-….yaml
 
 Most of a running pod's spec cannot change ([pod update and replacement](https://kubernetes.io/docs/concepts/workloads/pods/#pod-update-and-replacement)). `k edit` on such a field fails with `pods "<name>" is invalid`, and it saves your edit to a file under `/tmp` and prints its name. `k replace --force -f <that file>` deletes the pod and creates it from your copy. A [Deployment](workloads.md)'s pods are replaced by a [rollout](workloads.md#rollouts) instead, so edit the Deployment, not its pods.
 
-## Checking your work
+## Reading values back
 
-Read back the exact value you changed. `-o jsonpath` prints only the fields its template names:
+`-o jsonpath` prints only the fields its template names:
 
 ```bash
 k get deploy web -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image}{"\n"}'
@@ -153,7 +155,7 @@ jsonpath is a way to pick fields out of an object's JSON, such as `{.spec.replic
 | `Error from server (NotFound): deployments.apps "web" not found` from `k expose … --dry-run=client` | `expose` reads the object from the cluster. Create it first, or use `k create service`. |
 | `Secret in version "v1" cannot be handled as a Secret: illegal base64 data at input byte 4` | A plain value under a Secret's `data`. Use `k create secret generic --from-literal`, or put it under `stringData`. |
 | `error: pods "tool" is invalid`, then `A copy of your changes has been stored to "/tmp/kubectl-edit-….yaml"` | The field cannot change on a running pod. `k replace --force -f` that file. |
-| `error parsing stair.yaml: error converting YAML to JSON: yaml: line 7: mapping values are not allowed in this context` | vim indented the paste. Undo, `:set paste`, paste again. |
+| `error parsing web.yaml: error converting YAML to JSON: yaml: line 7: mapping values are not allowed in this context` | vim indented the paste. Undo, `:set paste`, paste again. |
 
 ## Docs
 

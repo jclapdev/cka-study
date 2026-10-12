@@ -27,19 +27,19 @@
 
 ## Using the app
 
-Each topic is a short course of lessons, listed under it in the sidebar: an introduction, how the technology works, one lesson per task with steps to check off, a quiz, and a practice exam. A lesson gets a ✓ in the sidebar once you have opened it, checked off all its steps, answered every quiz question with **Got it**, or saved a practice exam score of 66% or more. The Dashboard's **Continue** button opens the lesson you had open last.
+Each topic is a short course of lessons, listed under it in the sidebar: an introduction, how the technology works, one lesson per task with steps to check off, a quiz, and a practice exam. A lesson gets a ✓ in the sidebar when it is done. An introduction or a lesson on how a technology works is done once you open it. A lesson of steps is done when you have clicked the circle beside each step to check it off. The quiz is done when you have marked every question **Got it**, and the practice exam when you save a score of 66% or more. The Dashboard, the app's home page and the first link in the sidebar, has a **Continue** button that opens the lesson you had open last.
 
 Your progress is saved on your computer.
 
 Most topics have a lab: a set of practice machines, running on your computer, that you work on through a terminal shown beside each lesson. Press **Start lab** and wait for the shell. The first start takes about 6 minutes, later ones under a minute. If the lab doesn't start, the button changes to **Try again**.
 
-Your computer runs one lab at a time, and each topic starts its own, even when two topics use the same machines. Starting a lab in another topic ends the one that was running and loses its work, so the app asks first. A lab also stops by itself after an hour with no terminal open. Press **Start lab** to start it again.
+Your computer runs one lab at a time, and each topic with a lab has its own. Starting the lab in another topic ends the one that was running and loses its work, so the app asks first. A lab also stops by itself after an hour with no terminal open. Press **Start lab** to start it again.
 
 The cluster is the set of machines running Kubernetes. The shell opens on `base`, a machine outside the cluster. The Certified Kubernetes Administrator (CKA) exam also starts you on a machine like it. From `base` you reach the cluster's machines with `ssh` and do the work there. `controlplane` is the one that runs the parts managing the cluster, and `kubectl`, the command you use to work with Kubernetes, is set up only there. So run `ssh controlplane` first. Each topic's introduction names the machines in its lab.
 
 **+** opens another terminal, up to four, so you can keep one command running while you work in another. After `exit`, press Enter for a new shell. **Reset lab** starts the lab over, and so does starting the practice exam; either way the terminals close and a fresh one opens. Copy with Ctrl+Shift+C and paste with Ctrl+Shift+V, the keys the CKA exam's terminal uses, or right-click for Copy and Paste.
 
-On a wide screen, the button beside **Reset lab** opens the terminals in a window of their own, and the button at the far right hides the panel.
+On a wide screen, **Open in new window**, the arrow button beside **Reset lab**, moves the terminals into a window of their own. **Hide panel**, the button at the far right, hides the terminals so the lesson fills the screen, and the same button brings them back.
 
 ## Grading
 
@@ -58,12 +58,14 @@ Run these inside this project's folder.
 
 ## Troubleshooting
 
-**The lab says "The lab didn't start."** Usually Kubernetes on `controlplane` failed to come up. The [kubelet](../references/control-plane.md#components) is the program on each machine that starts Kubernetes' parts, and its log says why it couldn't. To read the last lines of that log, open a terminal on your own computer, not the one in the app, and run this inside this project's folder:
+**The lab says "The lab didn't start."** Usually Kubernetes on `controlplane` failed to come up. The [kubelet](../references/workers.md#what-a-worker-runs) is the program on each machine that starts Kubernetes' parts, and its log says why it couldn't. To read the last lines of that log, open a terminal on your own computer, not the one in the app, and run this inside this project's folder:
 
 ```shell
 docker compose exec controlplane journalctl -u kubelet --no-pager | tail -20
 ```
 
 Errors are the lines whose message starts with `E` and the date, such as `E1009`; the last one is usually the cause. Then press **Try again**.
+
+**The app doesn't open at <http://localhost:5173>.** Docker isn't running, or the app hasn't started. Start Docker, then run `docker compose up -d` again in this project's folder.
 
 **The machines are slow or stop at random.** Docker has too little memory. In Docker Desktop, open **Settings**, then **Resources**, and give it at least 4 GiB.

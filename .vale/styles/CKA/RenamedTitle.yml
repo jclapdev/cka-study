@@ -1,0 +1,8 @@
+# renamed-title in the style list: link text names a kubernetes.io page by its own (American) title.
+extends: existence
+message: "'%s' renames a docs page. Use the page's own title."
+level: error
+ignorecase: false
+scope: raw
+raw:
+  - '\[(?:[^\]]*\b(?:Customis|Organis|Authoris|Initialis|Recognis)[^\]]*)\]\(https://kubernetes\.io'

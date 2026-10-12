@@ -4,7 +4,7 @@ A CustomResourceDefinition (CRD) adds a resource type to the apiserver without c
 
 ## What a CRD adds
 
-A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions` (short names `crd`, `crds`) in the group `apiextensions.k8s.io`. REST is the style of HTTP API the apiserver offers: each type has its own URL path, and objects are read and written with ordinary HTTP requests. Creating a CRD adds a path for each version it serves, `/apis/<group>/<version>/<plural>` ([create a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition)). After that, `kubectl get`, `apply`, `delete`, `explain`, [RBAC](rbac.md) rules and `-n` all work with the new type as with any other.
+A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions` (short names `crd`, `crds`) in the group `apiextensions.k8s.io`. The apiserver serves each type at a URL path of its own, and creating a CRD adds a path for each version it serves, `/apis/<group>/<version>/<plural>` ([create a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition)). After that, `kubectl get`, `apply`, `delete`, `explain`, [RBAC](rbac.md) rules and `-n` all work with the new type as with any other.
 
 Deleting a CRD deletes every object of its type, in every namespace ([delete a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#delete-a-customresourcedefinition)).
 
@@ -18,7 +18,7 @@ Deleting a CRD deletes every object of its type, in every namespace ([delete a C
 | `spec.scope` | `Namespaced` or `Cluster` ([namespaces](namespaces.md)). |
 | `spec.names` | `plural`, `singular`, `kind`, and optional `shortNames`. |
 
-The example CRD on [create a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition), for a made-up type `CronTab`, has every field, with a comment on each. Copy it, then change the names, the group and the fields under `spec.properties`.
+The example CRD on [create a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition), for a made-up type `CronTab`, has each of these parts, with a comment on each. The CRDs and Operators topic shows it in full. To write a new CRD, copy it, then change the names, the group and the fields under `spec.properties`.
 
 ## Schemas and validation
 
@@ -26,7 +26,7 @@ OpenAPI is a standard format for describing an API's objects, their fields and t
 
 - A value of the wrong type is rejected: `spec.replicas in body must be of type integer`.
 - A field the schema does not list is rejected by `kubectl apply`, which asks for strict field validation by default: `strict decoding error: unknown field "spec.colour"` ([field validation](https://kubernetes.io/docs/reference/using-api/api-concepts/#field-validation)).
-- `k explain <kind>.<field>` (`k` is short for `kubectl`) reads the schema, so it works for custom types too. Fields marked `-required-` must be set.
+- `kubectl explain <kind>.<field>` reads the schema, so it works for custom types too. Fields marked `-required-` must be set.
 
 ## Operators
 
@@ -55,26 +55,26 @@ A chart can ship CRDs in two ways ([Helm and CRDs](https://helm.sh/docs/topics/c
 ## Commands
 
 ```bash
-k get crd                                          # every CRD in the cluster
-k get crd -o name | grep cert-manager > crds.txt   # names only, for a file
-k api-resources --api-group=cert-manager.io        # the types a group adds, with kinds and short names
-k explain certificate.spec                         # fields, with -required- marked
-k explain certificate.spec.subject > subject.txt   # one field's documentation, for a file
-k wait --for=condition=Established crd/crontabs.stable.example.com   # until the apiserver serves the new type
-k get certificate -A                               # custom objects work like built-in ones
-k delete crd crontabs.stable.example.com           # deletes every CronTab too
+kubectl get crd                                    # every CRD in the cluster
+kubectl get crd -o name | grep cert-manager        # the names only, one per line
+kubectl api-resources --api-group=cert-manager.io  # the types a group adds, with kinds and short names
+kubectl explain certificate.spec                   # fields, with -required- marked
+kubectl explain certificate.spec.subject           # one field's documentation
+kubectl wait --for=condition=Established crd/crontabs.stable.example.com # until the apiserver serves the new type
+kubectl get certificate -A                         # custom objects work like built-in ones
+kubectl delete crd crontabs.stable.example.com     # deletes every CronTab too
 ```
 
 ## Failure modes
 
 | Symptom | Cause |
 | --- | --- |
-| `error: couldn't find resource for "stable.example.com/v1, Resource=crontabs"` from `k explain` | The CRD was created a moment ago and is not `Established` yet. `Established` is the condition the apiserver sets on a CRD once it serves the new type. `k wait --for=condition=Established crd/<name>`, then retry. |
+| `error: couldn't find resource for "stable.example.com/v1, Resource=crontabs"` from `kubectl explain` | The CRD was created a moment ago and is not `Established` yet. `Established` is the condition the apiserver sets on a CRD once it serves the new type. `kubectl wait --for=condition=Established crd/<name>`, then retry. |
 | `The CronTab "bad" is invalid: spec.replicas: Invalid value: "string": spec.replicas in body must be of type integer: "string"` | The value does not match the schema's type. |
-| `strict decoding error: unknown field "spec.colour"` | The schema has no such field. Check the name with `k explain`. |
-| `The Certificate "nope" is invalid: spec.secretName: Required value` | A required field is missing. `k explain <kind>.spec` marks them `-required-`. |
+| `strict decoding error: unknown field "spec.colour"` | The schema has no such field. Check the name with `kubectl explain`. |
+| `The Certificate "nope" is invalid: spec.secretName: Required value` | A required field is missing. `kubectl explain <kind>.spec` marks them `-required-`. |
 | `Error from server (NotFound): Unable to list "stable.example.com/v1, Resource=crontabs": the server could not find the requested resource` | The CRD does not exist, or was deleted along with its objects. |
-| A chart installs and `k get crd` shows none of its types | The chart templates its CRDs behind a value, such as `crds.enabled=true`. |
+| A chart installs and `kubectl get crd` shows none of its types | The chart templates its CRDs behind a value, such as `crds.enabled=true`. |
 
 ## Docs
 

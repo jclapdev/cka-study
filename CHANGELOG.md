@@ -1,6 +1,16 @@
 # What's new
 
-Changes to the app, newest first. The lab is the set of practice machines beside each lesson. You work on it through the terminal tabs above it. See [Getting started](lab/README.md).
+Changes to the app, newest first. The lab is the set of practice machines you work on through the terminal beside each lesson. See [Getting started](lab/README.md).
+
+## 12 October 2026
+
+- **Quit** and **Finish** on a practice exam now ask first, as **Start** and **Reset lab** do.
+- A lesson with no numbered steps could never get its ✓, so kubeadm Installation could never be finished. Its two such lessons now have steps, and every lesson can be finished.
+- When a lab doesn't start, the message links Troubleshooting in Getting started.
+- Copy buttons sit only on commands and YAML, not on command output.
+- The Dashboard says Coming soon for a domain with no topics yet, and shows a domain's bar once it has a practice average.
+- The notes box says Saved only after it has saved something.
+- Every topic, Learn page and reference page was reread: tools such as busybox now say what they are and why they're used, quiz questions only ask what the lessons teach, and steps show each file you paste.
 
 ## 11 October 2026
 

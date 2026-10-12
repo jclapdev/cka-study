@@ -4,7 +4,7 @@ A kubeconfig is the file `kubectl` reads to learn where the [apiserver](control-
 
 | Section | Holds |
 | --- | --- |
-| `clusters` | apiserver URL and the [CA](certificates.md) cert that signs it |
+| `clusters` | The apiserver's URL, and the certificate of the [CA](certificates.md), the certificate authority that signed the apiserver's certificate. |
 | `users` | credentials: a client certificate and key, a token, or a command to run that returns one |
 | `contexts` | a named (cluster, user, namespace) triple |
 | `current-context` | which context applies when no flag says otherwise |
@@ -16,7 +16,7 @@ Nothing in the file is a permission. It is identity only; what that identity may
 [Merging kubeconfig files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#merging-kubeconfig-files) has the full rules.
 
 1. `--kubeconfig <file>`
-2. `$KUBECONFIG` — colon-separated list, merged left to right
+2. `$KUBECONFIG`, a colon-separated list of files, merged left to right
 3. `~/.kube/config`
 
 `sudo kubectl` runs as root, so it reads `/root/.kube/config`, not the invoking user's. When root has no kubeconfig of its own on the [control plane](control-plane.md) node, `sudo kubectl get nodes` fails with `localhost:8080 was refused` while plain `kubectl get nodes` works.
@@ -59,13 +59,13 @@ kubectl config current-context
 | --- | --- |
 | `connection to the server localhost:8080 was refused` | No kubeconfig was found, so kubectl used its built-in default. Often `sudo`, or a worker node. |
 | `error loading config file "/home/<user>/.kube/config": open /home/<user>/.kube/config: permission denied` | The copied file is still root-owned. Run the `chown`. |
-| `You must be logged in to the server (Unauthorized)` | credentials present but wrong or expired |
-| `x509: certificate signed by unknown authority` | cluster CA does not match the apiserver's |
-| `Forbidden` | identity is fine; RBAC says no |
+| `You must be logged in to the server (Unauthorized)` | The credentials are there but wrong or expired. |
+| `x509: certificate signed by unknown authority` | The kubeconfig's cluster CA is not the one that signed the apiserver's certificate. |
+| `Forbidden` | The identity is fine, and RBAC refused the request. |
 
 ## Docs
 
-- [Organising cluster access with kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)
+- [Organizing cluster access using kubeconfig files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)
 - [Configuring access to multiple clusters](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)
 - [Controlling access to the API](https://kubernetes.io/docs/concepts/security/controlling-access/)
 - [Service accounts](https://kubernetes.io/docs/concepts/security/service-accounts/)

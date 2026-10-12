@@ -14,7 +14,7 @@ A cluster uses three ranges of addresses: one for pods, one for [Services](servi
 | Service CIDR | `kubeadm init --service-cidr` | `10.96.0.0/12` | [ClusterIPs](services.md#service-types) |
 | [Node](workers.md) network | the infrastructure | none | node interfaces |
 
-No interface holds a Service IP. [kube-proxy](control-plane.md#components) writes iptables or [IPVS](services.md#how-a-service-ip-answers) rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
+No interface holds a Service IP. [kube-proxy](workers.md#what-a-worker-runs) writes iptables or [IPVS](services.md#how-a-service-ip-answers) rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
 
 All three must be disjoint. Kubernetes splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. On a cluster with two workers:
 
@@ -42,7 +42,7 @@ Read it with `kubectl logs -n kube-flannel -l app=flannel`.
 
 After a CNI plugin installs, that directory holds a conflist file, `10-flannel.conflist` for Flannel. A conflist is the plugin's configuration file in the CNI format, which tells the kubelet which plugin to call for each new pod. Once it exists, the kubelet marks the node `Ready` within seconds.
 
-The file is the only thing the kubelet checks. Flannel's `install-cni` init container, a container that runs to completion before the pod's main container starts, copies it in before the Flannel agent starts, so the node goes `Ready` even when the agent then crash-loops. `Ready` means the configuration exists. Both CoreDNS pods `Running` means pods are getting addresses.
+The kubelet's network check looks only for that file. Flannel's `install-cni` init container, a container that runs to completion before the pod's main container starts, copies it in before the Flannel agent starts, so the node goes `Ready` even when the agent then crash-loops. `Ready` means the configuration exists. Both CoreDNS pods `Running` means pods are getting addresses.
 
 ## Plugins
 
@@ -68,7 +68,7 @@ kube-apiserver-controlplane            true
 kube-proxy-4wdrl                       true
 ```
 
-So in `kubectl get pods -A -o wide`, these pods show the node's address, and only CoreDNS shows a `10.244.x` address.
+So in `kubectl get pods -A -o wide`, these pods show the node's address, while CoreDNS, like every ordinary pod, shows a `10.244.x` address.
 
 ## Network namespaces on a node
 
@@ -115,7 +115,7 @@ VXLAN is a way of carrying one network's packets inside another's. `flannel.1` i
 
 ## CoreDNS
 
-CoreDNS is the cluster's DNS server, a [Deployment](workloads.md) of two replicas in `kube-system`, reachable at the service `kube-dns` on `10.96.0.10`. It resolves `<service>.<namespace>.svc.cluster.local` ([DNS for services and pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)). It does not use the host network, so it needs an address from the pod network. [How DNS works in the cluster](../learn/dns.md) explains how a name is looked up.
+CoreDNS is the cluster's DNS server, a [Deployment](workloads.md) of two replicas in `kube-system`, reachable at the Service `kube-dns` on `10.96.0.10`. It resolves `<service>.<namespace>.svc.cluster.local` ([DNS for services and pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)). It does not use the host network, so it needs an address from the pod network. [How DNS works in the cluster](../learn/dns.md) explains how a name is looked up.
 
 The kubelet writes each pod's `/etc/resolv.conf` from its `clusterDNS` and `clusterDomain` settings in `/var/lib/kubelet/config.yaml`. In a pod in `default`:
 
@@ -125,7 +125,7 @@ nameserver 10.96.0.10
 options ndots:5
 ```
 
-The Corefile is CoreDNS's configuration file, kept in the [ConfigMap](config.md) `coredns` in `kube-system` ([CoreDNS ConfigMap options](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#coredns-configmap-options)). `kubernetes cluster.local in-addr.arpa ip6.arpa` answers cluster names, and `forward . /etc/resolv.conf` sends every other name to the node's DNS server:
+The Corefile is CoreDNS's configuration file, kept in the [ConfigMap](config.md) `coredns` in `kube-system` ([CoreDNS ConfigMap options](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#coredns-configmap-options)). `kubernetes cluster.local in-addr.arpa ip6.arpa` answers cluster names, and `forward . /etc/resolv.conf` sends every other name to the node's DNS server. Cluster names resolve only from inside a pod, so the second command starts a short-lived pod as the client. `busybox` is a small image with a shell and basic tools, `nslookup` among them. `--rm` deletes the pod afterwards, `-i` shows its output, and `--restart=Never` runs it once:
 
 ```bash
 kubectl get cm coredns -n kube-system -o jsonpath='{.data.Corefile}'
@@ -144,7 +144,7 @@ Address: 10.104.158.216
 - [Cluster networking](https://kubernetes.io/docs/concepts/cluster-administration/networking/)
 - [Network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)
 - [DNS for services and pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)
-- [Customising CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)
+- [Customizing DNS Service](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)
 - [Flannel](https://github.com/flannel-io/flannel) · [Calico quickstart](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart) (not available in the exam)
 
 Related: [kubeadm](kubeadm.md), [Pod](pod.md), [Workers](workers.md), [Control plane](control-plane.md).

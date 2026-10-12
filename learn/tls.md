@@ -32,16 +32,16 @@ kubeadm, the tool that builds the cluster, creates three CAs and signs every oth
 ```mermaid
 flowchart TD
   CA[cluster CA<br/>ca.crt] --> S[apiserver serving certificate]
-  CA --> AD[admin.conf client certificate<br/>you, as kubectl]
+  CA --> AD[admin.conf client certificate<br/>you, as kubectl, from your kubeconfig]
   CA --> KL[kubelet client certificates<br/>one per node]
-  CA --> CM[controller-manager and scheduler<br/>client certificates]
+  CA --> CM[controller-manager, which runs the controllers,<br/>and scheduler, which places pods:<br/>client certificates]
   ECA[etcd CA<br/>etcd/ca.crt] --> ES[etcd serving and peer certificates]
   ECA --> AE[apiserver-etcd-client<br/>the apiserver as etcd's client]
 ```
 
 Each client of the apiserver carries the cluster CA's certificate to check it with: each kubeconfig holds a copy, and every pod gets one too, so a program in a pod can check the apiserver it calls. etcd has a CA of its own, so a certificate signed for the apiserver cannot be used to reach etcd directly. A new node gets its kubelet's client certificate when it joins, through a signing request that the cluster approves ([how kubeadm builds a cluster](kubeadm.md#joining-a-node)).
 
-Certificates expire. kubeadm signs the component certificates for one year and the CAs for ten, and `kubeadm certs renew` signs new ones ([certificate management with kubeadm](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)). An expired certificate fails the check like one from the wrong CA, so `kubectl` with an expired `admin.conf` no longer reaches the apiserver.
+Certificates expire. kubeadm signs the component certificates for one year and the CAs for ten, and `kubeadm certs renew` signs new ones ([certificate management with kubeadm](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/)). An expired certificate fails the check like one from the wrong CA, so `kubectl` with an expired `admin.conf`, the admin kubeconfig that holds your client certificate, no longer reaches the apiserver.
 
 The file for each certificate, the commands to read one and the errors a mismatch causes are on the [certificates reference page](../references/certificates.md), and how the apiserver reads users from certificates is on the [authentication reference page](../references/authentication.md).
 

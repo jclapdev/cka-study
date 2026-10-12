@@ -19,7 +19,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 * Allow it an action on a type of object, with a [Role](../../references/rbac.md#the-model), a list of allowed actions, and a RoleBinding, which grants it.
 * See the same request refused in another namespace, and read the message that says why.
 * Write a list of allowed actions as a ClusterRole, for use in any namespace, and grant it in `dev` and `prod`.
-* Grant access to nodes, which belong to no namespace, where a RoleBinding cannot.
+* Grant access to nodes, which belong to no namespace, so a RoleBinding can't reach them.
 
 ## Create the namespaces
 
@@ -55,9 +55,10 @@ grant that allows it.
    Groups                                              [kubeadm:cluster-admins system:authenticated]
    ```
 
-   You are not a Kubernetes object. `kubernetes-admin` is a name written in the client
-   [certificate](../../references/certificates.md) that `kubectl` signs in with, kept in `~/.kube/config`, and `kubeadm:cluster-admins` is a group asserted by the
-   same certificate. Neither exists as a resource you could delete. [Client certificates](../../references/authentication.md#client-certificates)
+   `kubernetes-admin` is a name written in the client
+   [certificate](../../references/certificates.md#client-and-serving-certificates) that `kubectl` signs in with, kept in `~/.kube/config`, and `kubeadm:cluster-admins` is a group named in the
+   same certificate. Neither is an object in the cluster: there is no user you could list or
+   delete. [Client certificates](../../references/authentication.md#client-certificates)
    explains how a certificate becomes a user and groups, and [how TLS secures the cluster](../../learn/tls.md)
    how the cluster signs one.
 
@@ -87,6 +88,9 @@ Every request comes from a subject: a user, a group or a ServiceAccount. A [Serv
 identity for a program, and the only subject that is an object you can create. Users and groups
 exist only in the credentials that sign a request.
 
+`deploy-bot`, a made-up deployment tool, runs in the namespace `dev` and needs to read pods there. A program that talks to the apiserver needs
+an identity of its own, so that it can be given only the access its job needs, not yours.
+
 1. Create the account in `dev`. `create serviceaccount deploy-bot -n dev` makes a
    ServiceAccount named `deploy-bot` in the namespace `dev`:
 
@@ -94,8 +98,9 @@ exist only in the credentials that sign a request.
    k create serviceaccount deploy-bot -n dev
    ```
 
-2. Ask what it is allowed to do. `k auth can-i` asks the apiserver's authoriser, the part that checks permissions, directly,
-   and `--as` impersonates without needing the subject's credentials
+2. Ask what it is allowed to do. `k auth can-i` asks the apiserver whether a request would be
+   allowed, without sending the request itself. `--as` asks on behalf of another subject,
+   without needing its credentials
    ([impersonation](../../references/authentication.md#commands)). A ServiceAccount is named in full as
    `system:serviceaccount:<namespace>:<name>`. `list pods -n dev` is the request being asked
    about: the verb, the resource and the namespace:
@@ -104,16 +109,9 @@ exist only in the credentials that sign a request.
    k auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The answer is `no`. The account exists and can authenticate, but permissions in Kubernetes are
-   additive and it has been granted none
+   The answer is `no`. The apiserver knows who `deploy-bot` is, but it has been granted nothing,
+   and Kubernetes allows only what has been granted
    ([subjects](../../references/rbac.md#subjects)).
-
-> [!note]
-> A RoleBinding, the object that grants a role to subjects, is not checked against those
-> subjects. A binding that names a ServiceAccount
-> which does not exist is created without complaint and grants nothing, so a typo in the name
-> fails silently. Compare `k get sa -n dev`, which lists the ServiceAccounts in `dev`, against `k describe rolebinding` when a
-> grant appears to do nothing at all.
 
 ## Write a Role
 
@@ -142,19 +140,17 @@ in one namespace and can only ever name resources in that namespace.
    ```
 
    `get`, `list` and `watch` are separate verbs. Granting `get` does not let
-   anyone `list`: `get` fetches one named object, `list` enumerates them, and `k get pods`
-   with no name needs `list`.
+   anyone `list`: `get` fetches one named object, `list` returns all of them, and `k get pods`
+   with no name needs `list`. `watch` keeps a connection open and receives each change.
 
-2. The Role names this exact verb on this exact resource. Ask again whether the answer has
+2. The Role allows the request `deploy-bot` was refused. Ask again whether the answer has
    changed:
 
    ```shell
    k auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   Still `no`. A Role is a definition attached to nobody. Nothing about creating it mentions
-   `deploy-bot`, and RBAC never guesses at a subject. When a Role looks right and still grants
-   nothing, look for a RoleBinding that names both the Role and the subject.
+   Still `no`. A Role grants nothing until a RoleBinding names it and a subject.
 
 ## Bind the Role
 
@@ -203,7 +199,15 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
    k auth can-i delete pods -n dev --as=system:serviceaccount:dev:deploy-bot
    ```
 
-   The answer is `no`, because the Role names only `get`, `list` and `watch`.
+   The answer is `no`, because the Role names only `get`, `list` and `watch`. Nothing in RBAC
+   denies a request: whatever no binding allows is refused. So to take access away, you delete
+   the binding that gave it.
+
+> [!note]
+> A RoleBinding is not checked against its subjects. A binding that names a ServiceAccount
+> which does not exist is created without complaint and grants nothing, so a typo in the name
+> fails silently. When a grant seems to do nothing, compare `k get sa -n dev`, which lists the
+> ServiceAccounts in `dev`, with the subjects `k describe rolebinding` prints.
 
 ## Cross a namespace boundary
 
@@ -216,8 +220,7 @@ The RoleBinding lives in `dev`, so what it grants stops at `dev`.
    ```
 
    The answer is `no` again. Both halves are namespaced, and both are in `dev`: the Role can only describe `dev`
-   resources, and the RoleBinding only grants inside `dev`. The subject being a `dev`
-   ServiceAccount is not what limits it. The binding's namespace is. Granting the same access
+   resources, and the RoleBinding only grants inside `dev`. Granting the same access
    in `prod` needs a second RoleBinding there, or a [ClusterRoleBinding](../../references/rbac.md#the-model) if it should apply
    [everywhere](../../references/namespaces.md#namespaced-and-cluster-scoped-resources).
 
@@ -240,9 +243,20 @@ The RoleBinding lives in `dev`, so what it grants stops at `dev`.
    which holds pods. It is not a missing value.
 
 > [!note]
-> The Forbidden message names the group the request needed. If it says `in API group "apps"`
-> and your hand-written Role has `apiGroups: [""]`, the rule matches nothing.
-> `k create role --resource=deployments` fills in `apps` for you.
+> In a Role's YAML, each rule names its group under `apiGroups`. `pod-reader`'s rule, as
+> `k create role` wrote it, has `""` for pods:
+>
+> ```yaml
+> rules:
+> - apiGroups:
+>   - ""
+>   resources:
+>   - pods
+> ```
+>
+> [Deployments](../../references/workloads.md) are in the group `apps`, and `k create role --resource=deployments` writes
+> `- apps` there by itself. A rule written by hand with `""` for deployments matches nothing,
+> and the Forbidden message then says `in API group "apps"`, the group the request needed.
 
 ## Reuse a ClusterRole across namespaces
 
@@ -275,8 +289,21 @@ namespaces as needed, instead of a Role in each.
 
    The answer is `no`.
 
+3. Grant a built-in ClusterRole to a group. `view` is a ClusterRole the cluster comes with,
+   which reads most objects. `--group=auditors` names a group as the subject instead of a
+   ServiceAccount. A group has no object, so `--as=anyone` makes up a user name and
+   `--as-group=auditors` puts it in the group:
+
+   ```shell
+   k create rolebinding auditors-view -n dev --clusterrole=view --group=auditors
+   k auth can-i list pods -n dev --as=anyone --as-group=auditors
+   k auth can-i list secrets -n dev --as=anyone --as-group=auditors
+   ```
+
+   The answers are `yes`, then `no`: `view` reads pods but leaves out [Secrets](../../references/config.md#secrets), which hold passwords and keys.
+
 A ClusterRole bound by a RoleBinding is a reusable definition applied per namespace. The
-built-in `view` (read most objects, but not [Secrets](../../references/config.md#secrets)), `edit` (also change them) and `admin` (also
+built-in `view` (read most objects, but not Secrets), `edit` (also change them) and `admin` (also
 manage permissions in the namespace) roles are meant to be used this way.
 
 ## Reach a cluster-scoped resource
@@ -307,7 +334,9 @@ PersistentVolumes, which are pieces of storage that belong to the whole cluster.
    does nothing.
 
 2. The only binding without a namespace is a ClusterRoleBinding. `create clusterrolebinding`
-   takes the same flags as `create rolebinding`, with no `-n`:
+   takes the same flags as `create rolebinding`, with no `-n`. It grants only a ClusterRole:
+   it has no `--role` flag, because a Role's rules belong to one namespace and can't apply
+   cluster-wide:
 
    ```shell
    k create clusterrolebinding deploy-bot-reads-nodes \
@@ -420,7 +449,7 @@ Users and groups. Both are names asserted by whatever authenticated the request,
 so a binding can reference a user that no one can create or delete.
 </details>
 
-<details><summary>Fastest way to see everything a ServiceAccount can do in a namespace?</summary>
+<details><summary>What is the fastest way to see everything a ServiceAccount can do in a namespace?</summary>
 
 `k auth can-i --list -n <ns> --as=system:serviceaccount:<ns>:<name>`.
 </details>
@@ -488,8 +517,8 @@ Do these tasks in **15 minutes**.
 <details><summary>Solution</summary>
 
 Every task runs on `controlplane`. `k auth can-i … --as=` asks the apiserver whether a subject
-may do something, so each task ends with a question that should be answered `yes` and one that
-should be answered `no`. A ServiceAccount's name in `--as` is
+may do something, so most tasks end with two `can-i` checks, one that should be answered `yes`
+and one `no`. A ServiceAccount's name in `--as` is
 `system:serviceaccount:<namespace>:<name>`.
 
 **Task 1.**
@@ -599,7 +628,7 @@ On `controlplane`:
   subject gets, and the failure modes.
 * [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
   is the reference for every field of a Role, a ClusterRole and both bindings.
-* [ServiceAccounts](https://kubernetes.io/docs/concepts/security/service-accounts/) covers
+* [Service Accounts](https://kubernetes.io/docs/concepts/security/service-accounts/) covers
   how the subject you created authenticates, and how a pod gets one.
 * [Authorization](https://kubernetes.io/docs/reference/access-authn-authz/authorization/)
   explains where RBAC sits among the other authorizers a request passes through.

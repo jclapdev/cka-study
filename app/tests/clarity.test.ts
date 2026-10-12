@@ -12,6 +12,16 @@ const topics = listDomains()
 /** The markdown of a `##` section, from below its heading to the next `##`. */
 const sectionText = (md: string, title: string) => md.split(`\n## ${title}\n`)[1]?.split(/\n## /)[0] ?? "";
 
+describe("every lesson can be finished", () => {
+  for (const { id, summary } of topics) {
+    it(`${id}: each lesson of steps has numbered steps to check off`, () => {
+      // A lesson of steps gets its tick when every step is checked off, so one with none never would.
+      const empty = summary.lessons.filter((l) => l.kind === "steps" && !l.stepKeys.length).map((l) => l.title);
+      expect(empty).toEqual([]);
+    });
+  }
+});
+
 describe("a newcomer can follow each topic", () => {
   for (const { id, md, summary } of topics.filter((t) => t.summary.lab)) {
     const lessons = summary.lessons.filter((l) => l.kind === "steps" && l.stepKeys.length);

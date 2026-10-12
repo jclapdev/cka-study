@@ -1,10 +1,10 @@
 # How kubectl talks to the cluster
 
-`kubectl` is a client for the Kubernetes API, an HTTP interface served by the apiserver, the control plane component every request goes through. Every command, from `get` to `apply` to `edit`, becomes one or more HTTP requests to the apiserver, and every other component works through the same API ([the Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/)).
+`kubectl` is a client for the Kubernetes API, an HTTP interface served by the apiserver, the control plane component every request goes through. Commands such as `get`, `apply` and `edit` become HTTP requests to the apiserver, and every other component works through the same API ([the Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/)).
 
 ## Finding the cluster
 
-`kubectl` reads a kubeconfig file to learn the apiserver's address, the certificate of the CA, the certificate authority that signed the apiserver's certificate, to check it with, and the credential to send. The file holds clusters, users and contexts, where a context pairs a cluster with a user and a default namespace ([organizing cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)). Without a kubeconfig, `kubectl` tries `localhost:8080` and fails, which is the error on any machine that has none.
+`kubectl` reads a kubeconfig file to learn three things: the apiserver's address, the credential to send, and a CA certificate to check the apiserver with. A CA, certificate authority, is the signer of the apiserver's certificate, and its certificate proves the apiserver is genuine. The file holds clusters, users and contexts, where a context pairs a cluster with a user and a default namespace ([organizing cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)). Without a kubeconfig, `kubectl` tries `localhost:8080` and fails, which is the error on any machine that has none.
 
 ## What happens to a request
 
@@ -28,7 +28,7 @@ Admission is where the cluster's admission controllers, plugins inside the apise
 
 ## Types, groups and versions
 
-Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, and `kubectl explain` reads it from there, so it describes the exact version your cluster runs, including types added later by CustomResourceDefinitions (CRDs), objects that add new types to the cluster.
+Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, `kubectl explain` reads that schema, so it describes the exact version your cluster runs. That includes types added later by CustomResourceDefinitions (CRDs), objects that add new types to the cluster.
 
 ## Ways to change objects
 
@@ -42,7 +42,7 @@ Every type lives at a path under an API group and version, such as `/apis/apps/v
 
 `apply` remembers each file it applied in an annotation on the object, `kubectl.kubernetes.io/last-applied-configuration`, and compares the next file with it, so it can tell a field you deleted from one you never set ([how apply calculates differences](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/#how-apply-calculates-differences-and-merges-changes)).
 
-The commands combine. `kubectl create … --dry-run=client -o yaml` builds an object on your machine without sending it and prints it as YAML, so you get a correct file to edit before you apply it.
+`kubectl create … --dry-run=client -o yaml` builds an object on your machine without sending it and prints it as YAML, so you get a correct file to edit before you apply it.
 
 The shortcuts and checks are on the [kubectl reference page](../references/kubectl.md), and the kubeconfig details on the [kubeconfig reference page](../references/kubeconfig.md).
 

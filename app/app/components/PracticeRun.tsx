@@ -135,12 +135,17 @@ export function PracticeRun({
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={() => send("practice-quit")} className="rounded border border-line px-3 py-2 text-sm hover:border-accent">
+          <button
+            onClick={async () => {
+              if (await ask("Quit the practice exam? Your checks so far are lost and no score is saved.", "Quit")) send("practice-quit");
+            }}
+            className="rounded border border-line px-3 py-2 text-sm hover:border-accent">
             Quit
           </button>
           {startedAt && !endedAt && (
             <button
-              onClick={() => {
+              onClick={async () => {
+                if (!(await ask(`Finish the practice exam? The clock stops, and ${grader ? "every task is checked" : "you mark the tasks you passed"}.`, "Finish"))) return;
                 send("practice-finish");
                 if (grader) checkAll();
               }}
@@ -205,6 +210,7 @@ export function PracticeRun({
           )}
         </>
       )}
+      {dialog}
     </div>
   );
 }

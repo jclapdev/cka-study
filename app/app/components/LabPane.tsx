@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRevalidator, useRouteLoaderData } from "react-router";
+import { Link, useRevalidator, useRouteLoaderData } from "react-router";
 import type { loader as rootLoader } from "~/root";
 
 /**
@@ -84,8 +84,15 @@ export function LabStart({ lab, ask }: { lab: Lab; ask: (text: string, yes: stri
         <p>Docker is not running. Start Docker to start the lab.</p>
       ) : (
         <>
-          {lab.status === "failed" && <p>The lab didn't start.</p>}
-          {lab.error && <p>{lab.error}</p>}
+          {(lab.status === "failed" || lab.error) && (
+            <p>
+              {lab.error ?? "The lab didn't start."}{" "}
+              <Link to="/doc/lab/README.md#troubleshooting" className="underline">
+                Troubleshooting
+              </Link>{" "}
+              says what to check.
+            </p>
+          )}
           <button onClick={start} disabled={lab.blocked} className="rounded bg-accent px-4 py-2 font-semibold text-paper hover:opacity-90 disabled:opacity-60">
             {lab.status === "failed" ? "Try again" : "Start lab"}
           </button>

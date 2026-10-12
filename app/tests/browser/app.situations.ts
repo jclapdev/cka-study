@@ -117,7 +117,12 @@ test("practice exam: the clock starts once the lab runs, and survives a reload a
   await expect(page.locator("#lesson section").first()).toBeVisible();
   await page.goto(`${RBAC}/practice`);
   await expect(timer).toBeVisible();
+  // Finish and Quit both end the exam, so each asks first, like Start and Reset lab.
+  await page.getByRole("button", { name: "Finish" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Cancel" }).click();
+  await expect(timer).toBeVisible();
   await page.getByRole("button", { name: "Quit" }).click();
+  await page.locator("dialog[open]").getByRole("button", { name: "Quit" }).click();
   await expect(page.getByRole("button", { name: "Start practice exam" })).toBeVisible();
 });
 

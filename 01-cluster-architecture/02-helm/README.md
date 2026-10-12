@@ -241,10 +241,11 @@ same release.
    [values](../../references/helm.md#values) on that command line.
 
 3. Upgrade again with `--reuse-values`, which keeps the release's current values and merges
-   the new ones on top:
+   the new ones on top. `--version 6.15.0` keeps the chart where it is, because without
+   `--version`, `helm upgrade` takes the newest chart version in the repository:
 
    ```shell
-   helm upgrade web podinfo/podinfo -n apps --reuse-values --set replicaCount=3
+   helm upgrade web podinfo/podinfo --version 6.15.0 -n apps --reuse-values --set replicaCount=3
    helm get values web -n apps
    ```
 
@@ -256,8 +257,6 @@ same release.
    ui:
      message: hello from helm
    ```
-
-   Without `--version`, `helm upgrade` takes the newest chart version in the repository.
 
 ## Roll back
 
@@ -319,8 +318,10 @@ returns the release to an earlier one.
 
 ## Render without installing
 
-[`helm template`](../../references/helm.md#rendering-without-installing) renders a chart's manifests on the local machine and prints them, without
-installing anything.
+Rendering a chart means filling its templates with values to get plain manifests.
+[`helm template`](../../references/helm.md#rendering-without-installing) renders a chart on your machine and prints the manifests, without
+installing anything. You would do this to read exactly what a chart will create before you
+install it, or to keep the manifests as files and apply them with `k apply -f`.
 
 1. Render version 6.15.0 to a file and list the kinds in it. `helm template` takes the same
    release name, chart and flags as `helm install`. `> web.yaml` writes the result to a file,
@@ -612,5 +613,5 @@ On `controlplane`:
 * [Use OCI-based registries](https://helm.sh/docs/topics/registries/) covers installing charts
   from an `oci://` address instead of a repository.
 * [Custom Resource Definitions](https://helm.sh/docs/topics/charts/#custom-resource-definitions-crds)
-  explains how a chart installs [CRDs](../../references/crds.md) and why Helm never upgrades or deletes them.
+  explains how a chart installs [CRDs](../../references/crds.md), objects that add new types to the cluster, and why Helm never upgrades or deletes them.
   [CRDs and Operators](../04-crds-operators/README.md) builds on it.

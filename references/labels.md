@@ -1,6 +1,6 @@
 # Labels
 
-A label is a key-value pair on an object, such as `node-role.kubernetes.io/worker=` on a node. Labels have no effect on their own. Other things select objects by them: `kubectl get -l`, a [Service](services.md) choosing its pods, a node selector choosing nodes ([labels and selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)).
+A label is a key-value pair on an object, such as `node-role.kubernetes.io/worker=` on a node. Labels have no effect on their own. Other things select objects by them: `kubectl get -l`, a [Service](services.md) choosing its pods, and a node selector, which picks nodes by the labels a pod requires ([labels and selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)).
 
 ## Keys and values
 
@@ -8,7 +8,7 @@ A key has an optional prefix and a name, separated by `/`. Prefixes such as `kub
 
 ## Node labels
 
-[kubeadm](kubeadm.md) and the [kubelet](control-plane.md#components) put these labels on a control plane node:
+[kubeadm](kubeadm.md) and the [kubelet](workers.md#what-a-worker-runs) put these labels on a [control plane](control-plane.md) node:
 
 ```
 beta.kubernetes.io/os=linux,kubernetes.io/hostname=controlplane,kubernetes.io/os=linux,node-role.kubernetes.io/control-plane=,node.kubernetes.io/exclude-from-external-load-balancers=
@@ -20,7 +20,7 @@ The ROLES column of `kubectl get nodes` is built from `node-role.kubernetes.io/<
 
 ```bash
 kubectl get nodes --show-labels
-kubectl label node node01 node02 node-role.kubernetes.io/worker=   # add, empty value
+kubectl label node node01 node02 node-role.kubernetes.io/worker=   # add to the workers node01 and node02, empty value
 kubectl label node node02 node-role.kubernetes.io/worker-          # remove: key followed by -
 kubectl label node node01 disk=hdd --overwrite                     # change an existing value
 kubectl get nodes -l node-role.kubernetes.io/worker                # select by key

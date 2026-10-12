@@ -1,11 +1,10 @@
 # CRDs and Operators
 
-Kubernetes comes with a fixed set of object types, such as [Pods](../../references/pod.md) and [Deployments](../../references/workloads.md). A
-[CustomResourceDefinition](../../references/crds.md) (CRD) adds a new type to the [apiserver](../../references/control-plane.md#components), the part of the control plane every
-request goes through, so you can create objects of that type like any other. An [operator](../../references/crds.md#operators) is a
-program running in the cluster that watches objects of such a type and does the work they
-describe. Installing an operator usually means installing its CRDs and the program together,
-often from a [chart](../../references/helm.md#charts-repositories-and-releases), a package of manifests, installed with [Helm](../../references/helm.md), the tool that installs packaged applications into a cluster.
+Kubernetes comes with a fixed set of object types, such as [Pods](../../references/pod.md) and [Deployments](../../references/workloads.md), each written as a [manifest](../../references/kubectl.md#generating-yaml). A
+[CustomResourceDefinition](../../references/crds.md) (CRD) adds a new type to the [apiserver](../../references/control-plane.md#components), so you can create objects of that type
+like any other. An [operator](../../references/crds.md#operators) is a program running in the cluster that watches objects of such a
+type and does the work they describe. Installing an operator usually means installing its CRDs
+and the program together. They often come as one [Helm](../../references/helm.md) [chart](../../references/helm.md#charts-repositories-and-releases), a package of manifests that Helm installs.
 [How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
 
 <!-- lab: crds -->
@@ -49,7 +48,8 @@ A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the 
    customresourcedefinitions   crd,crds     apiextensions.k8s.io/v1   false        CustomResourceDefinition
    ```
 
-   Every type the cluster has is built into the apiserver, the control plane program that stores and serves objects.
+   So far, every type the cluster has is built into the apiserver, the program every request
+   goes through.
 
 ## Create a CRD
 
@@ -59,9 +59,49 @@ schedule. Nothing acts on it; it shows what a CRD adds.
 1. Search kubernetes.io for `customresourcedefinition`, open
    [Extend the Kubernetes API with CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition),
    and copy the `CronTab` CustomResourceDefinition under "Create a CustomResourceDefinition".
-   Paste it into `vim resourcedefinition.yaml` with `:set paste`, and save. It defines the
-   [API group](../../references/api-groups.md) `stable.example.com`, the name the type is filed under; the kind `CronTab`, the
-   type's name in a [manifest](../../references/kubectl.md#generating-yaml); the short name `ct`; and three fields under `spec`: `cronSpec` and `image` as strings, `replicas` as an integer.
+   Paste it into `vim resourcedefinition.yaml` with `:set paste`, and save. Without the docs'
+   comments, the file reads:
+
+   ```yaml
+   apiVersion: apiextensions.k8s.io/v1
+   kind: CustomResourceDefinition
+   metadata:
+     name: crontabs.stable.example.com
+   spec:
+     group: stable.example.com
+     versions:
+       - name: v1
+         served: true
+         storage: true
+         schema:
+           openAPIV3Schema:
+             type: object
+             properties:
+               spec:
+                 type: object
+                 properties:
+                   cronSpec:
+                     type: string
+                   image:
+                     type: string
+                   replicas:
+                     type: integer
+     scope: Namespaced
+     names:
+       plural: crontabs
+       singular: crontab
+       kind: CronTab
+       shortNames:
+       - ct
+   ```
+
+   `group` is the [API group](../../references/api-groups.md) the new type is filed under, `stable.example.com`. Under `versions`,
+   `served: true` makes the apiserver answer for `v1`, and `storage: true` makes it the version
+   objects are saved as. `openAPIV3Schema` lists the fields an object may have: under `spec`,
+   `cronSpec` and `image` as strings and `replicas` as a whole number. `scope: Namespaced` puts
+   each object in a namespace. `names` gives the type's names: `kind: CronTab` is what a
+   [manifest](../../references/kubectl.md#generating-yaml) puts in `kind`, `plural` and `singular` are what `kubectl` accepts, and `ct`
+   is a short name. `metadata.name` must be the plural, a dot, and the group.
 
 2. Apply it and look for the new type. `--api-group=stable.example.com` lists only the types
    in the CRD's group:
@@ -123,8 +163,23 @@ With the CRD applied, objects of the new type are created, listed and checked li
 
 1. On the same page, copy the `CronTab` object under
    [Create custom objects](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-custom-objects)
-   into `vim my-crontab.yaml`, then apply it and list it by both names. `k get crontab` uses
-   the type's name, and `k get ct` its short name:
+   into `vim my-crontab.yaml`:
+
+   ```yaml
+   apiVersion: "stable.example.com/v1"
+   kind: CronTab
+   metadata:
+     name: my-new-cron-object
+   spec:
+     cronSpec: "* * * * */5"
+     image: my-awesome-cron-image
+   ```
+
+   `apiVersion` is the CRD's group and version, and `kind` is the name the CRD gave the type.
+   `cronSpec` is a schedule in the five-field format Linux's cron uses (minute, hour, day of
+   month, month, day of week), and `image` names a container image. Both are only text here:
+   nothing runs them. Apply the file and list it by both names. `k get crontab` uses the type's
+   name, and `k get ct` its short name:
 
    ```shell
    k apply -f my-crontab.yaml
@@ -134,10 +189,14 @@ With the CRD applied, objects of the new type are created, listed and checked li
 
    Both commands list `my-new-cron-object`, because `ct` is the short name the CRD defines.
 
-2. Try an object whose `replicas` is text. Copy `my-crontab.yaml` to `bad.yaml`, and in vim
-   change the name to `bad` and the `spec` to:
+2. Try an object whose `replicas` is text. Copy the file with `cp my-crontab.yaml bad.yaml`,
+   then in `vim bad.yaml` change the name to `bad` and the `spec`, so the file reads:
 
    ```yaml
+   apiVersion: "stable.example.com/v1"
+   kind: CronTab
+   metadata:
+     name: bad
    spec:
      replicas: three
    ```
@@ -154,10 +213,14 @@ With the CRD applied, objects of the new type are created, listed and checked li
 
    The apiserver checks every object against the CRD's [`openAPIV3Schema`](../../references/crds.md#schemas-and-validation).
 
-3. Try a field the schema does not have. In `bad.yaml`, change the name to `extra` and the
-   `spec` to:
+3. Try a field the schema does not have. In `vim bad.yaml`, change the name to `extra` and the
+   `spec`, so the file reads:
 
    ```yaml
+   apiVersion: "stable.example.com/v1"
+   kind: CronTab
+   metadata:
+     name: extra
    spec:
      image: x
      colour: blue
@@ -173,8 +236,8 @@ With the CRD applied, objects of the new type are created, listed and checked li
    Error from server (BadRequest): error when creating "bad.yaml": CronTab in version "v1" cannot be handled as a CronTab: strict decoding error: unknown field "spec.colour"
    ```
 
-   `kubectl` asks the apiserver to reject unknown fields, so a misspelt field is an error
-   instead of being dropped without a word.
+   `kubectl` asks the apiserver to reject unknown fields, so a misspelled field is an error
+   instead of being dropped.
 
 4. Delete the CRD, then list the objects again. `crontabs.stable.example.com` is the CRD's
    name:
@@ -196,13 +259,17 @@ With the CRD applied, objects of the new type are created, listed and checked li
 
 ## Install an operator
 
-An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. cert-manager issues [TLS certificates](../../references/certificates.md#client-and-serving-certificates), the files that let HTTPS servers prove who they are: you
-create a `Certificate` object, and its [controller](../../references/control-plane.md#components), the part of the operator that watches those objects, writes the key and certificate into a [Secret](../../references/config.md#secrets), an object that holds sensitive data.
+An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. The one here,
+cert-manager, issues [TLS certificates](../../references/certificates.md#client-and-serving-certificates), the files that let HTTPS servers prove who they are. You
+create a `Certificate` object that asks for one. cert-manager's [controller](../../references/control-plane.md#components), the part that watches
+those objects, then writes the key and certificate into a [Secret](../../references/config.md#secrets), an object for sensitive data.
 [How TLS secures the cluster](../../learn/tls.md) explains what a certificate proves.
 
-1. Install cert-manager's chart, its packaged manifests, with Helm, the tool that installs charts, along with its CRDs.
+1. Install cert-manager's chart with Helm, along with its CRDs.
    `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
-   a server that stores images and charts, so there is no `helm repo add` first. `--version v1.21.2` pins the chart version, and
+   a server that stores images and, here, charts. `oci://` names that kind of address, after
+   [OCI](../../references/helm.md#charts-repositories-and-releases), the standard such registries follow. Helm installs from it directly, so there is no
+   `helm repo add` first. `--version v1.21.2` pins the chart version, and
    `--set crds.enabled=true` sets `crds.enabled`:
 
    ```shell
@@ -251,8 +318,9 @@ create a `Certificate` object, and its [controller](../../references/control-pla
    orders.acme.cert-manager.io           2026-09-28T00:16:50Z
    ```
 
-   `cert-manager` does the work, `cainjector` copies certificate data into other objects, and `webhook`
-   checks cert-manager objects before the apiserver stores them.
+   `cert-manager` is the controller that does the work. `webhook` is a webhook, a server the
+   apiserver calls to check an object before storing it, and it checks cert-manager's objects.
+   `cainjector` copies the certificates of a [CA](../../references/certificates.md), a certificate authority, into other objects that need them.
 
 3. List the new types in the `cert-manager.io` group, with `--api-group`:
 
@@ -289,8 +357,10 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    k explain certificate.spec | grep -- '-required-'
    ```
 
-   The first five lines are the kinds of issuer, of which you set one: `selfSigned` signs each certificate with its own key, `ca` with the key of a [CA](../../references/certificates.md), a certificate authority, kept in a Secret, and `acme`, `vault` and `venafi` ask an outside service. The last two are the
-   fields a Certificate must have:
+   The first five lines are the kinds of issuer, and an Issuer sets one of them. `selfSigned`
+   signs each certificate with its own key. `ca` signs with the key of a [CA](../../references/certificates.md), a certificate
+   authority, kept in a Secret. `acme`, `vault` and `venafi` ask an outside service. The last
+   two lines are the fields a Certificate must have:
 
    ```
      acme	<Object>
@@ -369,7 +439,9 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    ```
 
    You created one object. The controller created the CertificateRequest and the Secret, as
-   its [ServiceAccount](../../references/service-accounts.md), the identity a program in the cluster runs as.
+   its [ServiceAccount](../../references/service-accounts.md), the identity a program in the cluster runs as. The Secret's 3 keys are
+   `tls.crt`, the certificate; `tls.key`, its private key; and `ca.crt`, the certificate of
+   the CA that signed it. Here that is the same certificate, because it signed itself.
 
 4. Read the certificate the Secret holds. `{.data.tls\.crt}` is the key `tls.crt` under
    `data`; the `\.` keeps the dot in the key's name from being read as a step down. Secret
@@ -407,11 +479,27 @@ them, so `k explain` reads their fields from the CRDs and marks the [required on
    demo-tls   kubernetes.io/tls   3      5s
    ```
 
-   The controller saw the Certificate's Secret missing and issued a new one. Changing what an
-   operator manages means changing its custom resource, not the objects it creates.
+   The controller saw the Certificate's Secret missing and issued a new one. A custom resource is
+   an object of a type a CRD added, such as the Certificate. Changing what an operator manages
+   means changing its custom resource, not the objects it creates.
 
 6. Leave out a required field. In `vim cert.yaml`, change the name to `nope` and delete the
-   `secretName` line, then apply it:
+   `secretName` line, so the file reads:
+
+   ```yaml
+   apiVersion: cert-manager.io/v1
+   kind: Certificate
+   metadata:
+     name: nope
+     namespace: demo
+   spec:
+     dnsNames:
+     - demo.example.com
+     issuerRef:
+       name: selfsigned
+   ```
+
+   Then apply it:
 
    ```shell
    k apply -f cert.yaml
@@ -598,7 +686,7 @@ customresourcedefinition.apiextensions.k8s.io/orders.acme.cert-manager.io
 
 ```shell
 k explain certificate.spec.subject > /opt/course/3/subject.txt
-head -8 /opt/course/3/subject.txt
+head -9 /opt/course/3/subject.txt
 ```
 
 The file starts with the group, kind and field, which confirms it documents the right field:
@@ -612,6 +700,7 @@ FIELD: subject <Object>
 
 
 DESCRIPTION:
+    Requested set of X509 certificate subject attributes.
 ```
 
 **Task 4.** cert-manager's webhook checks every cert-manager object before the apiserver stores

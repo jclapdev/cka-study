@@ -1,9 +1,10 @@
 # Kustomize
 
-[Kustomize](../../references/kustomize.md) takes plain YAML [manifests](../../references/kubectl.md#generating-yaml) and changes them for each use, such as a different
-namespace, a name prefix or an image tag, without editing the original files. A file named
-`kustomization.yaml` lists the manifests and the changes. Kustomize is built into `kubectl`, so
-nothing else needs installing.
+The same application often runs in several environments, separate places with their own
+settings, such as `staging` for testing changes and `prod` for real users. [Kustomize](../../references/kustomize.md) takes one set of plain YAML [manifests](../../references/kubectl.md#generating-yaml)
+and changes them for each environment, such as a different namespace, a name prefix or an image
+tag, without editing the original files. A file named `kustomization.yaml` lists the manifests
+and the changes. Kustomize is built into `kubectl`, so nothing else needs installing.
 [How Kustomize works](../../learn/kustomize.md) explains how one set of files serves several environments.
 
 <!-- lab: kustomize -->
@@ -21,11 +22,10 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 * Write an overlay, the changes for an environment, that sets the base's namespace, names, [labels](../../references/labels.md)
   and image tag.
 * Change fields in an object with patches copied from the docs.
-* Generate a [ConfigMap](../../references/config.md) whose name changes with its contents, and see the [Deployment](../../references/workloads.md) replace its
+* Generate a [ConfigMap](../../references/config.md), an object of settings a pod can read, whose name changes with its contents, and see the [Deployment](../../references/workloads.md) replace its
   pods when it does.
 * Apply and delete everything a kustomization produces with `-k`.
 
-Every YAML file in the steps comes from `k create --dry-run` or from kubernetes.io, the docs the exam allows.
 The Kustomize snippets are all on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
@@ -118,7 +118,7 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
 ## Write an overlay
 
 An [overlay](../../references/kustomize.md#bases-and-overlays) is a kustomization whose resources include another kustomization, the base, and
-which changes what the base produces. The base files are never edited.
+which changes what the base produces. An overlay does not edit the base files.
 
 1. In the same Bases and Overlays section, copy the `prod` overlay block, paste it, and build
    it:
@@ -232,7 +232,9 @@ which changes what the base produces. The base files are never edited.
 
    `images` names the image as the base does, `nginx`. The `env: prod` label went onto each
    object's own labels only, not into the selector or the [pod template](../../references/workloads.md#the-pod-template).
-   [What an overlay can set](../../references/kustomize.md#what-an-overlay-can-set) lists the other fields.
+   [What an overlay can set](../../references/kustomize.md#what-an-overlay-can-set) lists the other fields. The rest came from the base files as
+   `k create` wrote them: `80-80` is the name it gave the Service's port, and the empty
+   `status` fields are left for the cluster to fill in.
 
 4. Apply the overlay. `apply -k prod` builds the kustomization in `prod` and applies the
    result, as `apply -f` does with a file:
@@ -250,12 +252,21 @@ which changes what the base produces. The base files are never edited.
 
    `namespace:` sets the namespace on every object but [does not create it](../../references/kustomize.md#failure-modes).
 
-5. Generate a [Namespace](../../references/namespaces.md) manifest into the overlay, then add `- namespace.yaml` under
-   `resources` in `vim prod/kustomization.yaml`:
+5. Generate a [Namespace](../../references/namespaces.md) manifest into the overlay, so the overlay creates `prod` itself:
 
    ```shell
    k create namespace prod --dry-run=client -o yaml > prod/namespace.yaml
    ```
+
+   Then in `vim prod/kustomization.yaml`, add it to `resources`, below the base:
+
+   ```yaml
+   resources:
+   - ../base
+   - namespace.yaml
+   ```
+
+   The overlay is applied again in the next lesson, with its patches.
 
 ## Patch fields
 
@@ -352,7 +363,9 @@ the fields to add or replace.
    ```
 
    The pods are missing, because the [label](../../references/kustomize.md#labels) was not added to the pod template. `-l app=web`
-   finds them, because that [selector](../../references/labels.md#keys-and-values) matches the pod template's labels.
+   finds them, because that [selector](../../references/labels.md#keys-and-values) matches the pod template's labels. To put `env: prod` on
+   the pods as well, add `includeTemplates: true` beside `pairs` in the `labels` entry. It adds
+   the label to the pod template and leaves the selector alone.
 
 ## Generate a ConfigMap
 
@@ -378,9 +391,13 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    the example file has an `envFrom` block. Copy it into `vim base/deployment.yaml`, below
    `resources: {}` and at the same indent, and change the name. `envFrom` with
    `configMapRef` turns every key in the ConfigMap into an environment variable in the
-   container:
+   container. The container in `base/deployment.yaml` now reads:
 
    ```yaml
+         containers:
+         - image: nginx:1.27
+           name: nginx
+           resources: {}
            envFrom:
            - configMapRef:
                name: web-config
@@ -432,7 +449,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    +  name: prod-web-config-hc7d4825hb
    ```
 
-   New contents give a new name, and the new name changes the pod template, so the Deployment
+   New contents give a new name. The new name changes the pod template, so the Deployment
    rolls out new pods. A ConfigMap edited in place would not update the running pods.
 
 6. Apply the change:
@@ -455,7 +472,8 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    ```
 
    The old ConfigMap is still there. `k apply` creates and updates, and never deletes an object
-   the kustomization no longer produces.
+   the kustomization no longer produces. `kube-root-ca.crt` is not yours: the cluster puts
+   this [ConfigMap](../../references/config.md#kube-root-cacrt) in every namespace, holding the [certificate](../../references/certificates.md) pods use to check the [apiserver](../../references/control-plane.md#components).
 
 ## Delete everything
 
@@ -567,7 +585,7 @@ Do these tasks in **15 minutes**.
 <details><summary>Solution</summary>
 
 Every task runs on `controlplane`. `k kustomize <folder>` prints what a kustomization builds
-without changing anything, so use it to check each folder before applying it.
+without changing anything.
 
 **Task 1.** Generate the two manifests into `base`, then paste the base kustomization block from
 the Bases and Overlays section of the Kustomize page. Its `resources` list names the two files:
@@ -696,7 +714,18 @@ error: no resource matches strategic merge patch "Deployment.v1.apps/tools-api.[
 
 The patch names the prefixed `tools-api`, but a patch is matched against the base's names,
 before `namePrefix` is added. In `vim /opt/course/3/overlay/replicas.yaml`, change the name to
-`api`, then apply:
+`api`, so the patch reads:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 2
+```
+
+Then apply:
 
 ```shell
 k apply -k /opt/course/3/overlay

@@ -4,9 +4,9 @@ Kubernetes sets three rules for networking: every pod gets its own IP address, a
 
 ## CNI plugins
 
-The container network interface (CNI) is a standard for how a container runtime asks a plugin to connect a container to a network ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). When the kubelet starts a pod, the runtime calls the plugin named in `/etc/cni/net.d/`, and the plugin gives the pod an address and connects it.
+The container network interface (CNI) is a standard for how a container runtime asks a plugin to connect a container to a network ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). When the kubelet, the agent on each node that runs its pods, starts a pod, the container runtime, the program that starts containers, calls the plugin named in `/etc/cni/net.d/`, and the plugin gives the pod an address and connects it.
 
-A plugin usually comes in two parts: that configuration file on every node, and an agent pod on every node, installed as a DaemonSet, which carries traffic between nodes. Plugins differ in how they carry it and in what else they do. Flannel connects pods and nothing more, while Calico also enforces NetworkPolicy, the rules that limit which pods may talk to which.
+A plugin usually comes in two parts: that configuration file on every node, and an agent pod on every node, installed as a DaemonSet, which carries traffic between nodes. Flannel connects pods and nothing more, while Calico also enforces NetworkPolicy, the rules that limit which pods may talk to which.
 
 ## Address ranges
 

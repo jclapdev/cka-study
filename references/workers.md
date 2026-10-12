@@ -1,12 +1,17 @@
 # Workers
 
-A node is a machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet (the agent that runs its pods), [kubeadm](kubeadm.md), swap turned off, and the same kernel settings ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). Unlike the control plane node, it runs no control plane [static pods](control-plane.md#static-pods).
+A node is a machine in the cluster, and the [apiserver](control-plane.md#components) keeps a Node object for each. A worker is a node that runs workloads. It has the same software as the [control plane](control-plane.md) node: a [container runtime](#what-a-worker-runs), the kubelet (the agent that runs its pods), [kubeadm](kubeadm.md), swap turned off, and the same kernel settings. Swap is disk space Linux uses as extra memory, and by default the kubelet refuses to start while it is on ([installing kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)). Unlike the control plane node, it runs no control plane [static pods](control-plane.md#static-pods).
 
 ## What a worker runs
 
-- **kubelet**, a systemd service. It is the only agent that starts containers. It registers the node, watches the apiserver for pods assigned to it, and reports their status.
+Every node runs these, the control plane node included.
+
+- **kubelet**: the kubelet is a systemd service that runs the node's pods. It tells the container runtime which containers to run. It registers the node, watches the apiserver for pods assigned to it, and reports their status.
 - **The container runtime** is the program that pulls images and starts and stops containers. containerd is one such runtime. The CRI (container runtime interface) is the API the kubelet uses to give a runtime instructions, and containerd serves it at `/run/containerd/containerd.sock`. crictl is a command-line client for the CRI ([`crictl`](https://kubernetes.io/docs/tasks/debug/debug-cluster/crictl/)), so `sudo crictl ps` lists the node's containers.
-- **kube-proxy**, which makes [Service](services.md) addresses work on the node, and the pod network agent, which connects the node's pods to the others, both as [DaemonSet](daemonsets.md) pods.
+- **kube-proxy** makes [Service](services.md) addresses work on the node.
+- **The pod network agent** connects the node's pods to the others.
+
+kube-proxy and the pod network agent both run as [DaemonSet](daemonsets.md) pods.
 
 A worker has no admin [kubeconfig](kubeconfig.md), only `/etc/kubernetes/kubelet.conf` for the kubelet's own identity. `kubectl` on a worker fails with `The connection to the server localhost:8080 was refused`. Run `kubectl` on the control plane node.
 
@@ -30,7 +35,7 @@ Active: activating (auto-restart) (Result: exit-code)
 
 `kubeadm join <apiserver>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>`
 
-At the start neither side trusts the other, so the join line carries one secret in each direction. The hash of the [CA](certificates.md), the certificate authority that signed the apiserver's certificate, lets the node check that it reached the right apiserver. The token lets the apiserver accept the node for long enough to sign a client certificate for it ([TLS bootstrapping](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/)). After the join, the node authenticates with that certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem`. [Joining a node](../learn/kubeadm.md#joining-a-node) shows the sequence.
+At the start neither side trusts the other, so the join line carries something for each direction. The hash of the [CA](certificates.md), the certificate authority that signed the apiserver's certificate, lets the node check that it reached the right apiserver. The token, the part to keep secret, lets the apiserver accept the node for long enough to sign a client certificate for it ([TLS bootstrapping](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/)). After the join, the node authenticates with that certificate, which lands in `/var/lib/kubelet/pki/kubelet-client-current.pem`. [Joining a node](../learn/kubeadm.md#joining-a-node) shows the sequence.
 
 Tokens expire 24 hours after they are created ([bootstrap tokens](https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/)), so the join line printed by `kubeadm init` stops working after a day. Print a new one on the control plane node:
 

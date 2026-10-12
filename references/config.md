@@ -39,7 +39,7 @@ env:
       key: password
 ```
 
-The container sees `MODE=prod` and `PASSWORD=s3cret`. Environment variables are read once, when the container starts, so a change to the ConfigMap reaches the pod only after it restarts. A ConfigMap mounted as files is updated in place after a short delay ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
+If `app-config` holds `MODE=prod` and the Secret `db` holds `password: s3cret`, the container sees `MODE=prod` and `PASSWORD=s3cret`. Environment variables are read once, when the container starts, so a change to the ConfigMap reaches the pod only after it restarts. A ConfigMap mounted as files is updated in place after a short delay ([mounted ConfigMaps are updated automatically](https://kubernetes.io/docs/concepts/configuration/configmap/#mounted-configmaps-are-updated-automatically)).
 
 ## kube-root-ca.crt
 

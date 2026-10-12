@@ -1,14 +1,14 @@
 # RBAC
 
-RBAC (role-based access control) is how Kubernetes decides what a user may do. Every
-request the [apiserver](control-plane.md#components) accepts has already been
-authenticated, so the apiserver knows its subject: the identity that sent it. RBAC decides whether that subject may perform that verb, such as `list`, on that
+RBAC (role-based access control) is how Kubernetes decides what a user may do. It runs
+after authentication, which tells the [apiserver](control-plane.md#components) the request's subject: the identity
+that sent it. RBAC decides whether that subject may perform that verb, such as `list`, on that
 resource, such as pods. [How access control works](../learn/access-control.md) explains the model.
 
 ## The model
 
-Four objects, in two pairs. One pair defines permissions, the other grants them —
-a permission that is never bound grants nothing.
+RBAC has four objects, in two pairs. One pair defines permissions and the other grants them,
+so a role that is never bound grants nothing.
 
 | | Defines what | Grants it to whom |
 | --- | --- | --- |
@@ -19,10 +19,8 @@ A Role is a list of permissions inside one namespace, and a ClusterRole is the s
 whole cluster. A RoleBinding grants a Role or a ClusterRole to subjects inside one namespace,
 and a ClusterRoleBinding grants a ClusterRole in every namespace.
 
-The pairs cross in one direction only.
-
 A `RoleBinding` may reference a `ClusterRole`. The permissions still apply only
-inside the binding's own namespace — the `ClusterRole` is being used as a reusable
+inside the binding's own namespace. The `ClusterRole` is used as a reusable
 definition, not as a cluster-wide grant. There is no path from a `Role` to a
 `ClusterRoleBinding`; a namespaced definition cannot be granted cluster-wide.
 
@@ -30,13 +28,13 @@ definition, not as a cluster-wide grant. There is no path from a `Role` to a
 
 Three kinds, named in a binding's `subjects` ([referring to subjects](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-subjects)):
 
-- **ServiceAccount** — an in-cluster identity, referred to in full as
-  `system:serviceaccount:<namespace>:<name>`. The only kind Kubernetes creates
-  ([ServiceAccounts](service-accounts.md)).
-- **User** — has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a [certificate](certificates.md) or token
+- **ServiceAccount**: an identity for a program in the cluster, referred to in full as
+  `system:serviceaccount:<namespace>:<name>`. It is the only kind that is an object in the
+  cluster ([ServiceAccounts](service-accounts.md)).
+- **User**: has no object ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user exists because a [certificate](certificates.md) or token
   authenticates as that name ([authentication](authentication.md)). `kubeadm` writes `kubernetes-admin` into
   `admin.conf`, the admin [kubeconfig](kubeconfig.md) that `kubectl` reads.
-- **Group** — also has no object, and comes from the same credential. `kubeadm`
+- **Group**: also has no object, and comes from the same credential. `kubeadm`
   puts `kubernetes-admin` in the group `kubeadm:cluster-admins`, and binds *that
   group* to `cluster-admin`.
 
@@ -82,8 +80,8 @@ kubectl auth can-i list pods -n dev --as=system:serviceaccount:dev:deploy-bot
 kubectl auth can-i --list -n dev --as=system:serviceaccount:dev:deploy-bot
 ```
 
-`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation) another subject ([authentication](authentication.md#commands)), and works on any command, so a denied request can be seen in
-full rather than as a bare `no`:
+`--as` [impersonates](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation) another subject ([authentication](authentication.md#commands)). It works on any command, so a denied request shows in
+full instead of as a bare `no`:
 
 ```
 Error from server (Forbidden): pods is forbidden: User

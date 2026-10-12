@@ -8,13 +8,13 @@ A base is a folder of ordinary manifests plus a `kustomization.yaml` that lists 
 
 ```mermaid
 flowchart LR
-  B[base/<br/>deployment.yaml<br/>service.yaml<br/>kustomization.yaml] --> D[overlays/dev/<br/>kustomization.yaml]
-  B --> P[overlays/prod/<br/>kustomization.yaml<br/>namespace.yaml<br/>resources-patch.yaml]
+  B[base/<br/>deployment.yaml<br/>service.yaml<br/>kustomization.yaml] --> D[dev/<br/>kustomization.yaml]
+  B --> P[prod/<br/>kustomization.yaml<br/>namespace.yaml<br/>set_memory.yaml]
   P -->|kubectl kustomize| M[manifests]
   M -->|kubectl apply -k| C[cluster]
 ```
 
-Every file stays valid Kubernetes YAML. There are no templates and no placeholders, so the base can be applied on its own, and a change is either a field in `kustomization.yaml`, such as `namespace` or `images`, or a patch: a partial manifest holding only the fields to change.
+Every file stays valid Kubernetes YAML. There are no templates and no placeholders, so the base can be applied on its own. A change is either a field in `kustomization.yaml`, such as `namespace` or `images`, or a patch: a partial manifest holding only the fields to change.
 
 ## Names that change with their contents
 

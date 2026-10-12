@@ -1,6 +1,6 @@
 # DaemonSets
 
-A DaemonSet runs one copy of a pod on every node, or on every node that matches its selector. When a node joins, the DaemonSet adds a pod to it, and when a node leaves, its pod is removed ([DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)). [Node](workers.md) agents are deployed this way: [kube-proxy](control-plane.md#components), the pod network's agent, log collectors.
+A DaemonSet runs one copy of a pod on every node, or on every node that matches its selector. When a node joins, the DaemonSet adds a pod to it, and when a node leaves, its pod is removed ([DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)). [Node](workers.md) agents are deployed this way: [kube-proxy](workers.md#what-a-worker-runs), which makes [Service](services.md) addresses work on its node; the pod network's agent, which connects the node's pods to the others; and log collectors, which ship each node's logs elsewhere.
 
 ## On a kubeadm cluster
 

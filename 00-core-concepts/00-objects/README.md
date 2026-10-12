@@ -1,10 +1,10 @@
 # Kubernetes Objects
 
 Kubernetes runs containers across a group of machines called a cluster. Everything you run on
-it is an object: a record of what you want, which the cluster then works to make true. In this
-topic you run a [Pod](../../references/pod.md), write one in YAML, keep copies of it running with a [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) and a [Deployment](../../references/workloads.md), give
-them a stable address with a [Service](../../references/services.md), group objects in [namespaces](../../references/namespaces.md), and change objects with `kubectl`,
-the command that talks to the cluster.
+it is an object: a record of what you want, which the cluster then works to make true. The
+first objects to know are the [Pod](../../references/pod.md), which runs containers; the [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) and the [Deployment](../../references/workloads.md), which
+keep copies of a pod running; the [Service](../../references/services.md), which gives pods a stable address; and the [namespace](../../references/namespaces.md),
+which groups objects. You create and change them with `kubectl`, the command that talks to the cluster.
 [How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components), programs in the cluster that act on it, and
 [how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command sends.
 
@@ -32,8 +32,11 @@ placed together on one [node](../../references/workers.md), a machine in the clu
 
 1. Go to `controlplane` and start a pod. `ssh controlplane` opens a shell on the machine that
    runs the cluster's [control plane](../../references/control-plane.md), where `kubectl` works. `kubectl run web` creates a pod
-   named `web`, and `--image=nginx:1.27` is the container image it runs, version `1.27` of the
-   nginx web server:
+   named `web`. A container image is a packaged program with the files it needs, which the
+   node downloads from a registry, a server that stores images.
+   `--image=nginx:1.27` picks version `1.27` of nginx, a small web server. These lessons use
+   nginx because it starts in seconds and answers web requests with a welcome page, so you
+   can see it working:
 
    ```shell
    ssh controlplane
@@ -41,8 +44,8 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    ```
 
    It prints `pod/web created`. The cluster has stored the pod, which does not mean it runs
-   yet. Wherever `kubectl` works, [`k`](../../references/kubectl.md#the-k-alias-and-short-names) is the same command with Tab completion: type `k get dep`
-   and press Tab, and it writes `deployments`.
+   yet. Wherever `kubectl` works, [`k`](../../references/kubectl.md#the-k-alias-and-short-names) is the same command with Tab completion: type `k get po`
+   and press Tab twice, and it lists the types whose names start with `po`, such as `pods`.
 
 2. List the pods. `get pods` lists every pod in `default`, the namespace, or named group of objects, that a command uses when it
    names none:
@@ -78,8 +81,8 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    ```
 
    Every pod gets its own IP from the pod network, the part of the cluster that gives pods
-   their addresses. `NOMINATED NODE` and `READINESS GATES` stay
-   `<none>` for an ordinary pod.
+   their addresses. `NOMINATED NODE` and `READINESS GATES` belong to scheduling features that
+   an ordinary pod doesn't use, so they show `<none>`.
 
 4. Read what happened to it. `describe pod web` prints the pod's details, and ends with its
    `Events`, each thing the cluster did to it, oldest first:
@@ -102,7 +105,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    ```
 
    The [scheduler](../../references/control-plane.md#components) is the part of the control plane that picks a node for each pod. It chose `node01` for `default/web`, the pod `web` in the namespace `default`.
-   Then the kubelet on `node01`, the agent that runs pods on that machine, pulled the
+   Then the [kubelet](../../references/workers.md#what-a-worker-runs) on `node01`, the agent that runs pods on that machine, pulled the
    image, created the container and started it.
 
 5. Delete the pod and list again. `delete pod web` deletes the pod by name:
@@ -117,8 +120,10 @@ placed together on one [node](../../references/workers.md), a machine in the clu
 
 ## Write a pod in YAML
 
-Any object can be written as a [manifest](../../references/kubectl.md#generating-yaml), a YAML file that `kubectl` sends to the cluster. The
-docs have one for each common type, ready to copy.
+Any object can be written as a [manifest](../../references/kubectl.md#generating-yaml), a YAML file that `kubectl` sends to the cluster. A
+manifest can be kept, edited and applied again, which a one-off command can't. Some types, such
+as the ReplicaSet in the next lesson, have no command that writes their YAML, so it comes from
+kubernetes.io, which has an example of each common type, ready to copy.
 
 1. Search kubernetes.io for `pods`, open
    [Pods](https://kubernetes.io/docs/concepts/workloads/pods/#using-pods), and find the example
@@ -148,9 +153,8 @@ docs have one for each common type, ready to copy.
        - containerPort: 80
    ```
 
-   `apiVersion` is the version of the Kubernetes API, the set of object types the cluster
-   accepts, that the type belongs to: `v1` for a pod.
-   `kind` is the type of object. `metadata` identifies the object, here by its `name`. `spec` is
+   The Kubernetes API is the set of object types the cluster accepts. `apiVersion` says which
+   version of it the type belongs to: `v1` for a pod. `kind` is the type of object. `metadata` identifies the object, here by its `name`. `spec` is
    the state you want: a list of `containers`, where each `-` starts one container with its
    `name`, its `image`, and the `containerPort` it listens on.
 
@@ -184,22 +188,24 @@ docs have one for each common type, ready to copy.
    `status` is what the cluster last saw, and the cluster writes it, never you. Once the pod
    runs, its `phase` is `Running` and `podIP` holds the pod's address.
 
-5. Look up a field the docs' example leaves out. [`explain`](../../references/kubectl.md#kubectl-explain) prints the fields of any type
-   from the cluster's own schema. `pod.spec.containers.resources` is a path through the YAML:
-   the type, then each field below it, joined with dots. `| head -13` keeps the first 13 lines:
+5. Look up a field the docs' example leaves out. A container's `resources` field sets how much
+   CPU and memory it asks for and may use, and the example file has none. [`explain`](../../references/kubectl.md#kubectl-explain) prints the
+   fields of any type from the cluster's own description of its types, so it shows where
+   `resources` goes and what it holds. `pod.spec.containers.resources` is a path through the
+   YAML: the type, then each field below it, joined with dots:
 
    ```shell
-   k explain pod.spec.containers.resources | head -13
+   k explain pod.spec.containers.resources
    ```
 
-   `FIELD` gives the field's type in angle brackets, and `FIELDS` lists what goes under it:
+   `FIELD` gives the field's type in angle brackets, `DESCRIPTION` says what it is for, and
+   `FIELDS` lists what goes under it (trimmed here):
 
    ```
    KIND:       Pod
    VERSION:    v1
 
    FIELD: resources <ResourceRequirements>
-
 
    DESCRIPTION:
        Compute Resources required by this container. Cannot be updated. More info:
@@ -208,10 +214,20 @@ docs have one for each common type, ready to copy.
 
    FIELDS:
      claims	<[]ResourceClaim>
+       Claims lists the names of resources, defined in spec.resourceClaims, that
+       are used by this container.
+
+     limits	<map[string]Quantity>
+       Limits describes the maximum amount of compute resources allowed.
+
+     requests	<map[string]Quantity>
+       Requests describes the minimum amount of compute resources required.
    ```
 
-   `DESCRIPTION` says what the field is for. `[]` in a type, as in `<[]ResourceClaim>`, means a
-   list. `--recursive` prints every field below the path at once, without descriptions.
+   `limits` and `requests` are the fields you would write under `resources`. `[]` in a type,
+   as in `<[]ResourceClaim>`, means a list, and `map[string]Quantity` means names with amounts,
+   such as `memory: 128Mi`. `--recursive` prints every field below the path at once, without
+   descriptions.
 
 6. Delete the pod with the file. `delete -f nginx.yaml` deletes the objects the file
    describes:
@@ -271,7 +287,8 @@ key-value pair on an object. When there are too few, it creates new ones from it
    starting with `#` is a comment.
 
 2. Create it, then list the ReplicaSet and its pods. `apply -f frontend.yaml` creates what the
-   file describes. `get rs` lists ReplicaSets, `rs` being short for `replicasets`, and
+   file describes, as `create -f` did for the pod. Unlike `create`, it can also change the
+   object later from the same file, which the Create or apply lesson shows. `get rs` lists ReplicaSets, `rs` being short for `replicasets`, and
    `--show-labels` adds a column with each pod's labels:
 
    ```shell
@@ -348,7 +365,8 @@ of creating ReplicaSets yourself.
 
 1. Create a Deployment with three pods. `create deployment web` makes a Deployment named
    `web`, `--image=nginx:1.27` is the image of its container, and `--replicas=3` is how many
-   pods it keeps. `rollout status deploy/web` waits until all three are ready:
+   pods it keeps. `deploy/web` names one object as `<type>/<name>`, and `rollout status
+   deploy/web` waits until all three of its pods are ready:
 
    ```shell
    k create deployment web --image=nginx:1.27 --replicas=3
@@ -426,8 +444,9 @@ Each pod has [its own IP](../../learn/network-namespaces.md), and a pod that rep
 pods a stable IP and a [DNS name](../../learn/dns.md), and picks its pods by label.
 
 1. Expose the Deployment. `expose deployment web` creates a Service named `web` that selects
-   the Deployment's pods by their label, `app: web`, and `--port=80` is the port it listens
-   on. `get svc web` shows it, `svc` being short for `services`:
+   the Deployment's pods by their label, `app: web`. nginx answers on port 80, the standard port
+   for web traffic, so `--port=80` makes the Service listen on 80 and pass each connection to
+   port 80 on a pod. `get svc web` shows it, `svc` being short for `services`:
 
    ```shell
    k expose deployment web --port=80
@@ -464,10 +483,15 @@ pods a stable IP and a [DNS name](../../learn/dns.md), and picks its pods by lab
    web-fbdc6fc8c-xvcq5   1/1     Running   0          22s   10.244.2.6   node02   <none>           <none>
    ```
 
-3. Reach the Service by name from a pod. `run tmp` starts a pod from the small `busybox`
-   image. `-i` shows what it prints, `--rm` deletes it when it ends, and `--restart=Never`
-   makes it run once. Everything after `--` is its command: `wget -qO- web` fetches the page at
-   `web` and prints it without progress messages. `| grep title` keeps the page's title:
+3. Reach the Service by name. The name `web` works only inside the cluster, from a pod, because
+   only pods use the cluster's DNS server. So start a short-lived pod to act as the client.
+   Its image is `busybox`, a few megabytes that hold a shell and small versions of everyday
+   Linux tools such as `wget`, `nslookup` and `sleep`. It downloads and starts in a second or
+   two, so the Kubernetes docs use it for throwaway test pods like this one.
+   `run tmp` starts the pod. `-i` shows what it prints, `--rm` deletes it when it ends, and
+   `--restart=Never` makes it run once. Everything after `--` is the command it runs:
+   `wget -qO- web` fetches the page at `web` and prints it without progress messages.
+   `| grep title`, which runs on `controlplane`, keeps the page's title:
 
    ```shell
    k run tmp --rm -i --restart=Never --image=busybox:1.37 -- wget -qO- web | grep title
@@ -512,9 +536,12 @@ command named a namespace.
    ```
 
    `kube-node-lease` holds each node's heartbeat, and `kube-public` a little information anyone may
-   read. The four pods ending in `-controlplane` are the control plane, running on `controlplane`.
-   There is one `kube-proxy` pod per node, which makes Service IPs work on that node, and two
-   `coredns` pods. `1 (2m41s ago)` means the container restarted once, 2 minutes 41 seconds
+   read. The four pods ending in `-controlplane` are the control plane, running on `controlplane`:
+   `kube-apiserver` receives every request, including your `kubectl` commands; `etcd` is the
+   database that stores every object; `kube-controller-manager` runs the controllers, such as the
+   one that kept your ReplicaSet at three pods; and `kube-scheduler` picks a node for each new pod.
+   `kube-proxy` makes Service IPs work on its node, so there is one `kube-proxy` pod per node.
+   The two `coredns` pods are the DNS server that turned `web` into an address. `1 (2m41s ago)` means the container restarted once, 2 minutes 41 seconds
    ago, when the machines last started.
 
 2. Create a namespace, and a Deployment in it with the same name as the one in `default`.
@@ -540,7 +567,8 @@ command named a namespace.
    the two `coredns` pods.
 
 3. Reach the Service in `default` from a pod in `dev`, first by `web.default`, then by `web`.
-   `-n dev` starts the pod in `dev`, and `-T 3` makes `wget` give up after 3 seconds:
+   This is the same short-lived `busybox` client as in Reach pods through a Service. `-n dev` starts it in
+   `dev`, and `-T 3` makes `wget` give up after 3 seconds:
 
    ```shell
    k run tmp --rm -i --restart=Never -n dev --image=busybox:1.37 -- wget -qO- web.default | grep title
@@ -556,15 +584,16 @@ command named a namespace.
    ```
 
    A name without a namespace finds only Services in the pod's own namespace, and `dev` has no
-   Service `web`, so `bad address` means the name found no IP. `<service>.<namespace>` reaches
+   Service `web`. `bad address` means the name found no IP. `<service>.<namespace>` reaches
    one in another namespace. `terminated (Error)` means `wget` exited with an error.
 
 4. List which types live in a namespace, and their short names. `api-resources` prints every
-   type the cluster knows, one per line. `grep -wE` keeps only the lines that contain one of the
-   names between the `|` signs as a whole word, and `NAME` keeps the header line:
+   type the cluster knows, one per line. `grep -wE` keeps only the lines
+   that contain one of the names between the `|` signs as a whole word: the types this topic
+   used, and `NAME` for the header line:
 
    ```shell
-   k api-resources | grep -wE 'NAME|pods|deployments|services|configmaps|secrets|namespaces|serviceaccounts|persistentvolumeclaims|networkpolicies'
+   k api-resources | grep -wE 'NAME|pods|replicasets|deployments|services|namespaces'
    ```
 
    `SHORTNAMES` is what you can type instead of the full name, and `NAMESPACED` says whether
@@ -572,20 +601,16 @@ command named a namespace.
 
    ```
    NAME                                SHORTNAMES   APIVERSION                        NAMESPACED   KIND
-   configmaps                          cm           v1                                true         ConfigMap
    namespaces                          ns           v1                                false        Namespace
-   persistentvolumeclaims              pvc          v1                                true         PersistentVolumeClaim
    pods                                po           v1                                true         Pod
-   secrets                                          v1                                true         Secret
-   serviceaccounts                     sa           v1                                true         ServiceAccount
    services                            svc          v1                                true         Service
    deployments                         deploy       apps/v1                           true         Deployment
-   networkpolicies                     netpol       networking.k8s.io/v1              true         NetworkPolicy
+   replicasets                         rs           apps/v1                           true         ReplicaSet
    ```
 
-   [Secrets](../../references/config.md#secrets) have no short name, and namespaces are the only type here that is not namespaced.
-   `APIVERSION` is what a manifest of that type puts in its `apiVersion` line, and `KIND` is
-   what it puts in `kind`.
+   A namespace is not itself in a namespace, so its `NAMESPACED` is `false`. `APIVERSION` is what
+   a manifest of that type puts in its `apiVersion` line, and `KIND` is what it puts in `kind`.
+   Run the command without `grep` to see every type, including ones later topics teach.
 
 ## Create or apply
 
@@ -614,8 +639,35 @@ not.
    The first `apply` prints `deployment.apps/api created`, and the second
    `deployment.apps/api unchanged`, because the cluster already matches the file.
 
-3. In `vim api.yaml`, change `replicas: 1` to `replicas: 3`, then apply the file and list the
-   Deployment:
+3. In `vim api.yaml`, change `replicas: 1` to `replicas: 3`. The file `k create` wrote now reads:
+
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     labels:
+       app: api
+     name: api
+   spec:
+     replicas: 3
+     selector:
+       matchLabels:
+         app: api
+     strategy: {}
+     template:
+       metadata:
+         labels:
+           app: api
+       spec:
+         containers:
+         - image: nginx:1.27
+           name: nginx
+           resources: {}
+   status: {}
+   ```
+
+   The empty `strategy`, `resources` and `status` are fields `k create` leaves for the cluster
+   to fill in. Apply the file and list the Deployment:
 
    ```shell
    vim api.yaml
@@ -659,10 +711,11 @@ not.
    delete from the file is deleted from the object too.
 
 6. Most of a running pod cannot be changed in place, whether from a file or by editing the live
-   object. Start a pod, then try to change its command with `k edit`. `busybox` is a small image of
-   shell tools. Everything after `--` is passed to the container, here `sleep 3600`, which
-   keeps it running for an hour. `k edit` opens the live object in vim and sends your change
-   when you save:
+   object. To see it, start a pod that stays up, then try to change what it runs with `k edit`.
+   The pod uses the `busybox` image from Reach pods through a Service, because it has `sleep`.
+   Everything after `--` becomes the container's arguments, stored under `args`: here
+   `sleep 3600`, which keeps it running for an hour. `k edit` opens the live object in vim and
+   sends your change when you save:
 
    ```shell
    k run tool --image=busybox:1.37 -- sleep 3600
@@ -700,7 +753,7 @@ not.
 
 <details><summary>You delete a pod you created with `kubectl run`. What brings it back?</summary>
 
-Nothing. Only a pod that a ReplicaSet owns, directly or through a Deployment, is replaced.
+Nothing. A pod with no owner is not replaced. A ReplicaSet replaces the pods it owns, including the ones a Deployment's ReplicaSet runs.
 </details>
 
 <details><summary>Which four fields does every manifest have, and what does each hold?</summary>
@@ -745,8 +798,8 @@ from your edited copy.
 
 <details><summary>Which command lists every type with its short name, and whether it lives in a namespace?</summary>
 
-`k api-resources`. `SHORTNAMES` has the short names, and `NAMESPACED` is `false` for types such
-as namespaces and nodes.
+`k api-resources`. `SHORTNAMES` has the short names, and `NAMESPACED` is `false` for types that
+live outside any namespace, such as namespaces themselves.
 </details>
 
 <details><summary>You know a field exists but not where it goes in the YAML. Which command shows it?</summary>
@@ -894,7 +947,22 @@ api-zsffj   IPv4          80      10.244.2.2,10.244.1.2,10.244.1.3   21s
 ```
 
 **Task 5.** `--dry-run=client -o yaml` writes the Deployment as it was created, with `-n store`
-recorded as `namespace: store`. In vim, change `replicas: 3` to `replicas: 4`, then apply:
+recorded as `namespace: store`. In vim, change `replicas: 3` to `replicas: 4`, so the top of the
+file reads:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: api
+  name: api
+  namespace: store
+spec:
+  replicas: 4
+```
+
+Then apply it:
 
 ```shell
 k create deployment api --image=nginx:1.27 --replicas=3 -n store --dry-run=client -o yaml > ~/api.yaml

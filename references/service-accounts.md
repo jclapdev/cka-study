@@ -1,17 +1,17 @@
 # ServiceAccounts
 
-A ServiceAccount is an identity for software running in the cluster, such as a pod or a CI job. It is the only kind of identity that exists as a Kubernetes object. Users and groups come from credentials and have no object; see [authentication](authentication.md) ([service accounts](https://kubernetes.io/docs/concepts/security/service-accounts/)).
+A ServiceAccount is an identity for software running in the cluster, such as a pod or a deployment tool that runs in a pod. It is the only kind of identity that exists as a Kubernetes object. Users and groups come from credentials and have no object; see [authentication](authentication.md) ([service accounts](https://kubernetes.io/docs/concepts/security/service-accounts/)).
 
 ## The model
 
-- A ServiceAccount is namespaced. Its full username is `system:serviceaccount:<namespace>:<name>`, which is the name `--as` and the Forbidden message use.
+- A ServiceAccount is namespaced. Its full username is `system:serviceaccount:<namespace>:<name>`. Give that name to `kubectl --as` to act as it. A refused request's `Forbidden` message prints it too.
 - It belongs to two groups automatically: `system:serviceaccounts`, which covers every ServiceAccount, and `system:serviceaccounts:<namespace>`, which covers every ServiceAccount in its namespace. A binding can name either group.
 - A new ServiceAccount has no permissions. It can only do what [RBAC](rbac.md) bindings grant it.
 - Every namespace gets a ServiceAccount called `default` as soon as it is created ([default service accounts](https://kubernetes.io/docs/concepts/security/service-accounts/#default-service-accounts)). A pod that names no ServiceAccount runs as `default`.
 
 ## How a pod uses its ServiceAccount
 
-The [kubelet](control-plane.md#components) mounts a short-lived token for the pod's ServiceAccount into the pod, through a projected volume named `kube-api-access-<random>` ([assign to a pod](https://kubernetes.io/docs/concepts/security/service-accounts/#assign-to-pod)). Software in the pod sends that token to the apiserver, and the apiserver authenticates it as the ServiceAccount.
+The [kubelet](workers.md#what-a-worker-runs) mounts a short-lived token for the pod's ServiceAccount into the pod as a file in a volume. Kubernetes adds that volume to the pod by itself, named `kube-api-access-<random>` ([assign to a pod](https://kubernetes.io/docs/concepts/security/service-accounts/#assign-to-pod)). Software in the pod sends that token to the [apiserver](control-plane.md#components), and the apiserver authenticates it as the ServiceAccount.
 
 ```yaml
 spec:

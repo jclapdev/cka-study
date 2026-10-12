@@ -6,8 +6,9 @@ Reads ../assets/terms.tsv: one `term<TAB>home` per line, where home is
 paragraph explains it), `inline` for a term from a topic not built yet, which each page
 defines in the paragraph where it first appears, or `known` for what the reader brings.
 
-  NO LINK <file> <term>       the term's first mention in the file has no link to its home
-                              (for `inline`, no "<term> is ..." in that paragraph)
+  NO LINK <file> <term>       no link to the term's home in the paragraph of its first mention or
+                              before it (for `inline`, no "<term> is ..." in that paragraph).
+                              The root README's topic table is skipped: its rows link the topics.
   NOT DEFINED <home> <term>   the home section has no sentence that starts with the term or
                               says "<term> is ...", and no table row naming it
   UNKNOWN <file> <word>       an acronym or capitalised name that terms.tsv doesn't list
@@ -115,6 +116,9 @@ def main(files):
     for f in files:
         rel = str(Path(f).resolve().relative_to(ROOT))
         paragraphs = list(blocks((ROOT / rel).read_text()))
+        if rel == "README.md":
+            # The root README's table names each topic and links it; the topic explains its terms.
+            paragraphs = [(n, p) for n, p in paragraphs if not p.startswith("|")]
         seen = set()
         for _, para in paragraphs:
             words = para
@@ -148,7 +152,9 @@ def main(files):
                         problems.append(f"USED BEFORE DEFINED {rel}:{n} {term}")
                 continue
             target = Path(page).name + (f"#{anchor})" if anchor else "")
-            if not re.search(re.escape(target) + (r"" if anchor else r"[)#]"), para):
+            # A section is linked once per page, so a link to it at or before the term's first mention counts.
+            upto = "\n".join(p for m, p in paragraphs if m <= n)
+            if not re.search(re.escape(target) + (r"" if anchor else r"[)#]"), upto):
                 problems.append(f"NO LINK {rel}:{n} {term}")
 
     print("\n".join(problems))

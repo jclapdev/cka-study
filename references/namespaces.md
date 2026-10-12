@@ -1,6 +1,6 @@
 # Namespaces
 
-A namespace is a named group of objects inside a cluster. Two objects of the same kind can share a name if they are in different namespaces, and a namespace is the boundary that a [Role](rbac.md#the-model), a list of permissions, and a RoleBinding, which grants a Role to users, apply within. A ResourceQuota, which is a cap on the CPU, memory and number of objects a namespace may use, applies within a namespace too. So does a NetworkPolicy, which is a set of rules for which pods may talk to which ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
+A namespace is a named group of objects inside a cluster. Two objects of the same kind can share a name if they are in different namespaces. A [Role](rbac.md#the-model), which is a list of permissions, and a RoleBinding, which grants a Role to users, groups or [ServiceAccounts](service-accounts.md), apply within one namespace. A ResourceQuota, which is a cap on the CPU, memory and number of objects a namespace may use, does too. So does a NetworkPolicy, which is a set of rules for which pods may talk to which ([namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)).
 
 ## Namespaced and cluster-scoped resources
 
@@ -27,11 +27,10 @@ A new [kubeadm](kubeadm.md) cluster starts with four namespaces ([initial namesp
 | Namespace | Holds |
 | --- | --- |
 | `default` | Anything created without `-n`. |
-| `kube-system` | The [control plane](control-plane.md) pods, [CoreDNS](pod-network.md#coredns) and [kube-proxy](control-plane.md#components). |
+| `kube-system` | The [control plane](control-plane.md) pods, [CoreDNS](pod-network.md#coredns) and [kube-proxy](workers.md#what-a-worker-runs). |
 | `kube-public` | The `cluster-info` [ConfigMap](config.md). kubeadm binds a Role that lets `system:anonymous`, the identity of a request with no credentials, read it, so a joining node can read it before it has credentials. |
 | `kube-node-lease` | One Lease per node. A Lease is a small object with a timestamp, and the kubelet renews its node's every few seconds as a heartbeat. |
 | `kube-flannel` | The Flannel pod network. |
-
 
 Each new namespace gets a ServiceAccount called `default` straight away ([ServiceAccounts](service-accounts.md#the-model)).
 

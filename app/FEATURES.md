@@ -31,7 +31,7 @@ Each has a test in `tests/browser/app.situations.ts` whose name starts with it, 
 
 | Route | File | What it does |
 | --- | --- | --- |
-| `/` | `routes/home.tsx` | Dashboard. **fresh open**: Continue opens the lesson opened last (`visit`), or the first unfinished topic before any. Topics finished, lessons done per topic, quiz missed, best score; domain practice average over topics with a Practice section. Instruqt: "Continue from the last accessed challenge". |
+| `/` | `routes/home.tsx` | Dashboard. A domain with no topics yet says Coming soon, and its bar shows once a practice average exists. **fresh open**: Continue opens the lesson opened last (`visit`), or the first unfinished topic before any. Topics finished, lessons done per topic, quiz missed, best score; domain practice average over topics with a Practice section. Instruqt: "Continue from the last accessed challenge". |
 | `/t/:domain/:topic/:lesson?` | `routes/topic.tsx` | A lesson. Records the visit. `/introduction` redirects to the topic's own address. Actions: `step`, `recall`, `practice-start`, `practice-finish`, `practice-pass`, `practice-quit`, `attempt`, `grade`, each refused unless `fromApp`. **reload**: the lesson pane's scroll comes back (`cka-scroll`). |
 | `/doc/*` | `routes/doc.tsx` | Any Markdown page outside `app/`: Getting started, About the CKA, References, What's new (`CHANGELOG.md`), Learn and reference pages. A reference link opens beside the page (`split-doc`). |
 | `/reference/*` | `routes/reference.ts` | A reference or Learn page's HTML for the panel beside a lesson. |
@@ -45,18 +45,18 @@ Each has a test in `tests/browser/app.situations.ts` whose name starts with it, 
 | Component | What it does |
 | --- | --- |
 | `root.tsx` | Sidebar (hide/show, cookie `sidebar`), topic list with a meter of lessons done, each lesson with ✓ when done, help links (Getting started, About the CKA, References, What's new, kubectl cheat sheet). Opens `/events` so every page's lab status follows the lab. |
-| `components/LabPane.tsx` | `useLab(topic, lab)`: running only when this topic started the running lab. `startQuestion`: the one question asked before machines are recreated. Start lab, Try again, "Your lab will be ready shortly.", "Docker is not running. Start Docker to start the lab.", "Another lab is starting." |
+| `components/LabPane.tsx` | `useLab(topic, lab)`: running only when this topic started the running lab. `startQuestion`: the one question asked before machines are recreated. Start lab, Try again, "Your lab will be ready shortly.", "Docker is not running. Start Docker to start the lab.", "Another lab is starting." A failed start links Getting started's Troubleshooting. |
 | `components/Pane.tsx` | Tabs beside the lesson: Terminal 1–4, + (up to four), × (not on the last), a reference tab, Open in new window (wide screens only), Reset lab, Hide panel. Terminals are keyed by the lab's generation, so a start or reset gives one fresh tab. |
 | `components/Terminal.tsx` | One shell on `base`. Ctrl+Shift+C/V and a right-click menu (LF exam UI: "Copy = Ctrl+Shift+C", "Paste = Ctrl+Shift+V"). Only the focused window sets the shell's size. Follows a live dark-mode switch. "Session ended. Press Enter to start a new one." after `exit`. |
 | `components/popout.ts` | The pop-out window, named `cka-terminal`, says it is open on the BroadcastChannel `cka-terminal`, so its topic's page knows after a reload. |
-| `components/PracticeRun.tsx` | Practice exam from the saved `practice_run`: Start (asks, resets the lab), waiting for the lab, timer, Check per task, Finish, Check again, pass checkboxes when checks can't run, Save score, Quit, Hint, Solution, History. LF exam: the timer "will not pause". |
+| `components/PracticeRun.tsx` | Practice exam from the saved `practice_run`: Start (asks, resets the lab), waiting for the lab, timer, Check per task, Finish (asks), Check again, pass checkboxes when checks can't run, Save score, Quit (asks), Hint, Solution, History. LF exam: the timer "will not pause". |
 | `components/Step.tsx` | A step's check-off, folding a done step to its first line. |
 | `components/RecallCard.tsx` | A quiz question: Show answer, Got it, Missed it. |
-| `components/Notes.tsx` | The topic's notes under every lesson; saved a second after typing, and at once on blur, on leaving and on `pagehide`. |
+| `components/Notes.tsx` | The topic's notes under every lesson; saved a second after typing, and at once on blur, on leaving and on `pagehide`. Says "Saved" only after a save. |
 | `components/ReferencePanel.tsx` | A reference or Learn page in a tab beside the page, with Back for pages opened from it. |
 | `components/Split.tsx` | Page and panel side by side (stacked below `lg`), with a divider that drags, takes arrow keys, and resets on double-click; widths in cookies `split-lab` and `split-doc`. |
 | `components/Confirm.tsx` | The dialog every question uses. |
-| `components/Markdown.tsx` | Page HTML with a Copy button on code and Mermaid diagrams that follow dark mode. |
+| `components/Markdown.tsx` | Page HTML with a Copy button on commands and YAML (not on output), and Mermaid diagrams that follow dark mode. |
 
 ## Saved values
 

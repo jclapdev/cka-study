@@ -16,7 +16,7 @@ The type decides who can reach the Service ([service types](https://kubernetes.i
 
 ## How a Service IP answers
 
-No machine holds a Service IP. [kube-proxy](control-plane.md#components), a [DaemonSet](daemonsets.md) pod on every node, watches Services and writes packet-rewriting rules into each node's kernel. A connection to the ClusterIP is rewritten to one of the pods' IPs on the way out ([virtual IPs and service proxies](https://kubernetes.io/docs/reference/networking/virtual-ips/)). This is why a ClusterIP answers but never appears in `ip addr`.
+No machine holds a Service IP. [kube-proxy](workers.md#what-a-worker-runs), a [DaemonSet](daemonsets.md) pod on every node, watches Services and writes packet-rewriting rules into each node's kernel. A connection to the ClusterIP is rewritten to one of the pods' IPs on the way out ([virtual IPs and service proxies](https://kubernetes.io/docs/reference/networking/virtual-ips/)). This is why a ClusterIP answers but never appears in `ip addr`.
 
 kube-proxy writes iptables rules by default ([iptables mode](https://kubernetes.io/docs/reference/networking/virtual-ips/#proxy-mode-iptables)). IPVS is another Linux kernel feature for spreading connections across addresses, and kube-proxy uses it instead when its configuration sets `mode: ipvs` ([IPVS mode](https://kubernetes.io/docs/reference/networking/virtual-ips/#proxy-mode-ipvs)). [kubeadm](kubeadm.md) leaves `mode` empty, which means iptables.
 
@@ -24,7 +24,7 @@ An EndpointSlice is an object listing the pod IPs behind a Service, which the [c
 
 ## On a new cluster
 
-A new cluster has two Services. `kubernetes` is the apiserver, and `kube-dns` is [CoreDNS](pod-network.md#coredns):
+A new cluster has two Services. `kubernetes` is the [apiserver](control-plane.md#components), and `kube-dns` is [CoreDNS](pod-network.md#coredns):
 
 ```
 NAMESPACE     NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)                  AGE

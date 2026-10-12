@@ -1,6 +1,6 @@
 # Taints and tolerations
 
-A taint is a mark on a node that keeps pods off it. A toleration is a matching entry in a pod's spec that lets that pod onto a tainted node anyway. A toleration only permits a node. It doesn't send the pod there, which is what a node selector, a set of node [labels](labels.md) a pod requires, does ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)).
+A taint is a mark on a node that keeps pods off it. A toleration is a matching entry in a pod's spec that lets that pod onto a tainted node anyway. A toleration only permits a node. It doesn't send the pod there. A node selector does that: it is a set of node [labels](labels.md) a pod requires ([taints and tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)).
 
 A taint has a key, an optional value and an effect, written `key=value:Effect`, such as `disk=slow:NoSchedule`. The effect is what the taint does ([effects](#effects)). A toleration matches it when the key, the value (or `operator: Exists` for any value) and the effect agree.
 
@@ -42,7 +42,7 @@ The [CoreDNS](pod-network.md#coredns) pods tolerate the control plane taint, so 
  {"effect":"NoExecute","key":"node.kubernetes.io/unreachable","operator":"Exists","tolerationSeconds":300}]
 ```
 
-Take a [Deployment](workloads.md) with 2 pods on each worker. After `node02` is tainted `disk=slow:NoSchedule` and the Deployment is scaled to 8, all 4 new pods are on `node01`. The 2 pods already on `node02` stay:
+Take a [Deployment](workloads.md) with 2 pods on each worker. After `node02` is tainted `disk=slow:NoSchedule` and the Deployment is scaled to 8, all 4 new pods are on `node01`. The 2 pods already on `node02` stay. `kubectl get pods -o custom-columns=NODE:.spec.nodeName --no-headers | sort | uniq -c` counts the pods on each node:
 
 ```
       6 node01
@@ -63,7 +63,7 @@ kubectl explain pod.spec.tolerations
 | Symptom | Cause |
 | --- | --- |
 | A pod stays `Pending` with `0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 node(s) didn't match Pod's node affinity/selector.` | The only node the pod may use is tainted, and the pod has no toleration for it. Here the pod's node selector picked `controlplane`. |
-| Pods leave a node by themselves | The node has a `NoExecute` taint, often `unreachable` because it stopped reporting. |
+| A node's pods leave it by themselves | The node has a `NoExecute` taint, often `unreachable` because it stopped reporting. |
 
 ## Docs
 

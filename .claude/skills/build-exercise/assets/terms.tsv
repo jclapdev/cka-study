@@ -6,8 +6,8 @@ etcd	references/control-plane.md#components
 controller-manager	references/control-plane.md#components
 scheduler	references/control-plane.md#components
 controller	references/control-plane.md#components
-kubelet	references/control-plane.md#components
-kube-proxy	references/control-plane.md#components
+kubelet	references/workers.md#what-a-worker-runs
+kube-proxy	references/workers.md#what-a-worker-runs
 static pod	references/control-plane.md#static-pods
 Node	references/workers.md
 container runtime	references/workers.md#what-a-worker-runs
@@ -29,7 +29,6 @@ ClusterRoleBinding	references/rbac.md#the-model
 ServiceAccount	references/service-accounts.md
 CRD	references/crds.md
 CustomResourceDefinition	references/crds.md
-REST	references/crds.md#what-a-crd-adds
 OpenAPI	references/crds.md#schemas-and-validation
 operator	references/crds.md#operators
 cert-manager	references/crds.md#operators
@@ -78,7 +77,7 @@ Secret	references/config.md#secrets
 manifest	references/kubectl.md#generating-yaml
 imperative	references/kubectl.md#generating-yaml
 declarative	references/kubectl.md#create-and-apply
-jsonpath	references/kubectl.md#checking-your-work
+jsonpath	references/kubectl.md#reading-values-back
 # Topics not built yet: each page defines the term where it first appears.
 NetworkPolicy	inline
 PersistentVolume	inline
@@ -157,3 +156,9 @@ Open Container Initiative	known
 Container Network Interface	known
 Let's Encrypt	known
 Container Storage Interface	known
+Create	known
+Reach	known
+Operators	known
+Dashboard	known
+Copy	known
+Paste	known
