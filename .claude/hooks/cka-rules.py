@@ -17,6 +17,7 @@
 - PreToolUse guards: the stamp file can't be written, and the git hook can't be skipped.
 """
 import datetime
+import difflib
 import json
 import os
 import re
@@ -174,7 +175,78 @@ def load_stamps(reader):
 
 
 def blob(path):
-    return subprocess.run(["git", "hash-object", path], capture_output=True, text=True).stdout.strip()
+    # -w keeps the stamped version in git's object store, so the next packet can diff against it.
+    return subprocess.run(["git", "-C", os.path.dirname(path), "hash-object", "-w", path],
+                          capture_output=True, text=True).stdout.strip()
+
+
+CONTEXT = 12  # lines kept on each side of a change, enough for its step and the one before
+
+
+def packet_dir(reader):
+    return os.path.join(STATE, "packets", reader)
+
+
+def git_text(root, *args):
+    out = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True)
+    return out.stdout if out.returncode == 0 else None
+
+
+def packet(root, reader, rel):
+    """Write the sections of a page this reader hasn't cleared and return the packet's path,
+    or None when the reader already cleared this version. A section is the opening or one `##`
+    heading's lines; it is in the packet when a line in it changed since the reader's last
+    stamp, or since origin/main when it has none. `>` marks each changed line."""
+    path = os.path.join(root, rel)
+    current, stamped = blob(path), load_stamps(reader).get(rel)
+    if stamped == current:
+        return None
+    base = (stamped and git_text(root, "cat-file", "-p", stamped)) or git_text(root, "show", f"origin/main:{rel}")
+    lines = open(path).read().splitlines() or [""]
+    if base is None:
+        changed = set(range(len(lines)))
+    else:
+        changed = set()
+        matcher = difflib.SequenceMatcher(None, base.splitlines(), lines, autojunk=False)
+        for op, _, _, j1, j2 in matcher.get_opcodes():
+            if op != "equal":  # a deletion marks the line after it
+                changed.update(range(j1, j2) if j2 > j1 else [min(j1, len(lines) - 1)])
+    starts, fence = [0], False
+    for i, line in enumerate(lines):
+        fence ^= line.lstrip().startswith("```")
+        if i and not fence and line.startswith("## "):
+            starts.append(i)
+    starts.append(len(lines))
+    old_heads = set(base.splitlines()) if base is not None else set()
+    out = [f"PACKET {rel} {current} {path}",
+           f"Sections of {rel} changed since this reader last cleared it. `>` marks a changed line. "
+           "A section marked NEW did not exist before and is shown whole; elsewhere `...` marks lines left out."]
+    for a, b in zip(starts, starts[1:]):
+        if changed.intersection(range(a, b)):
+            new = base is None or (lines[a].startswith("## ") and lines[a] not in old_heads)
+            out.append(f"\n=== {rel} lines {a + 1}-{b}{' NEW' if new else ''} ===")
+            # A new section goes in whole; an old one keeps its heading and the lines near each change.
+            keep = range(a, b) if new else sorted({a} | {i for c in changed.intersection(range(a, b))
+                                                         for i in range(max(a, c - CONTEXT), min(b, c + CONTEXT + 1))})
+            last = None
+            for i in keep:
+                if last is not None and i > last + 1:
+                    out.append("  ...")
+                out.append(f"{i + 1:>5}{'>' if i in changed else ' '} {lines[i]}")
+                last = i
+    target = os.path.join(packet_dir(reader), rel.replace("/", "__"))
+    os.makedirs(packet_dir(reader), exist_ok=True)
+    with open(target, "w") as f:
+        f.write("\n".join(out) + "\n")
+    return target
+
+
+def packets(pages):
+    """Print each reader's packet paths for the given pages, relative to the repo root."""
+    root = (git_text(os.getcwd(), "rev-parse", "--show-toplevel") or os.getcwd()).strip()
+    for reader in READERS:
+        made = [p for p in (packet(root, reader, rel) for rel in pages) if p]
+        print(f"{reader}: " + (" ".join(made) if made else "already clear"))
 
 
 def epoch(timestamp):
@@ -203,6 +275,15 @@ def stamp(data):
         if call["name"] == "Read" and "offset" not in call["input"] and "limit" not in call["input"]:
             read[path] = epoch(ts)
     stamps = load_stamps(reader)
+    for path in [p for p in read if os.path.dirname(p) == packet_dir(reader)]:
+        # A packet read in full stands for its page, while the page is still the version it was built from.
+        try:
+            _, rel, built, page = open(path).readline().split(" ", 3)
+        except (OSError, ValueError):
+            continue
+        page = page.strip()
+        if rel not in flagged and os.path.exists(page) and blob(page) == built:
+            stamps[rel] = built
     for path, read_at in read.items():
         rel = repo_path(data["cwd"], path)
         if rel and LEARNER_PAGES.match(rel) and rel not in flagged and os.path.exists(path) \
@@ -257,7 +338,8 @@ def prepush():
     if missing:
         print("These learner pages changed but haven't passed the reader named beside them:\n  "
               + "\n  ".join(sorted(missing))
-              + "\nRun that agent on them, fix what it finds, and push again.", file=sys.stderr)
+              + "\nBuild their packets with `python3 .claude/hooks/cka-rules.py packet <pages>`, give each "
+              "reader its packet paths, fix what it finds, and push again.", file=sys.stderr)
     if unlogged:
         print("These files change what a learner sees, but CHANGELOG.md has no new line for them:\n  "
               + "\n  ".join(sorted(unlogged))
@@ -278,7 +360,9 @@ def review_check(data):
     missing = unreviewed(pages)
     if missing:
         problems.append("These learner pages haven't passed the reader named beside them since they "
-                        "last changed: " + ", ".join(missing) + ". Run that agent on them and fix what it finds.")
+                        "last changed: " + ", ".join(missing) + ". Build their packets with `python3 "
+                        ".claude/hooks/cka-rules.py packet <pages>`, give each reader its packet paths, "
+                        "and fix what it finds.")
     errors = vale(root, [p for p, _ in pages])
     if errors:
         problems.append("Vale found wording these pages must not use:\n" + errors)
@@ -297,6 +381,8 @@ def done_gate(data):
 def main():
     if sys.argv[1:] == ["prepush"]:
         return prepush()
+    if sys.argv[1:2] == ["packet"]:
+        return packets(sys.argv[2:])
     data = json.load(sys.stdin)
     event, tool = data["hook_event_name"], data.get("tool_name")
     if event == "PreToolUse" and tool == "Bash":

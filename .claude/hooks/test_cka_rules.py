@@ -73,6 +73,26 @@ handed = transcript(("Read", {"file_path": f"{CWD}/references/pod.md"}), ("Subag
 run("SubagentStop", agent_type="cold-reader", agent_transcript_path=handed, last_assistant_message="")
 assert "references/pod.md" in json.load(open(f"{state}/cold-read.json"))
 
+# A packet holds only the sections changed since the reader's last stamp, and reading it in full stamps the page.
+page = Path(CWD) / "references" / "zz-packet-check.md"
+packet = lambda: subprocess.run([HOOK, "packet", "references/zz-packet-check.md"], cwd=CWD, capture_output=True,
+                                text=True, check=True, env={**os.environ, "CKA_STATE": state}).stdout
+path_for = lambda out, reader: out.split(f"{reader}: ")[1].split()[0]
+page.write_text("# Check\n\nOpening.\n\n## First\n\nAlpha.\n\n## Second\n\nBeta.\n")
+try:
+    first = path_for(packet(), "cold-reader")
+    assert "Alpha." in open(first).read() and " NEW ===" in open(first).read()
+    run("SubagentStop", agent_type="cold-reader", agent_transcript_path=transcript(("Read", {"file_path": first})),
+        last_assistant_message="VERDICT: clear")
+    assert "references/zz-packet-check.md" in json.load(open(f"{state}/cold-read.json"))
+    assert "cold-reader: already clear" in packet()
+    page.write_text(page.read_text().replace("Beta.", "Gamma."))
+    second = open(path_for(packet(), "cold-reader")).read()
+    assert "   11> Gamma." in second
+    assert "Alpha." not in second and " NEW ===" not in second
+finally:
+    page.unlink()
+
 # Vale fails a page that uses a banned phrase.
 bad = Path(CWD) / "references" / "zz-vale-check.md"
 bad.write_text("# Check\n\nThe chart sets one value.\n")
