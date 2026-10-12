@@ -571,7 +571,7 @@ It adds no behaviour: nothing acts on the objects until a controller watches the
 `backups.stable.example.com`, which is `<plural>.<group>`.
 </details>
 
-<details><summary>Where is a CRD example you can copy from the allowed docs?</summary>
+<details><summary>Where on kubernetes.io is a CRD example you can copy?</summary>
 
 Search kubernetes.io for `customresourcedefinition` and open "Extend the Kubernetes API with
 CustomResourceDefinitions". The `CronTab` example is under "Create a CustomResourceDefinition".
@@ -824,7 +824,7 @@ On `controlplane`:
    web-cert   True    web-tls   10s
    ```
 
-2. The file lists the six CRDs:
+2. The file lists the six CRDs. `wc -l` counts the lines in the file, one per CRD:
 
    ```shell
    wc -l < /opt/course/2/crds.txt

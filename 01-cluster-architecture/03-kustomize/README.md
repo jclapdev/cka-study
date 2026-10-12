@@ -332,7 +332,7 @@ the fields to add or replace.
    ```
 
 3. Apply the overlay and check the Deployment. `-o jsonpath` prints the replica count, the
-   image and the memory limit, the three things the overlay changed:
+   image and the memory limit, which the patches and `images` set:
 
    ```shell
    cd ~/web
@@ -341,8 +341,7 @@ the fields to add or replace.
    k get deploy prod-web -n prod -o jsonpath='{.spec.replicas} {.spec.template.spec.containers[0].image} {.spec.template.spec.containers[0].resources.limits}{"\n"}'
    ```
 
-   The live Deployment has every change the overlay made, the replica count, the image and the
-   memory limit:
+   The live Deployment shows the replica count, image and memory limit the overlay set:
 
    ```
    3 nginx:1.28 {"memory":"128Mi"}
@@ -499,7 +498,7 @@ object it produces.
 is not a Kubernetes object.
 </details>
 
-<details><summary>Where in the allowed docs are the Kustomize snippets, and what do you search for?</summary>
+<details><summary>Where on kubernetes.io are the Kustomize snippets, and what do you search for?</summary>
 
 Search kubernetes.io for `kustomize` and open "Declarative Management of Kubernetes Objects Using
 Kustomize". Bases and Overlays, Setting cross-cutting fields, Customizing and configMapGenerator

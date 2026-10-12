@@ -143,7 +143,7 @@ in one namespace and can only ever name resources in that namespace.
    anyone `list`: `get` fetches one named object, `list` returns all of them, and `k get pods`
    with no name needs `list`. `watch` keeps a connection open and receives each change.
 
-2. The Role allows the request `deploy-bot` was refused. Ask again whether the answer has
+2. The Role names the action `deploy-bot` was refused. Ask again whether the answer has
    changed:
 
    ```shell
@@ -544,8 +544,8 @@ the Role to `ci`, written `<namespace>:<name>`:
 ```shell
 k create role deployer -n web --verb=create,update,delete --resource=deployments
 k create rolebinding ci-deployer -n web --role=deployer --serviceaccount=web:ci
-k auth can-i delete deployments.apps -n web --as=system:serviceaccount:web:ci
-k auth can-i get deployments.apps -n web --as=system:serviceaccount:web:ci
+k auth can-i delete deployments -n web --as=system:serviceaccount:web:ci
+k auth can-i get deployments -n web --as=system:serviceaccount:web:ci
 ```
 
 The answers are `yes`, then `no`: `delete` is in the Role and `get` is not.

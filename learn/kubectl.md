@@ -28,7 +28,7 @@ Admission is where the cluster's admission controllers, plugins inside the apise
 
 ## Types, groups and versions
 
-Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, `kubectl explain` reads that schema, so it describes the exact version your cluster runs. That includes types added later by CustomResourceDefinitions (CRDs), objects that add new types to the cluster.
+Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, and `kubectl explain` reads it, so it describes the exact version your cluster runs. That includes types added later by CustomResourceDefinitions (CRDs), objects that add new types to the cluster.
 
 ## Ways to change objects
 

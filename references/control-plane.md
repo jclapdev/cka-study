@@ -17,7 +17,7 @@ make the nodes match it. Workloads run on nodes.
 A controller is a loop that compares the state an object asks for with what exists, and acts on
 the difference, such as creating a pod when a [Deployment](workloads.md) has too few.
 
-The control plane node is also a node, so it runs the kubelet, which starts the node's pods, and kube-proxy, which makes [Service](services.md) addresses work on the node, like every worker. `kubectl get pods -n kube-system` shows the four components above
+The control plane node is also a node, so it runs the same two programs as every worker: the kubelet, which starts the node's pods, and kube-proxy, which makes [Service](services.md) addresses work on the node. `kubectl get pods -n kube-system` shows the four components above
 and kube-proxy. The kubelet is a systemd service, not a pod, so `systemctl status kubelet` and
 `journalctl -u kubelet` show it instead.
 

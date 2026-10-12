@@ -10,7 +10,7 @@ Changes to the app, newest first. The lab is the set of practice machines you wo
 - Copy buttons sit only on commands and YAML, not on command output.
 - The Dashboard says Coming soon for a domain with no topics yet, and shows a domain's bar once it has a practice average.
 - The notes box says Saved only after it has saved something.
-- Every topic, Learn page and reference page was reread: tools such as busybox now say what they are and why they're used, quiz questions only ask what the lessons teach, and steps show each file you paste.
+- Lessons now say what each tool is, such as busybox, and why it is used, and show each file you paste or edit. Quiz questions ask only what the lessons teach.
 
 ## 11 October 2026
 

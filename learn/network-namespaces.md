@@ -33,7 +33,7 @@ flowchart LR
 
 Pods on one node talk through the bridge. For a pod on another node, the node's routing table sends the packet to `flannel.1`, a VXLAN interface that tunnels packets between nodes. It wraps each pod packet inside a UDP packet addressed to the other node. The receiving node unwraps it and hands it to its own bridge. The node network sees only node addresses, so pod addresses work across machines that know nothing about them ([how to implement the Kubernetes network model](https://kubernetes.io/docs/concepts/cluster-administration/networking/#how-to-implement-the-kubernetes-network-model)).
 
-Not every pod gets a namespace of its own. A pod with `hostNetwork: true`, such as the apiserver, which every request to the cluster goes through, or kube-proxy, the program on each node that makes Service addresses work, stays in the node's namespace and uses the node's address, which is how those pods run before any pod network exists ([how the pod network works](pod-network.md#when-the-network-is-missing)).
+Not every pod gets a namespace of its own. A pod with `hostNetwork: true` stays in the node's namespace and uses the node's address. The apiserver, which every request to the cluster goes through, and kube-proxy, the program on each node that makes Service addresses work, are two such pods. That is how they run before any pod network exists ([how the pod network works](pod-network.md#when-the-network-is-missing)).
 
 Service addresses take no part in this. No namespace or interface holds one; kube-proxy rewrites packets sent to a Service address on their way out of the pod's node ([Services](../references/services.md#how-a-service-ip-answers)).
 

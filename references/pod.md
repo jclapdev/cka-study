@@ -27,7 +27,7 @@ kubectl logs <name> -n <ns> --previous    # what the crashed instance said
 kubectl get events -n <ns> --sort-by=.lastTimestamp
 ```
 
-`Pending` with `FailedScheduling` and `0/1 nodes are available` in the events is a scheduling problem: [taints](taints.md), resources or selectors. `CrashLoopBackOff` is the container's own fault and lives in the logs.
+`Pending` with `FailedScheduling` and `0/1 nodes are available` in the events is a scheduling problem: [taints](taints.md), resources or selectors. `CrashLoopBackOff` means the container's process keeps failing, and `kubectl logs` shows why.
 
 ## On a new cluster
 

@@ -722,7 +722,20 @@ not.
    k edit pod tool
    ```
 
-   In vim, change `"3600"` to `"7200"` under `args`, and `:wq`. The change is refused:
+   vim opens the whole pod as the cluster stores it. Near the top of `spec`, the container
+   reads like this, with `args` holding the command after `--`:
+
+   ```yaml
+   spec:
+     containers:
+     - args:
+       - sleep
+       - "3600"
+       image: busybox:1.37
+       name: tool
+   ```
+
+   Change `"3600"` to `"7200"`, and `:wq`. The change is refused:
 
    ```
    error: pods "tool" is invalid
@@ -1010,5 +1023,5 @@ On `controlplane`:
   the four required fields and the difference between `spec` and `status`.
 * [Kubernetes object management](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/)
   compares imperative commands with `kubectl apply`.
-* [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is on
-  the allowed docs and lists more [imperative](../../references/kubectl.md#generating-yaml) commands and `jsonpath` examples.
+* [kubectl Quick Reference](https://kubernetes.io/docs/reference/kubectl/quick-reference/) is part of
+  kubernetes.io, which the exam allows, and lists more [imperative](../../references/kubectl.md#generating-yaml) commands and `jsonpath` examples.

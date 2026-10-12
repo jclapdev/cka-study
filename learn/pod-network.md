@@ -45,7 +45,7 @@ stateDiagram-v2
   Ready --> NotReady: the configuration file is removed, or the kubelet stops reporting
 ```
 
-Some pods do not wait. The control plane static pods, kube-proxy and the plugin's own agent use the node's network instead of a pod address (`hostNetwork: true`), which is how they run before the pod network exists. CoreDNS, the cluster's DNS server, needs a pod address, so it is the first pod to show whether the network works.
+Some pods do not wait. The control plane's static pods, which the kubelet starts from files on the node, kube-proxy and the plugin's own agent use the node's network instead of a pod address (`hostNetwork: true`), which is how they run before the pod network exists. CoreDNS, the cluster's DNS server, needs a pod address, so it is the first pod to show whether the network works.
 
 The ranges, the readiness messages and the plugin commands are on the [pod network reference page](../references/pod-network.md).
 
