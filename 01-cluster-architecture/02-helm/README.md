@@ -3,7 +3,7 @@
 [Helm](../../references/helm.md) installs a packaged application into a cluster. The package is a [chart](../../references/helm.md#charts-repositories-and-releases), a set of
 [manifests](../../references/kubectl.md#generating-yaml) with settings you can change, and each install of it is a named release. Helm keeps a
 numbered history of each release, so it can be upgraded, rolled back and uninstalled as one
-unit. [How Helm works](../../learn/helm.md) explains what happens during an install.
+unit. [Helm basics](../../learn/helm.md) explains what happens during an install.
 
 <!-- lab: helm -->
 
@@ -23,7 +23,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 * Write the manifests a chart would install to a file, without installing them.
 * Uninstall a release.
 
-## Find a chart
+## Charts and repositories
 
 A [chart](../../references/helm.md#charts-repositories-and-releases) is a package of Kubernetes [manifests](../../references/kubectl.md#generating-yaml), and a repository is a web server that lists
 charts and their versions.
@@ -83,7 +83,7 @@ charts and their versions.
    `CHART VERSION` is the version of the package, and it is what `--version` selects.
    `APP VERSION` is the version of the software inside it.
 
-## Read the values
+## Values
 
 A chart's templates are manifests with blanks to fill in. They read settings from the chart's [values](../../references/helm.md#values), and the
 chart ships a default for each value.
@@ -123,7 +123,7 @@ chart ships a default for each value.
    Each key is a value you can override. A nested key is written with dots on the command
    line, so `ui.message` sets `message` under `ui`.
 
-## Install a release
+## Releases
 
 A [release](../../references/helm.md#charts-repositories-and-releases) is an installed copy of a chart, with its own name, in a namespace.
 
@@ -180,7 +180,7 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is an ins
    The [Deployment](../../references/workloads.md) and [Service](../../references/services.md) are named after the release. The [Secret](../../references/config.md#secrets)
    `sh.helm.release.v1.web.v1` is Helm's record of revision 1, holding the chart and the values
    used. Helm runs only as a command-line tool, and these Secrets are the only place a release
-   [is stored](../../references/helm.md#revisions-and-where-releases-are-stored).
+   [is stored](../../references/helm.md#revisions-and-release-storage).
 
 4. Read back the values the release was installed with. `helm get values` prints the values
    stored with a release:
@@ -198,9 +198,9 @@ A [release](../../references/helm.md#charts-repositories-and-releases) is an ins
 
    Only the overrides are shown. `--all` adds every default as well.
 
-## Upgrade a release
+## Upgrades
 
-`helm upgrade` installs a new chart version, new values, or both, as the next [revision](../../references/helm.md#revisions-and-where-releases-are-stored) of the
+`helm upgrade` installs a new chart version, new values, or both, as the next [revision](../../references/helm.md#revisions-and-release-storage) of the
 same release.
 
 1. Put the new value in a file. Its keys have the same nesting as `helm show values` prints, so
@@ -258,7 +258,7 @@ same release.
      message: hello from helm
    ```
 
-## Roll back
+## Rollbacks
 
 Every install and upgrade adds a numbered revision to the release's history, and a rollback
 returns the release to an earlier one.
@@ -298,7 +298,7 @@ returns the release to an earlier one.
    4       	Sun Sep 27 18:31:19 2026	deployed  	podinfo-6.14.1	6.14.1     	Rollback to 1
    ```
 
-   A rollback does not remove [revisions](../../references/helm.md#revisions-and-where-releases-are-stored) 2 and 3. It writes revision 4 with the chart and
+   A rollback does not remove [revisions](../../references/helm.md#revisions-and-release-storage) 2 and 3. It writes revision 4 with the chart and
    values of revision 1.
 
 3. Confirm the cluster matches revision 1. `-o wide` adds the image to the usual columns:
@@ -316,10 +316,10 @@ returns the release to an earlier one.
 
    The `ui.message` from revision 2 is gone too, because revision 1 never had it.
 
-## Render without installing
+## Local rendering
 
 Rendering a chart means filling its templates with values to get plain manifests.
-[`helm template`](../../references/helm.md#rendering-without-installing) renders a chart on your machine and prints the manifests, without
+[`helm template`](../../references/helm.md#local-rendering) renders a chart on your machine and prints the manifests, without
 installing anything. You would do this to read exactly what a chart will create before you
 install it, or to keep the manifests as files and apply them with `k apply -f`.
 
@@ -361,7 +361,7 @@ install it, or to keep the manifests as files and apply them with `k apply -f`.
    Applying this file with `k apply -f` creates the objects but no release, so
    `helm list` would not show them.
 
-## Uninstall
+## Uninstalling
 
 Uninstalling removes a release and every object its chart created, in one step.
 
@@ -386,7 +386,7 @@ Uninstalling removes a release and every object its chart created, in one step.
    ```
 
    Every object the release created is deleted, along with the Secrets for all four
-   [revisions](../../references/helm.md#revisions-and-where-releases-are-stored). The namespace stays, because `--create-namespace` made it outside the release.
+   [revisions](../../references/helm.md#revisions-and-release-storage). The namespace stays, because `--create-namespace` made it outside the release.
 
 ## Quiz
 
@@ -576,7 +576,7 @@ so `k get ns legacy` still shows the namespace `Active`.
 
 </details>
 
-## Check your work
+## Verification
 
 On `controlplane`:
 

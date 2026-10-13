@@ -1,8 +1,8 @@
 # Authentication
 
-Authentication is how the [apiserver](control-plane.md#components) learns who sent a request. It turns the request's credential into a username and a list of groups. It does not decide what that identity may do; [RBAC](rbac.md) does that next ([authenticating](https://kubernetes.io/docs/reference/access-authn-authz/authentication/)). [How access control works](../learn/access-control.md) explains the model.
+Authentication is how the [apiserver](control-plane.md#components) learns who sent a request. It turns the request's credential into a username and a list of groups. It does not decide what that identity may do; [RBAC](rbac.md) does that next ([authenticating](https://kubernetes.io/docs/reference/access-authn-authz/authentication/)). [Access control](../learn/access-control.md) explains the model.
 
-## Users and groups have no object
+## Users and groups
 
 Kubernetes has no User or Group resource ([users in Kubernetes](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#users-in-kubernetes)). A user or group exists only because a credential asserts its name. So:
 

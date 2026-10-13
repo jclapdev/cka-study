@@ -1,4 +1,4 @@
-# How kubeadm builds a cluster
+# kubeadm basics
 
 kubeadm is the tool that turns a few machines into a Kubernetes cluster. Each machine must already have a container runtime, the program that starts containers, and a kubelet, the agent that runs pods on a machine ([kubeadm init](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/)). The programs alone are not a cluster. The apiserver, the control plane's front door, is what every other part talks to, and each part needs two things before it will: a certificate, a signed file that proves who it is, and a kubeconfig, a file that says where the apiserver is. The control plane also needs a way to start before any apiserver exists to start it. kubeadm sets all of that up.
 
@@ -17,7 +17,7 @@ flowchart TD
 
 Certificates come first because everything after them uses them. The cluster CA, a certificate authority that kubeadm creates, signs a certificate for every component. A component trusts another one when its certificate was signed by that CA. The apiserver's own certificate lists every address it answers on. A client that connects on any other address refuses the connection. So kubeadm asks up front for the advertise address, the address the apiserver tells other machines to reach it on, and changing it later means building the control plane again.
 
-The control plane components are written as static pod manifests, files the kubelet reads straight from disk, so they start without an apiserver to ask ([how a cluster works](cluster-architecture.md#how-the-control-plane-starts-itself)).
+The control plane components are written as static pod manifests, files the kubelet reads straight from disk, so they start without an apiserver to ask ([static pods](cluster-architecture.md#static-pods)).
 
 ## Joining a node
 
@@ -37,11 +37,11 @@ sequenceDiagram
 
 The CA hash lets the node check that it reached the right cluster, and anyone may see it. The bootstrap token is the secret part: it lets the apiserver accept the node for long enough to sign it a certificate ([bootstrap tokens](https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/)). After the join, the node proves who it is with its own certificate, and the token is no longer needed.
 
-## What kubeadm leaves out
+## Outside kubeadm's scope
 
 kubeadm builds the cluster on machines you provide. It doesn't create the machines or install their container runtime and kubelet, and add-ons such as a dashboard or monitoring are out of its scope ([kubeadm overview](https://kubernetes.io/docs/reference/setup-tools/kubeadm/)).
 
-It also installs no pod network, the plugin that gives pods addresses and lets them reach each other across nodes, because clusters choose different ones. So a new cluster's nodes stay `NotReady` until you install one ([how the pod network works](pod-network.md)).
+It also installs no pod network, the plugin that gives pods addresses and lets them reach each other across nodes, because clusters choose different ones. So a new cluster's nodes stay `NotReady` until you install one ([Pod networking](pod-network.md)).
 
 The [kubeadm](../references/kubeadm.md) reference has the phases, files, commands and errors, and the [workers](../references/workers.md#joining) reference has the join.
 

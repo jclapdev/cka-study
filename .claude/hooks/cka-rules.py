@@ -220,7 +220,14 @@ def packet(root, reader, rel):
     old_heads = set(base.splitlines()) if base is not None else set()
     out = [f"PACKET {rel} {current} {path}",
            f"Sections of {rel} changed since this reader last cleared it. `>` marks a changed line. "
-           "A section marked NEW did not exist before and is shown whole; elsewhere `...` marks lines left out."]
+           "A section marked NEW did not exist before and is shown whole; elsewhere `...` marks lines left out.",
+           f"\n=== {rel} headings, every one, changed or not ==="]
+    # Headings are the page's lesson list, read as a whole, so every packet carries all of them.
+    fence = False
+    for i, line in enumerate(lines):
+        fence ^= line.lstrip().startswith("```")
+        if not fence and re.match(r"#{1,6} ", line):
+            out.append(f"{i + 1:>5}{'>' if i in changed else ' '} {line}")
     for a, b in zip(starts, starts[1:]):
         if changed.intersection(range(a, b)):
             new = base is None or (lines[a].startswith("## ") and lines[a] not in old_heads)

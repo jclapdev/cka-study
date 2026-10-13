@@ -58,7 +58,7 @@ Run these inside this project's folder.
 
 ## Troubleshooting
 
-**The lab says "The lab didn't start."** Usually Kubernetes on `controlplane` failed to come up. The [kubelet](../references/workers.md#what-a-worker-runs) is the program on each machine that starts Kubernetes' parts, and its log says why it couldn't. To read the last lines of that log, open a terminal on your own computer, not the one in the app, and run this inside this project's folder:
+**The lab says "The lab didn't start."** Usually Kubernetes on `controlplane` failed to come up. The [kubelet](../references/workers.md#worker-components) is the program on each machine that starts Kubernetes' parts, and its log says why it couldn't. To read the last lines of that log, open a terminal on your own computer, not the one in the app, and run this inside this project's folder:
 
 ```shell
 docker compose exec controlplane journalctl -u kubelet --no-pager | tail -20

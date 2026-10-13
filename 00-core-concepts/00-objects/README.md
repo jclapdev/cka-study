@@ -5,8 +5,8 @@ it is an object: a record of what you want, which the cluster then works to make
 first objects to know are the [Pod](../../references/pod.md), which runs containers; the [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) and the [Deployment](../../references/workloads.md), which
 keep copies of a pod running; the [Service](../../references/services.md), which gives pods a stable address; and the [namespace](../../references/namespaces.md),
 which groups objects. You create and change them with `kubectl`, the command that talks to the cluster.
-[How a Kubernetes cluster works](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components), programs in the cluster that act on it, and
-[how kubectl talks to the cluster](../../learn/kubectl.md) explains what each command sends.
+[Cluster architecture](../../learn/cluster-architecture.md) explains desired state and the [controllers](../../references/control-plane.md#components), programs in the cluster that act on it, and
+[kubectl and the API](../../learn/kubectl.md) explains what each command sends.
 
 <!-- lab: cluster -->
 
@@ -25,7 +25,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 * Create objects in a namespace, a named group of objects, and reach them from another namespace.
 * Tell `kubectl create` from `kubectl apply`, and change an object by editing its file.
 
-## Run a pod
+## Pods
 
 A [Pod](../../references/pod.md) is the smallest thing Kubernetes runs: one or more containers that share an IP address,
 placed together on one [node](../../references/workers.md), a machine in the cluster.
@@ -105,7 +105,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    ```
 
    The [scheduler](../../references/control-plane.md#components) is the part of the control plane that picks a node for each pod. It chose `node01` for `default/web`, the pod `web` in the namespace `default`.
-   Then the [kubelet](../../references/workers.md#what-a-worker-runs) on `node01`, the agent that runs pods on that machine, pulled the
+   Then the [kubelet](../../references/workers.md#worker-components) on `node01`, the agent that runs pods on that machine, pulled the
    image, created the container and started it.
 
 5. Delete the pod and list again. `delete pod web` deletes the pod by name:
@@ -118,7 +118,7 @@ placed together on one [node](../../references/workers.md), a machine in the clu
    It prints `pod "web" deleted from default namespace`, then
    `No resources found in default namespace.` Nothing recreates a pod you created on its own.
 
-## Write a pod in YAML
+## Pods with YAML
 
 Any object can be written as a [manifest](../../references/kubectl.md#generating-yaml), a YAML file that `kubectl` sends to the cluster. A
 manifest can be kept, edited and applied again, which a one-off command can't. Some types, such
@@ -238,7 +238,7 @@ kubernetes.io, which has an example of each common type.
 
    It prints `pod "nginx" deleted from default namespace`.
 
-## Keep pods running with a ReplicaSet
+## ReplicaSets
 
 A [ReplicaSet](../../references/workloads.md#deployments-and-replicasets) keeps a set number of identical pods running. It finds its pods by [label](../../references/labels.md), a
 key-value pair on an object. When there are too few, it creates new ones from its [pod template](../../references/workloads.md#the-pod-template), a pod manifest kept inside it. No
@@ -356,7 +356,7 @@ key-value pair on an object. When there are too few, it creates new ones from it
 
    After a few seconds, `get pods` prints `No resources found in default namespace.`
 
-## Run a Deployment
+## Deployments
 
 A [Deployment](../../references/workloads.md) creates and manages a ReplicaSet for you, and can replace its pods with a new version.
 The ReplicaSet page recommends
@@ -438,7 +438,7 @@ of creating ReplicaSets yourself.
    The old ReplicaSet stays, with no pods, so the change can be undone. This replacement is a
    [rollout](../../references/workloads.md#rollouts).
 
-## Reach pods through a Service
+## Services
 
 Each pod has [its own IP](../../learn/network-namespaces.md), and a pod that replaces it gets a new one. A [Service](../../references/services.md) gives a set of
 pods a stable IP and a [DNS name](../../learn/dns.md), and picks its pods by label.
@@ -463,7 +463,7 @@ pods a stable IP and a [DNS name](../../learn/dns.md), and picks its pods by lab
    The type [ClusterIP](../../references/services.md#service-types), the default, can be reached only inside the cluster, so `EXTERNAL-IP`
    is `<none>`. `80/TCP` is the port and its protocol.
 
-2. See which pods it sends traffic to. An [EndpointSlice](../../references/services.md#how-a-service-ip-answers) lists the pod IPs behind a Service, and
+2. See which pods it sends traffic to. An [EndpointSlice](../../references/services.md#kube-proxy-and-endpointslices) lists the pod IPs behind a Service, and
    `-l kubernetes.io/service-name=web` picks the one for `web` by its label. `get pods -o wide`
    shows the pods' IPs to compare:
 
@@ -500,7 +500,7 @@ pods a stable IP and a [DNS name](../../learn/dns.md), and picks its pods by lab
    It prints `<title>Welcome to nginx!</title>`. [CoreDNS](../../references/pod-network.md#coredns), the cluster's DNS server, turned the name `web`
    into the Service's IP, and the connection went on to one of the three pods.
 
-## Group objects in namespaces
+## Namespaces
 
 A [namespace](../../references/namespaces.md) is a named group of objects. Everything so far went into `default`, because no
 command named a namespace.
@@ -613,7 +613,7 @@ command named a namespace.
    a manifest of that type puts in its `apiVersion` line, and `KIND` is what it puts in `kind`.
   
 
-## Create or apply
+## Imperative and declarative
 
 `kubectl create` is [imperative](../../references/kubectl.md#generating-yaml): it makes the object you name, and fails if it exists.
 `kubectl apply` is [declarative](../../references/kubectl.md#create-and-apply): it makes the cluster match a file, whether the object exists or
@@ -999,7 +999,7 @@ api    4/4     4            4           23s
 
 </details>
 
-## Check your work
+## Verification
 
 On `controlplane`:
 

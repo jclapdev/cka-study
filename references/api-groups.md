@@ -5,7 +5,7 @@ An API group is a family of related resource types, such as `apps` for [Deployme
 - The **core group** has no name. Its objects have `apiVersion: v1`, and it holds the oldest types: pods, services, secrets, configmaps, namespaces, nodes, persistentvolumes and serviceaccounts.
 - **Named groups** appear before the version. Deployments are `apps/v1`, [Roles](rbac.md#the-model) are `rbac.authorization.k8s.io/v1` and Ingresses are `networking.k8s.io/v1` ([API groups](https://kubernetes.io/docs/reference/using-api/#api-groups)).
 
-## Where the group matters
+## Groups in RBAC rules
 
 In [RBAC](rbac.md), a rule names its groups in `apiGroups`, and the core group is written `""`. A rule for `deployments` in `""` matches nothing, because Deployments are in `apps`.
 

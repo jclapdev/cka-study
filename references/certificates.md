@@ -11,7 +11,7 @@ TLS (Transport Layer Security) is the protocol that sets up an encrypted, authen
 - A **serving certificate** proves the server's identity to the client. The [apiserver](control-plane.md#components)'s serving certificate lists every name and IP a client may use to reach it, so a client connecting to an address not on the list fails the check ([server certificates](https://kubernetes.io/docs/setup/best-practices/certificates/#server-certificates)).
 - A **client certificate** proves the client's identity to the server. The apiserver reads the user name from its `CN` (common name) and the groups from its `O` (organisation) fields ([authentication](authentication.md#client-certificates)).
 
-## On a kubeadm cluster
+## kubeadm's certificates
 
 `kubeadm init` creates three CAs and signs every other certificate with one of them. The cluster CA signs most of them. etcd has its own CA, and so do API extensions, which are servers that add to the Kubernetes API from outside the apiserver. PKI (public key infrastructure) is the set of keys, certificates and CAs that a system's trust is built on. The cluster's PKI is these files, kept in `/etc/kubernetes/pki/` on the [control plane](control-plane.md) node ([where certificates are stored](https://kubernetes.io/docs/setup/best-practices/certificates/#where-certificates-are-stored)):
 
@@ -19,12 +19,12 @@ TLS (Transport Layer Security) is the protocol that sets up an encrypted, authen
 | --- | --- |
 | `ca.crt`, `ca.key` | The cluster CA. `ca.crt` is also copied into every [kubeconfig](kubeconfig.md) and every pod, so clients can check the apiserver. |
 | `apiserver.crt` | The apiserver's serving certificate. |
-| `apiserver-kubelet-client.crt` | The apiserver's client certificate for calling [kubelets](workers.md#what-a-worker-runs). |
+| `apiserver-kubelet-client.crt` | The apiserver's client certificate for calling [kubelets](workers.md#worker-components). |
 | `etcd/ca.crt` and the rest of `etcd/` | A separate CA for etcd, and etcd's own certificates. |
 | `front-proxy-ca.crt` | A CA for API extensions. |
 | `sa.key`, `sa.pub` | A key pair, not a certificate, that signs [ServiceAccount](service-accounts.md) tokens. |
 
-The kubeconfigs in `/etc/kubernetes/` (`admin.conf`, `controller-manager.conf`, `scheduler.conf`) carry client certificates signed by the same CA ([kubeconfig](kubeconfig.md#on-a-kubeadm-cluster)). [kubeadm](kubeadm.md) signs them for one year and the CA for ten ([certificate expiry](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#check-certificate-expiration)).
+The kubeconfigs in `/etc/kubernetes/` (`admin.conf`, `controller-manager.conf`, `scheduler.conf`) carry client certificates signed by the same CA ([kubeconfig](kubeconfig.md#kubeadms-kubeconfigs)). [kubeadm](kubeadm.md) signs them for one year and the CA for ten ([certificate expiry](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#check-certificate-expiration)).
 
 ## Certificate signing requests
 

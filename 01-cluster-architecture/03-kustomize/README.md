@@ -5,7 +5,7 @@ settings, such as `staging` for testing changes and `prod` for real users. [Kust
 and changes them for each environment, such as a different namespace, a name prefix or an image
 tag, without editing the original files. A file named `kustomization.yaml` lists the manifests
 and the changes. Kustomize is built into `kubectl`, so nothing else needs installing.
-[How Kustomize works](../../learn/kustomize.md) explains how one set of files serves several environments.
+[Kustomize basics](../../learn/kustomize.md) explains how one set of files serves several environments.
 
 <!-- lab: kustomize -->
 
@@ -29,9 +29,9 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 Most of the Kustomize snippets are on one page,
 [Declarative Management of Kubernetes Objects Using Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/),
 found by searching kubernetes.io for `kustomize`. Its examples are `cat <<EOF` blocks you can
-[paste straight into the terminal](../../references/kubectl.md#snippets-from-the-docs).
+[paste straight into the terminal](../../references/kubectl.md#docs-snippets).
 
-## Write a base
+## Bases
 
 A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordinary manifests with a `kustomization.yaml` that lists them.
 
@@ -115,7 +115,7 @@ A [base](../../references/kustomize.md#bases-and-overlays) is a folder of ordina
    k delete -f base/deployment.yaml -f base/service.yaml
    ```
 
-## Write an overlay
+## Overlays
 
 An [overlay](../../references/kustomize.md#bases-and-overlays) is a kustomization whose resources include another kustomization, the base, and
 which changes what the base produces. An overlay does not edit the base files.
@@ -231,7 +231,7 @@ which changes what the base produces. An overlay does not edit the base files.
 
    `images` names the image as the base does, `nginx`. The `env: prod` label went onto each
    object's own labels only, not into the selector or the [pod template](../../references/workloads.md#the-pod-template).
-   [What an overlay can set](../../references/kustomize.md#what-an-overlay-can-set) lists the other fields. The rest came from the base files as
+   [Overlay fields](../../references/kustomize.md#overlay-fields) lists the other fields. The rest came from the base files as
    `k create` wrote them: `80-80` is the name it gave the Service's port, and the empty
    `status` fields are left for the cluster to fill in.
 
@@ -267,7 +267,7 @@ which changes what the base produces. An overlay does not edit the base files.
 
    The overlay is applied again in the next lesson, with its patches.
 
-## Patch fields
+## Patches
 
 A [patch](../../references/kustomize.md#patches) is a partial manifest. It names the object it changes by kind and name, and holds only
 the fields to add or replace.
@@ -367,7 +367,7 @@ the fields to add or replace.
    the pods as well, add `includeTemplates: true` beside `pairs` in the `labels` entry. It adds
    the label to the pod template and leaves the selector alone.
 
-## Generate a ConfigMap
+## ConfigMap generators
 
 A ConfigMap holds key-value settings that a pod can read as environment variables.
 `configMapGenerator` writes one and adds a [hash of its contents](../../references/kustomize.md#generated-names) to the name.
@@ -486,7 +486,7 @@ A ConfigMap holds key-value settings that a pod can read as environment variable
    the kustomization no longer produces. `kube-root-ca.crt` is not yours: the cluster puts
    this [ConfigMap](../../references/config.md#kube-root-cacrt) in every namespace, holding the [certificate](../../references/certificates.md) pods use to check the [apiserver](../../references/control-plane.md#components).
 
-## Delete everything
+## Deleting a kustomization
 
 `-k` works for deleting as it does for applying: it builds the kustomization and acts on every
 object it produces.
@@ -754,7 +754,7 @@ tools-api   2/2     2            2           20s
 
 </details>
 
-## Check your work
+## Verification
 
 On `controlplane`:
 

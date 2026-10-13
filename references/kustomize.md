@@ -2,7 +2,7 @@
 
 Kustomize builds a set of [manifests](kubectl.md#generating-yaml) from plain YAML files and a `kustomization.yaml` that lists them and the changes to make. It has no templates: the input files are valid Kubernetes objects, and the changes are written as fields and patches ([overview of Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#overview-of-kustomize)). Kustomize is built into `kubectl`.
 
-[How Kustomize works](../learn/kustomize.md) explains bases and overlays and compares Kustomize with [Helm](helm.md).
+[Kustomize basics](../learn/kustomize.md) explains bases and overlays and compares Kustomize with [Helm](helm.md).
 
 ## Bases and overlays
 
@@ -13,7 +13,7 @@ A kustomization is a folder with a `kustomization.yaml`. Its `resources` lists m
 
 An overlay does not edit the base files. `kubectl kustomize` reads the base, applies the overlay's changes to the result and prints it.
 
-## What an overlay can set
+## Overlay fields
 
 These fields change every object, or one named object, without a patch ([setting cross-cutting fields](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/#setting-cross-cutting-fields)):
 

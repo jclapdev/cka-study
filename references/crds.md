@@ -1,8 +1,8 @@
 # CRDs and operators
 
-A CustomResourceDefinition (CRD) adds a resource type to the apiserver without changing Kubernetes itself. The apiserver then stores, validates and serves objects of the new type like built-in ones ([custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-resources)). A CRD adds no behaviour. An [operator](#operators) is a [controller](control-plane.md#components) that watches those objects and makes the cluster match them ([operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/#operators-in-kubernetes)). [How CRDs and operators extend Kubernetes](../learn/crds-operators.md) explains the model.
+A CustomResourceDefinition (CRD) adds a resource type to the apiserver without changing Kubernetes itself. The apiserver then stores, validates and serves objects of the new type like built-in ones ([custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#custom-resources)). A CRD adds no behaviour. An [operator](#operators) is a [controller](control-plane.md#components) that watches those objects and makes the cluster match them ([operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/#operators-in-kubernetes)). [Custom resources and operators](../learn/crds-operators.md) explains the model.
 
-## What a CRD adds
+## Custom types
 
 A CRD is itself an object, of the cluster-scoped type `customresourcedefinitions` (short names `crd`, `crds`) in the group `apiextensions.k8s.io`. The apiserver serves each type at a URL path of its own, and creating a CRD adds a path for each version it serves, `/apis/<group>/<version>/<plural>` ([create a CustomResourceDefinition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition)). After that, `kubectl get`, `apply`, `delete`, `explain`, [RBAC](rbac.md) rules and `-n` all work with the new type as with any other.
 

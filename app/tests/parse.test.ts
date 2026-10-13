@@ -66,7 +66,7 @@ describe("parse", () => {
     expect(practice.tasks[2].hintHtml).toContain("Flannel");
     expect(practice.solutionHtml).toContain('<code class="whitespace-nowrap">--pod-network-cidr</code>');
     expect(practice.solutionHtml).not.toContain("Hint");
-    const check = ex.sections.find((s) => s.slug === "check-your-work");
+    const check = ex.sections.find((s) => s.slug === "verification");
     expect(check?.kind).toBe("plain");
   });
 
@@ -74,7 +74,7 @@ describe("parse", () => {
     const md = readMarkdown(RBAC)!;
     const s = summarize(md);
     expect(s.stepKeys.length).toBeGreaterThan(10);
-    expect(s.stepKeys.some((k) => k.startsWith("create-the-namespaces#go-to-controlplane-and-create-them"))).toBe(true);
+    expect(s.stepKeys.some((k) => k.startsWith("the-dev-and-prod-namespaces#go-to-controlplane-and-create-them"))).toBe(true);
     expect(s.recallKeys).toHaveLength(7);
     expect(s.hasPractice).toBe(true);
     const ex = await parseExercise(md, RBAC);
@@ -104,11 +104,6 @@ describe("parse", () => {
 });
 
 describe("steps", () => {
-  it("counts a teaching section whose heading starts with Check", () => {
-    const s = summarize(readMarkdown(KUBEADM)!);
-    expect(s.stepKeys.some((k) => k.startsWith("check-what-is-already-running#go-to-controlplane"))).toBe(true);
-  });
-
   it("keys each step by its first line, so a tick stays on its step when steps move", () => {
     const md = "# T\n\n## Do it\n\n1. Run `a`.\n2. Run `b`.\n3. Run `a`.\n";
     const moved = "# T\n\n## Do it\n\n1. Run `b`.\n2. Run `new`.\n3. Run `a`.\n";
@@ -149,37 +144,37 @@ describe("lessons", () => {
     const s = summarize(readMarkdown(HELM)!, learnTitle);
     expect(s.lessons.map((l) => l.title)).toEqual([
       "Introduction",
-      "How Helm works",
-      "Find a chart",
-      "Read the values",
-      "Install a release",
-      "Upgrade a release",
-      "Roll back",
-      "Render without installing",
-      "Uninstall",
+      "Helm basics",
+      "Charts and repositories",
+      "Values",
+      "Releases",
+      "Upgrades",
+      "Rollbacks",
+      "Local rendering",
+      "Uninstalling",
       "Quiz",
       "Practice",
     ]);
     expect(s.lessons[0].sections).toEqual(["objectives"]);
-    expect(s.lessons.at(-1)!.sections).toEqual(["practice", "check-your-work", "further-reading"]);
+    expect(s.lessons.at(-1)!.sections).toEqual(["practice", "verification", "further-reading"]);
     expect(s.lessons.flatMap((l) => l.stepKeys)).toEqual(s.stepKeys);
     expect(pageLinks("[pods](../../references/pod.md)", "learn")).toEqual([]);
   });
 
   it("keeps a section without numbered steps as a lesson of its own once lessons have started", () => {
     const titles = summarize(readMarkdown(KUBEADM)!, learnTitle).lessons.map((l) => l.title);
-    expect(titles).toContain("Point kubectl at the cluster");
-    expect(titles).toContain("Check the control plane");
+    expect(titles).toContain("The admin kubeconfig");
+    expect(titles).toContain("Control plane pods");
     expect(titles).not.toContain("Objectives");
   });
 
   it("puts each Learn page just before the lesson that first links it", () => {
     const titles = summarize(readMarkdown(KUBEADM)!, learnTitle).lessons.map((l) => l.title);
     const at = (t: string) => titles.indexOf(t);
-    expect(at(learnTitle("kubeadm"))).toBeLessThan(at("Check what is already running"));
-    expect(at(learnTitle("tls"))).toBe(at("Initialise the control plane") - 2);
-    expect(at(learnTitle("etcd"))).toBe(at("Initialise the control plane") - 1);
-    expect(at(learnTitle("network-namespaces"))).toBe(at("Install a pod network") - 1);
+    expect(at(learnTitle("kubeadm"))).toBeLessThan(at("The kubelet without a cluster"));
+    expect(at(learnTitle("tls"))).toBe(at("kubeadm init") - 2);
+    expect(at(learnTitle("etcd"))).toBe(at("kubeadm init") - 1);
+    expect(at(learnTitle("network-namespaces"))).toBe(at("Flannel") - 1);
   });
 
   it("opens a reference from a Learn page as a page of its own", async () => {

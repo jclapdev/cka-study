@@ -21,7 +21,7 @@ Nothing in the file is a permission. It is identity only; what that identity may
 
 `sudo kubectl` runs as root, so it reads `/root/.kube/config`, not the invoking user's. When root has no kubeconfig of its own on the [control plane](control-plane.md) node, `sudo kubectl get nodes` fails with `localhost:8080 was refused` while plain `kubectl get nodes` works.
 
-## On a kubeadm cluster
+## kubeadm's kubeconfigs
 
 `kubeadm init` writes root-owned kubeconfigs to `/etc/kubernetes/`:
 

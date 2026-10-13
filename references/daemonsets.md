@@ -1,8 +1,8 @@
 # DaemonSets
 
-A DaemonSet runs one copy of a pod on every node, or on every node that matches its selector. When a node joins, the DaemonSet adds a pod to it, and when a node leaves, its pod is removed ([DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)). [Node](workers.md) agents are deployed this way: [kube-proxy](workers.md#what-a-worker-runs), which makes [Service](services.md) addresses work on its node; the pod network's agent, which connects the node's pods to the others; and log collectors, which ship each node's logs elsewhere.
+A DaemonSet runs one copy of a pod on every node, or on every node that matches its selector. When a node joins, the DaemonSet adds a pod to it, and when a node leaves, its pod is removed ([DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)). [Node](workers.md) agents are deployed this way. [kube-proxy](workers.md#worker-components) makes [Service](services.md) addresses work on its node. The pod network's agent connects the node's pods to the others. Log collectors ship each node's logs elsewhere.
 
-## On a kubeadm cluster
+## kubeadm's DaemonSets
 
 A [kubeadm](kubeadm.md) cluster with one [control plane](control-plane.md) node, two workers and [Flannel](pod-network.md#plugins) as its pod network runs two DaemonSets:
 
@@ -14,7 +14,7 @@ kube-system    kube-proxy        3         3         3       3            3     
 
 `DESIRED` is the number of nodes that should run a copy. Each pod is named `<daemonset>-<random>`, such as `kube-proxy-4wdrl`, and `kubectl get pods -o wide` shows which node it runs on.
 
-A DaemonSet's pods still obey [taints](taints.md) ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). kubeadm taints the control plane node `node-role.kubernetes.io/control-plane:NoSchedule`. Both of these DaemonSets tolerate every `NoSchedule` taint, so they run there too.
+A DaemonSet's pods still obey [taints](taints.md), marks on a node that keep off every pod without a matching toleration ([taints and tolerations](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#taints-and-tolerations)). kubeadm taints the control plane node `node-role.kubernetes.io/control-plane:NoSchedule`, and `NoSchedule` means no new pod is placed there unless it tolerates the taint. Both of these DaemonSets tolerate every `NoSchedule` taint, so they run there too.
 
 ## Commands
 

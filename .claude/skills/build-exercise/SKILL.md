@@ -9,8 +9,8 @@ In the study app, a topic is a short course of lessons listed under it in the si
 
 1. **Introduction**: the README's opening paragraph and Objectives.
 2. One lesson per `learn/*.md` page the README links to, placed just before the lesson that first links it: how a technology works and why, with diagrams and further reading.
-3. One lesson per `##` section of the README before Quiz, named by its heading, such as "Find a chart" or "Install a release".
-4. **Quiz**, then **Practice**, which also shows Check your work and Further reading.
+3. One lesson per `##` section of the README before Quiz, named by its heading, such as "Charts and repositories" or "Releases".
+4. **Quiz**, then **Practice**, which also shows Verification and Further reading.
 
 A topic with a lab shows the lab beside every lesson: a Start lab button, then terminal tabs with + and Reset lab. Nothing on the page describes the lab. A link to a `references/*.md` page opens that page.
 
@@ -62,7 +62,7 @@ A topic with a lab shows the lab beside every lesson: a Start lab button, then t
 - kubectl behaviour differs from what memory suggests. `kubectl create role --resource=deployments` fills in the `apps` group by itself, and `kubectl get nodes -n dev` prints no warning. Run a command on the lab before describing what it does.
 - Test a failure mode on a freshly started lab, not after `kubeadm reset`. Reset leaves `/etc/cni/net.d/` and `/run/flannel/` behind, and the next cluster reuses them, so the failure test gives the wrong result.
 - `admin.conf` authenticates in the group `kubeadm:cluster-admins`. `system:masters` belongs to `super-admin.conf`.
-- The app finds sections by heading name: `## Objectives`, `## Quiz`, `## Practice`, `## Check your work`, `## Further reading`. Every other `##` heading before Quiz is a lesson of steps, even one with no numbered list. Objectives stays on Introduction, and Check your work and Further reading stay on Practice.
+- The app finds sections by heading name: `## Objectives`, `## Quiz`, `## Practice`, `## Verification`, `## Further reading`. Every other `##` heading before Quiz is a lesson of steps, even one with no numbered list. Objectives stays on Introduction, and Verification and Further reading stay on Practice.
 - The introduction names its lab in an invisible ``<!-- lab: <lab-name> -->`` comment, as in the template, and the visible text never names or describes the lab. `lab/labs/<lab-name>/` must exist. Otherwise the topic shows no lab. A topic folder never holds a `setup.sh`; it belongs to the lab.
 - Editing a lab's `setup.sh` makes its next start set it up again, along with every lab built on it. The first start of a lab with a changed setup takes minutes, not seconds.
 - Each Practice task opens with a bold lead-in, ``**Host `controlplane`, weight 19%.**`` (or ``**Hosts `a`, `b`, weight 25%.**``), and the weights add up to 100. The time budget is a bold ``**N minutes**`` in the section's opening text.

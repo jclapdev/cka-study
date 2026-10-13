@@ -1,11 +1,11 @@
 # kubeadm Installation
 
 `kubeadm` is the tool that turns a few machines into a working Kubernetes cluster. Each machine
-needs a [container runtime](../../references/workers.md#what-a-worker-runs), the program that starts containers, and the kubelet, the agent that
+needs a [container runtime](../../references/workers.md#worker-components), the program that starts containers, and the kubelet, the agent that
 runs pods on that machine. On the first machine, kubeadm creates the [certificates](../../references/certificates.md#client-and-serving-certificates) the cluster's
 parts use to prove who they are. It then starts the [control plane](../../references/control-plane.md), the parts that manage the cluster, and
 prints a command that joins the other machines to it.
-[How a cluster works](../../learn/cluster-architecture.md) and [how kubeadm builds a cluster](../../learn/kubeadm.md) explain the parts.
+[Cluster architecture](../../learn/cluster-architecture.md) and [kubeadm basics](../../learn/kubeadm.md) explain the parts.
 
 <!-- lab: vms -->
 
@@ -25,9 +25,9 @@ Run `ssh controlplane` first: most steps run there, and a step that needs a work
 * Join two workers with a token, a short-lived secret that lets a new node join, which you generate yourself.
 * Label the workers, and check that every part of the control plane is running.
 
-## Check what is already running
+## The kubelet without a cluster
 
-The machines have the Kubernetes tools installed but [no cluster](../../references/workers.md#the-kubelet-before-init-or-join).
+The machines have the Kubernetes tools installed but [no cluster](../../references/workers.md#the-kubelet-without-a-cluster).
 
 1. Go to `controlplane` and check the state of the kubelet, the agent on every node that
    starts the pods the cluster gives it. `systemctl status` shows whether a service that systemd
@@ -79,7 +79,7 @@ The machines have the Kubernetes tools installed but [no cluster](../../referenc
    is, so kubectl used its built-in
    default of `localhost:8080`.
 
-## Initialise the control plane
+## kubeadm init
 
 `kubeadm init` builds the control plane on this machine: its certificates, the files that let
 clients reach it, and the pods that run it. It writes the machine's address into the apiserver's
@@ -139,7 +139,7 @@ fixable without `kubeadm reset`, which removes the control plane so `init` can r
    ```
 
    Each progress line starts with the phase that printed it, such as `[preflight]`, `[certs]`,
-   `[kubeconfig]` or `[addons]`. [What kubeadm init does](../../references/kubeadm.md#what-kubeadm-init-does)
+   `[kubeconfig]` or `[addons]`. [What kubeadm init does](../../references/kubeadm.md#kubeadm-init-phases)
    lists each phase and the files it leaves.
 
 > [!note]
@@ -172,10 +172,10 @@ apiserver or a scheduler. That is how the control plane starts before there is a
 start it. Editing one of these files restarts that component within seconds. `k delete pod`
 on one of these pods does nothing lasting, because the kubelet recreates it from the file ([static pods](../../references/control-plane.md#static-pods)).
 
-## Point kubectl at the cluster
+## The admin kubeconfig
 
-kubectl reads its kubeconfig from `~/.kube/config`. `kubeadm init` wrote an admin kubeconfig to
-`/etc/kubernetes/admin.conf`, which only root can read. [On a kubeadm cluster](../../references/kubeconfig.md#on-a-kubeadm-cluster) lists every kubeconfig `init` writes.
+A kubeconfig is the file that tells kubectl where the cluster is and which credential to send. kubectl reads its kubeconfig from `~/.kube/config`, so it reaches nothing until a file is there. `kubeadm init` wrote an admin kubeconfig to
+`/etc/kubernetes/admin.conf`, which only root can read. [kubeadm's kubeconfigs](../../references/kubeconfig.md#kubeadms-kubeconfigs) lists every kubeconfig `init` writes.
 
 1. Copy the admin kubeconfig into your home directory and make it yours. `mkdir -p` creates
    `~/.kube` and does nothing if it exists. `sudo cp` copies the root-owned file, and
@@ -211,13 +211,13 @@ kubectl reads its kubeconfig from `~/.kube/config`. `kubeadm init` wrote an admi
 > no kubeconfig. Either you ran it with `sudo`, which reads root's home instead of yours, or you
 > are on a worker, which has no admin kubeconfig. Run it as your normal user on `controlplane`.
 
-## Install a pod network
+## Flannel
 
 Kubernetes needs a [network plugin](../../learn/pod-network.md) to [give pods addresses](../../learn/network-namespaces.md), and kubeadm installs none. The
 plugin hands out pod addresses from the range you give `init`. The controller-manager, the control plane part that runs the cluster's controllers, splits that range into one `/24` per node. Each node's pods get addresses from its own slice. The range must not overlap the one
 for [Services](../../references/services.md), the stable addresses in front of pods, or the machines' own network ([address ranges for pods, Services and nodes](../../references/pod-network.md#pod-service-and-node-address-ranges)).
 
-### A NotReady node
+### NotReady nodes
 
 Check the node, the pods, and `/etc/cni/net.d/`, where a network plugin writes its configuration file
 in the [CNI](../../references/pod-network.md) format, the standard for such plugins. `describe node` prints the
@@ -247,7 +247,7 @@ kube-scheduler-controlplane            0/1     Running   0          14s
 `/etc/cni/net.d/` is empty, so the kubelet reports `cni plugin not initialized` and keeps the
 node `NotReady`. A `NotReady` node carries the [taint](../../references/taints.md) `node.kubernetes.io/not-ready:NoSchedule`, a mark
 that keeps off every pod not set to tolerate it. The [CoreDNS](../../references/pod-network.md#coredns) pods don't tolerate it, so
-both stay [`Pending`](../../references/pod.md#coredns-after-kubeadm-init).
+both stay [`Pending`](../../references/pod.md#pending-coredns-pods).
 
 1. Install [Flannel](../../references/pod-network.md#plugins), a common network plugin. It hands out addresses from `10.244.0.0/16` by default, the range you gave `init`. `k apply -f`
    reads a manifest from a URL as well as from a file. This one creates the `kube-flannel`
@@ -295,7 +295,7 @@ both stay [`Pending`](../../references/pod.md#coredns-after-kubeadm-init).
 > given none, the node is still `Ready`. The Flannel pod goes into `CrashLoopBackOff`, crashing and
 > restarting over and over, and CoreDNS stays in `ContainerCreating`. `k logs -n kube-flannel -l app=flannel` names the mismatch.
 
-## Join the workers
+## kubeadm join
 
 The [join line](../../references/workers.md#joining) printed by `init` contains a token, a short-lived secret that lets a new node ask the cluster for a certificate, and it expires after 24 hours. `kubeadm token
 create --print-join-command` prints a new one.
@@ -351,7 +351,7 @@ create --print-join-command` prints a new one.
 Workers get no admin kubeconfig, so `kubectl` on `node01` fails with the same `localhost:8080`
 error. Run `kubectl` on `controlplane`.
 
-## Label the workers
+## Node roles
 
 A node's role is a [label](../../references/labels.md#keys-and-values), not a field. Back on `controlplane`, with `ssh controlplane` from `base`:
 
@@ -383,7 +383,7 @@ A node's role is a [label](../../references/labels.md#keys-and-values), not a fi
 
    `ROLES` now shows `worker` for both. The value after `=` is empty. The role name comes from the key.
 
-## Check the control plane
+## Control plane pods
 
 A healthy cluster runs the four control plane pods on `controlplane`, and kube-proxy and Flannel
 on every node.
@@ -658,7 +658,7 @@ kube-scheduler-controlplane            1/1     Running   0          54s
 
 </details>
 
-## Check your work
+## Verification
 
 Run these on `controlplane` as your normal user, without `sudo` on the `kubectl` lines.
 

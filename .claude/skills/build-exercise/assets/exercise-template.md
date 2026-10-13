@@ -15,7 +15,7 @@ already has set up, if anything, such as "Helm is installed on `controlplane`.">
 
 * <One line per thing the reader will be able to do.>
 
-## <First lesson: one task, named for what it achieves, e.g. "Find a chart">
+## <First lesson: one task, named for the object, command or idea it teaches, e.g. "Charts and repositories" or "kubeadm join" (style list: heading-name)>
 
 <At most one or two sentences on what the lesson does and what the concept is, with the link on
 the term itself: A [<term>](../../references/<concept>.md#<section-anchor>) is ...>
@@ -142,7 +142,7 @@ exit
 
 </details>
 
-## Check your work
+## Verification
 
 Run these on `controlplane`.
 

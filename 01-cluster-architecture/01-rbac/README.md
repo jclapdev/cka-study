@@ -3,7 +3,7 @@
 Every `kubectl` command is a request to the [apiserver](../../references/control-plane.md#components), the part of the control plane that all requests
 go through. Role-based access control ([RBAC](../../references/rbac.md)) decides which of those requests it allows, by
 checking who sent each one against the permissions granted to them.
-[How access control works](../../learn/access-control.md) explains the model.
+[Access control](../../learn/access-control.md) explains the model.
 
 <!-- lab: cluster -->
 
@@ -21,7 +21,7 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
 * Write a list of allowed actions as a ClusterRole, for use in any namespace, and grant it in `dev` and `prod`.
 * Grant access to nodes, which belong to no namespace, so a RoleBinding can't reach them.
 
-## Create the namespaces
+## The dev and prod namespaces
 
 Most permissions are granted inside one [namespace](../../references/namespaces.md), a named group of objects. Two
 namespaces, `dev` and `prod`, show where such a grant stops.
@@ -35,7 +35,7 @@ namespaces, `dev` and `prod`, show where such a grant stops.
    k create namespace prod
    ```
 
-## Find out why your kubectl can do anything
+## The admin identity
 
 Your own `kubectl` is allowed every request. Find who the apiserver thinks you are, and the
 grant that allows it.
@@ -59,7 +59,7 @@ grant that allows it.
    [certificate](../../references/certificates.md#client-and-serving-certificates) that `kubectl` signs in with. It is kept in `~/.kube/config`, a copy of `admin.conf`, the admin [kubeconfig](../../references/kubeconfig.md) [kubeadm](../../references/kubeadm.md) wrote when it built the cluster. `kubeadm:cluster-admins` is a group named in the
    same certificate. Neither is an object in the cluster: there is no user you could list or
    delete. [Client certificates](../../references/authentication.md#client-certificates)
-   explains how a certificate becomes a user and groups, and [how TLS secures the cluster](../../learn/tls.md)
+   explains how a certificate becomes a user and groups, and [TLS basics](../../learn/tls.md)
    how the cluster signs one.
 
 2. Find the binding that gives that group its power. A [ClusterRoleBinding](../../references/rbac.md#the-model) grants a ClusterRole,
@@ -82,7 +82,7 @@ grant that allows it.
    reason your commands work, and it is an ordinary object of the same kind you are about to
    create.
 
-## Create an identity
+## ServiceAccounts
 
 Every request comes from a subject: a user, a group or a ServiceAccount. A [ServiceAccount](../../references/service-accounts.md#the-model) is an
 identity for a program, and the only subject that is an object you can create. Users and groups
@@ -113,7 +113,7 @@ an identity of its own, so that it can be given only the access its job needs, n
    and Kubernetes allows only what has been granted
    ([subjects](../../references/rbac.md#subjects)).
 
-## Write a Role
+## Roles
 
 A [Role](../../references/rbac.md#the-model) is a list of rules, each naming verbs and the resources those verbs apply to. It lives
 in one namespace and can only ever name resources in that namespace.
@@ -152,7 +152,7 @@ in one namespace and can only ever name resources in that namespace.
 
    Still `no`. A Role grants nothing until a RoleBinding names it and a subject.
 
-## Bind the Role
+## RoleBindings
 
 A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one role and the subjects that get it.
 
@@ -209,7 +209,7 @@ A [RoleBinding](../../references/rbac.md#the-model) is the grant. It names one r
 > fails silently. When a grant seems to do nothing, compare `k get sa -n dev`, which lists the
 > ServiceAccounts in `dev`, with the subjects `k describe rolebinding` prints.
 
-## Cross a namespace boundary
+## Namespace scope
 
 The RoleBinding lives in `dev`, so what it grants stops at `dev`.
 
@@ -239,7 +239,7 @@ The RoleBinding lives in `dev`, so what it grants stops at `dev`.
    ```
 
    The message names every field a rule has to match: subject, verb, resource, API group and
-   namespace. Every resource type belongs to an [API group](../../references/api-groups.md#where-the-group-matters), a family of types, and `""` is the core group,
+   namespace. Every resource type belongs to an [API group](../../references/api-groups.md#groups-in-rbac-rules), a family of types, and `""` is the core group,
    which holds pods. It is not a missing value.
 
 > [!note]
@@ -258,7 +258,7 @@ The RoleBinding lives in `dev`, so what it grants stops at `dev`.
 > `- apps` there by itself. A rule written by hand with `""` for deployments matches nothing,
 > and the Forbidden message then says `in API group "apps"`, the group the request needed.
 
-## Reuse a ClusterRole across namespaces
+## ClusterRoles
 
 A [ClusterRole](../../references/rbac.md#the-model) is a list of allowed actions written once for the whole cluster, outside any
 namespace. A RoleBinding may point at one, so the same ClusterRole can be granted in as many
@@ -306,7 +306,7 @@ A ClusterRole bound by a RoleBinding is a reusable definition applied per namesp
 built-in `view` (read most objects, but not Secrets), `edit` (also change them) and `admin` (also
 manage permissions in the namespace) roles are meant to be used this way.
 
-## Reach a cluster-scoped resource
+## Cluster-scoped resources
 
 [Nodes](../../references/workers.md), the machines pods run on, belong to the whole cluster rather than to a namespace. They
 are [cluster-scoped](../../references/namespaces.md#namespaced-and-cluster-scoped-resources), like namespaces themselves and
@@ -589,7 +589,7 @@ k auth can-i list pods -n default --as=anyone --as-group=auditors
 
 </details>
 
-## Check your work
+## Verification
 
 On `controlplane`:
 

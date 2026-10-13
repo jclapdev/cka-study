@@ -9,9 +9,9 @@ A ServiceAccount is an identity for software running in the cluster, such as a p
 - A new ServiceAccount has no permissions. It can only do what [RBAC](rbac.md) bindings grant it.
 - Every namespace gets a ServiceAccount called `default` as soon as it is created ([default service accounts](https://kubernetes.io/docs/concepts/security/service-accounts/#default-service-accounts)). A pod that names no ServiceAccount runs as `default`.
 
-## How a pod uses its ServiceAccount
+## ServiceAccounts in pods
 
-The [kubelet](workers.md#what-a-worker-runs) mounts a short-lived token for the pod's ServiceAccount into the pod as a file in a volume. Kubernetes adds that volume to the pod by itself, named `kube-api-access-<random>` ([assign to a pod](https://kubernetes.io/docs/concepts/security/service-accounts/#assign-to-pod)). Software in the pod sends that token to the [apiserver](control-plane.md#components), and the apiserver authenticates it as the ServiceAccount.
+The [kubelet](workers.md#worker-components) mounts a short-lived token for the pod's ServiceAccount into the pod as a file in a volume. Kubernetes adds that volume to the pod by itself, named `kube-api-access-<random>` ([assign to a pod](https://kubernetes.io/docs/concepts/security/service-accounts/#assign-to-pod)). Software in the pod sends that token to the [apiserver](control-plane.md#components), and the apiserver authenticates it as the ServiceAccount.
 
 ```yaml
 spec:

@@ -13,8 +13,8 @@ Each entry's id is what the `style-reader` reports.
 - Pass: "`--set replicaCount=2` overrides `replicaCount`."
 
 **heading-count** (Vale). A number in a heading.
-- Fail: "## Give pods one address with a Service", "## Three address ranges"
-- Pass: "## Reach pods through a Service", "## Address ranges"
+- Fail: "## Three address ranges"
+- Pass: "## Address ranges"
 
 ## The lab and the app
 
@@ -37,9 +37,13 @@ Each entry's id is what the `style-reader` reports.
 
 ## Headings
 
-**phrase-heading**. A heading that is a phrase instead of a name.
-- Fail: "Where you are", "Practice it"
-- Pass: "Dashboard", "Practice"
+**heading-name** (Vale for known patterns). Every heading, a page's `#` title included, is the name of what its section covers, the way a course names its lessons. KodeKloud's CKA lessons are "Pods", "ReplicaSets", "Static Pods", "Cluster Roles", "Helm charts", "Overlays", "TLS Basics" and "Imperative vs Declarative". A topic's headings become its lessons in the sidebar, so they read as that list. A heading fails when it is:
+- an instruction. Fail: "## Run a pod", "## Find a chart", "## Bind the Role", "## Check your work". Pass: "## Pods", "## Charts and repositories", "## RoleBindings", "## Verification".
+- a sentence or clause. Fail: "## Users and groups have no object", "## When the network is missing", "## What a worker runs", "## Names that change with their contents". Pass: "## Users and groups", "## Nodes without a network", "## Worker components", "## Hashed names".
+- a "How …" title. Fail: "# How Helm works", "## How the control plane starts itself". Pass: "# Helm basics", "## Static pods".
+- a label any page could carry, which says nothing about this one. Fail: "## How it works", "## How it fits in the cluster", "## Putting it together", "Where you are". Pass: "## Keys, certificates and CAs", "## kubeadm's certificates", "## An admin request", "Dashboard".
+
+A topic lesson names the object, command or idea it teaches, such as "## Deployments" or "## kubeadm join", not the task the steps do with it. Keep the fixed names the app finds sections by (Objectives, Quiz, Practice, Verification, Further reading) and the reference pages' Commands, Failure modes, Example and Docs. A gerund that names an activity passes, as in KodeKloud's "Customizing chart parameters": "## Joining a node", "## Generating YAML".
 
 ## Narration
 

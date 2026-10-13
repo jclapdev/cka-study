@@ -198,7 +198,7 @@ export function PracticeRun({
           </div>
           {checkHtml && (
             <section>
-              <h3 className="mb-3 text-lg font-bold">Check your work</h3>
+              <h3 className="mb-3 text-lg font-bold">Verification</h3>
               <Markdown html={checkHtml} />
             </section>
           )}

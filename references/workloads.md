@@ -62,7 +62,7 @@ web-fbdc6fc8c    2         2         2       17s
 | --- | --- | --- |
 | Deployment | a number of interchangeable pods | web servers and other stateless applications |
 | StatefulSet | pods with fixed names (`db-0`, `db-1`) and their own storage each, started in order | databases and other applications where each copy keeps its own data ([StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)) |
-| [DaemonSet](daemonsets.md) | one pod on each node | node agents such as [kube-proxy](workers.md#what-a-worker-runs) |
+| [DaemonSet](daemonsets.md) | one pod on each node | node agents such as [kube-proxy](workers.md#worker-components) |
 | Job | pods until one finishes successfully, then stops | one-off tasks such as a migration ([Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/)) |
 | CronJob | a Job on a schedule | backups and other repeated tasks |
 

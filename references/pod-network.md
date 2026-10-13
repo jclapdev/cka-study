@@ -2,7 +2,7 @@
 
 Kubernetes requires that every pod gets its own IP and that any pod can reach any other pod on any node without NAT ([the Kubernetes network model](https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model)). NAT (network address translation) is rewriting a packet's addresses on the way through, as a home router does, and pods must not need it to reach each other.
 
-Kubernetes does not build this network itself. CNI (Container Network Interface) is the standard way for a separate program, a CNI plugin, to give each pod its address and connect it to the others ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). A cluster needs exactly one plugin, and [kubeadm](kubeadm.md) installs none. [How the pod network works](../learn/pod-network.md) explains the model.
+Kubernetes does not build this network itself. CNI (Container Network Interface) is the standard way for a separate program, a CNI plugin, to give each pod its address and connect it to the others ([network plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/)). A cluster needs exactly one plugin, and [kubeadm](kubeadm.md) installs none. The [pod networking](../learn/pod-network.md) page explains the model.
 
 ## Pod, Service and node address ranges
 
@@ -14,7 +14,7 @@ A cluster uses three ranges of addresses: one for pods, one for [Services](servi
 | Service CIDR | `kubeadm init --service-cidr` | `10.96.0.0/12` | [ClusterIPs](services.md#service-types) |
 | [Node](workers.md) network | the infrastructure | none | node interfaces |
 
-No interface holds a Service IP. [kube-proxy](workers.md#what-a-worker-runs) writes iptables or [IPVS](services.md#how-a-service-ip-answers) rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
+No interface holds a Service IP. [kube-proxy](workers.md#worker-components) writes iptables or [IPVS](services.md#kube-proxy-and-endpointslices) rules for it on every node ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a ClusterIP answers but never appears in `ip addr`.
 
 All three must be disjoint. Kubernetes splits the pod CIDR into a `/24` per node and records it in the node's `spec.podCIDR`. On a cluster with two workers:
 
@@ -34,10 +34,12 @@ The plugin's own configuration must contain those ranges. [Flannel](#plugins), a
 
 Read it with `kubectl logs -n kube-flannel -l app=flannel`.
 
-## Before a pod network is installed
+## Clusters without a pod network
+
+A cluster built with `kubeadm init` has no pod network until one is installed. Until then it shows these signs:
 
 - Node condition `Ready` is `False`, reason `KubeletNotReady`, message `container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized` (wording after the first clause varies by kubelet version)
-- CoreDNS pods stay `Pending`, because a `NotReady` node carries the [taint](taints.md) `node.kubernetes.io/not-ready:NoSchedule`, which CoreDNS does not tolerate
+- CoreDNS pods stay `Pending`, because a `NotReady` node carries the [taint](taints.md) `node.kubernetes.io/not-ready:NoSchedule`, a mark that keeps off every pod without a matching toleration, and CoreDNS has none
 - `/etc/cni/net.d/` is empty (root-only directory: `sudo ls /etc/cni/net.d/`)
 
 After a CNI plugin installs, that directory holds a conflist file, `10-flannel.conflist` for Flannel. A conflist is the plugin's configuration file in the CNI format, which tells the kubelet which plugin to call for each new pod. Once it exists, the kubelet marks the node `Ready` within seconds.
@@ -72,7 +74,7 @@ So in `kubectl get pods -A -o wide`, these pods show the node's address, while C
 
 ## Network namespaces on a node
 
-A network namespace is a separate copy of Linux's network: its own interfaces, addresses and routes. Each pod that is not on the host network gets one, shared by all its containers ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). A veth pair is two virtual interfaces joined like a cable, with one end in the pod's namespace as `eth0` and the other on the node. Flannel plugs the node ends into a bridge, a virtual switch called `cni0`. [How a pod gets its own network](../learn/network-namespaces.md) explains how they fit together.
+A network namespace is a separate copy of Linux's network: its own interfaces, addresses and routes. Each pod that is not on the host network gets one, shared by all its containers ([pod networking](https://kubernetes.io/docs/concepts/workloads/pods/#pod-networking)). A veth pair is two virtual interfaces joined like a cable, with one end in the pod's namespace as `eth0` and the other on the node. Flannel plugs the node ends into a bridge, a virtual switch called `cni0`. [Network namespaces](../learn/network-namespaces.md) explains how they fit together.
 
 On a node, as root:
 
@@ -115,7 +117,7 @@ VXLAN is a way of carrying one network's packets inside another's. `flannel.1` i
 
 ## CoreDNS
 
-CoreDNS is the cluster's DNS server, a [Deployment](workloads.md) of two replicas in `kube-system`, reachable at the Service `kube-dns` on `10.96.0.10`. It resolves `<service>.<namespace>.svc.cluster.local` ([DNS for services and pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)). It does not use the host network, so it needs an address from the pod network. [How DNS works in the cluster](../learn/dns.md) explains how a name is looked up.
+CoreDNS is the cluster's DNS server, a [Deployment](workloads.md) of two replicas in `kube-system`, reachable at the Service `kube-dns` on `10.96.0.10`. It resolves `<service>.<namespace>.svc.cluster.local` ([DNS for services and pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)). It does not use the host network, so it needs an address from the pod network. [Cluster DNS](../learn/dns.md) explains how a name is looked up.
 
 The kubelet writes each pod's `/etc/resolv.conf` from its `clusterDNS` and `clusterDomain` settings in `/var/lib/kubelet/config.yaml`. In a pod in `default`:
 

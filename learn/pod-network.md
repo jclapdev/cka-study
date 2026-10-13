@@ -1,4 +1,4 @@
-# How the pod network works
+# Pod networking
 
 Kubernetes sets three rules for networking: every pod gets its own IP address, any pod can reach any other pod on any node without address translation, and agents on a node can reach every pod on that node ([the Kubernetes network model](https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model)). Kubernetes does not implement these rules itself. A network plugin does, and there are many to choose from.
 
@@ -34,7 +34,7 @@ The node network is the machines' own addresses. The pod CIDR is a range of addr
 
 Service addresses are different from the other two. No network interface holds one. kube-proxy, a program that runs on every node, writes packet-forwarding rules on its node that send traffic for a Service address to one of its pods ([virtual IPs](https://kubernetes.io/docs/reference/networking/virtual-ips/)), so a Service address answers but never appears in `ip addr`.
 
-## When the network is missing
+## Nodes without a network
 
 A node reports `Ready` only once a network configuration file exists in `/etc/cni/net.d/`. Until a plugin is installed, every node is `NotReady` and pods that need a pod address wait.
 

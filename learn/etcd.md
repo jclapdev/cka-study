@@ -1,14 +1,14 @@
-# How etcd stores the cluster
+# etcd basics
 
 Every object in a cluster, from a pod to a Role, exists only as an entry in etcd, a key-value store that Kubernetes uses for all its data. It keeps every copy of the data in agreement, and keeps working when some of its machines fail ([operating etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)). Lose etcd's data and the cluster forgets every object it had, so etcd is what you back up.
 
 Without etcd, each component would have to store the state it cares about and agree with the others on it. With etcd, there is one record that every change goes into and every component reads from, through the apiserver, the part of the control plane that every request goes through.
 
-## How it works
+## Keys and watches
 
-The apiserver is etcd's only client. It checks each request, then writes the object to etcd under a key built from its type, namespace and name, such as `/registry/deployments/store/api` for the Deployment `api` in `store`, or `/registry/namespaces/store` for the namespace itself. The value is the object in a compact binary encoding, not the YAML you wrote.
+The apiserver is the only Kubernetes component that talks to etcd. It checks each request, then writes the object to etcd under a key built from its type, namespace and name, such as `/registry/deployments/store/api` for the Deployment `api` in `store`, or `/registry/namespaces/store` for the namespace itself. The value is the object in a compact binary encoding, not the YAML you wrote.
 
-Controllers, the scheduler and kubelets never read etcd. They watch the apiserver, which sends them each change to the objects they follow as it happens ([efficient detection of changes](https://kubernetes.io/docs/reference/using-api/api-concepts/#efficient-detection-of-changes)):
+The other components never read etcd: the controllers, which keep objects matching what was asked for, the scheduler, which picks a node for each new pod, and the kubelets, which run the pods on each node. They watch the apiserver, which sends them each change to the objects they follow as it happens ([efficient detection of changes](https://kubernetes.io/docs/reference/using-api/api-concepts/#efficient-detection-of-changes)):
 
 ```mermaid
 sequenceDiagram
@@ -35,15 +35,15 @@ flowchart LR
   F2 -.->|stored| L
 ```
 
-Members talk to each other on port 2380 and to clients on port 2379, both over TLS, the encryption HTTPS uses, with certificates signed by etcd's own CA, the certificate authority that vouches for them ([securing etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#securing-etcd-clusters), [how TLS secures the cluster](tls.md)).
+Members talk to each other on port 2380 and to clients on port 2379, both over TLS, the encryption HTTPS uses. Their certificates are signed by etcd's own CA, the certificate authority that vouches for them ([securing etcd clusters](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#securing-etcd-clusters), [TLS basics](tls.md)).
 
-## How it fits in the cluster
+## Topology and backups
 
-kubeadm, the tool that builds a cluster, runs one etcd member on each control plane node, as a static pod, a pod the kubelet starts from a file on the machine, next to the apiserver. This is the stacked topology, the kubeadm default. Losing a node then costs both an etcd member and a control plane instance, so a highly available cluster, one that keeps working when a control plane node fails, needs at least three control plane nodes ([stacked etcd topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/#stacked-etcd-topology)). The other choice, external etcd, runs the members on machines of their own, which needs twice as many machines ([external etcd topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/#external-etcd-topology)). A single control plane node, as kubeadm builds by default, has a single member, which is its own leader.
+kubeadm, the tool that builds a cluster, runs one etcd member on each control plane node, next to the apiserver. Each member is a static pod, a pod the kubelet starts from a file on the machine. This is the stacked topology, the kubeadm default. Losing a node then costs both an etcd member and a control plane instance. A highly available cluster, one that keeps working when a control plane node fails, needs at least three control plane nodes ([stacked etcd topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/#stacked-etcd-topology)). The other choice, external etcd, runs the members on machines of their own, which needs twice as many machines ([external etcd topology](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/#external-etcd-topology)). A single control plane node, as kubeadm builds by default, has a single member, which is its own leader.
 
 etcd holds objects, not what they point to. Container images, the files in volumes and container logs live on the nodes and in storage systems, so an etcd backup brings back every object but none of that data. A backup is a snapshot of the whole key space taken with `etcdctl`, etcd's command-line client ([backing up an etcd cluster](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#backing-up-an-etcd-cluster)), and restoring it puts the cluster back to the moment of the snapshot.
 
-The etcd pod and the other control plane components are on the [control plane reference page](../references/control-plane.md#components), and etcd's certificate files are on the [certificates reference page](../references/certificates.md#on-a-kubeadm-cluster).
+The etcd pod and the other control plane components are on the [control plane reference page](../references/control-plane.md#components), and etcd's certificate files are on the [certificates reference page](../references/certificates.md#kubeadms-certificates).
 
 ## Further reading
 

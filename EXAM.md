@@ -9,7 +9,7 @@ The Certified Kubernetes Administrator (CKA) exam tests whether you can run Kube
 - The clusters run Kubernetes 1.35.
 - You start on a machine named `base`, which only reaches the task hosts. Each task starts with a box naming the host to `ssh` into. `sudo -i` gives root, and `exit` returns to `base`. Doing a task on the wrong host scores zero for it, and ssh from one task host to another is not supported.
 - `kubectl` is preinstalled with the `k` alias and bash completion on the hosts you `ssh` into, with `yq` for reading and editing YAML, and `curl` and `wget` for testing web services. `base` has none of them.
-- The documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), [helm.sh/docs](https://helm.sh/docs), the [Gateway API docs](https://gateway-api.sigs.k8s.io), and any page a task links in its [Quick Reference](references/kubectl.md#snippets-from-the-docs) box, a list of docs links some tasks include ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
+- The documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), [helm.sh/docs](https://helm.sh/docs), the [Gateway API docs](https://gateway-api.sigs.k8s.io), and any page a task links in its [Quick Reference](references/kubectl.md#docs-snippets) box, a list of docs links some tasks include ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
 - Grading checks the final state of the cluster only. How you got there is never inspected, so an object made with an [imperative](references/kubectl.md#generating-yaml) command such as `kubectl create` scores the same as one written by hand in YAML, the text format Kubernetes objects are written in.
 - Tasks often combine topics. One might install a [chart](references/helm.md#charts-repositories-and-releases) that adds a new object type, or move an Ingress to the Gateway API. A chart is a packaged application that [Helm](references/helm.md) installs. An Ingress is a set of rules that routes outside HTTP traffic to [Services](references/services.md), and the Gateway API is the newer set of objects for the same job.
 
@@ -55,7 +55,7 @@ Sources: [Linux Foundation tips for the CKA](https://docs.linuxfoundation.org/tc
 - Manage the lifecycle of Kubernetes clusters.
 - Implement and configure a highly available [control plane](references/control-plane.md).
 - Use Helm and Kustomize to install cluster components.
-- Understand extension interfaces ([CNI](references/pod-network.md), CSI, [CRI](references/workers.md#what-a-worker-runs)). These are the standards Kubernetes uses to talk to plugins: CNI for the pod network and CRI for the program that runs containers. CSI (Container Storage Interface) is the standard for storage plugins.
+- Understand extension interfaces ([CNI](references/pod-network.md), CSI, [CRI](references/workers.md#worker-components)). These are the standards Kubernetes uses to talk to plugins: CNI for the pod network and CRI for the program that runs containers. CSI (Container Storage Interface) is the standard for storage plugins.
 - Understand [CRDs](references/crds.md), and install and configure [operators](references/crds.md#operators).
 
 ### Services and Networking (20%)

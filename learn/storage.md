@@ -1,8 +1,8 @@
-# How storage works for pods
+# Storage
 
 A container's files are lost when the container stops. That suits a web server that only serves what its image holds, but not a database, or two containers that need to share files. Kubernetes adds volumes: directories that a pod's containers mount, whose contents can outlive a container and, for some kinds, the pod itself ([why volumes are important](https://kubernetes.io/docs/concepts/storage/volumes/#why-volumes-are-important)).
 
-## How it works
+## Volumes
 
 A container's filesystem is built from its image's read-only layers with one writable layer on top. Everything the container writes goes into that top layer, and a restarted container starts again from the image with an empty one. So a file written inside a container is gone after it crashes and the kubelet, the agent on each node that runs its pods, restarts it ([why volumes are important](https://kubernetes.io/docs/concepts/storage/volumes/#why-volumes-are-important)).
 
@@ -17,7 +17,7 @@ A volume is declared once in the pod's `spec.volumes` and mounted by each contai
 
 Take a container that adds a line to a file in its own filesystem and a line to a file in an `emptyDir`, then exits. After each restart, the first file holds a single line, because it starts over, and the `emptyDir` file has gained another.
 
-## How it fits in the cluster
+## PersistentVolumes and claims
 
 Storage that outlives pods is split into two objects, so that the people who run a cluster and the people who run applications each deal with their own half ([persistent volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#introduction)). A PersistentVolume is a piece of storage in the cluster, such as a network disk, created by an administrator or on demand. A PersistentVolumeClaim is a pod's request for storage of a size and access mode. The access mode says how many nodes may use the storage at once, such as `ReadWriteOnce`, read and write from one node at a time. Kubernetes binds each claim to one volume that fits it, and the pod mounts the claim, never the volume directly ([binding](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#binding)).
 
@@ -31,7 +31,7 @@ flowchart LR
 
 A StorageClass names a kind of storage and the program that creates it, so a claim that names a class gets a new PersistentVolume made for it instead of waiting for an administrator ([dynamic provisioning](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#dynamic)). The programs that create and attach volumes for a storage system are mostly CSI drivers. CSI (Container Storage Interface) is the standard for storage plugins. A new storage system needs a CSI driver and no change to Kubernetes ([CSI](https://kubernetes.io/docs/concepts/storage/volumes/#csi)).
 
-etcd, the cluster's database, holds these objects but none of the data in them, so a PersistentVolume's contents survive only as long as the storage behind it ([how etcd stores the cluster](etcd.md)).
+etcd, the cluster's database, holds these objects but none of the data in them, so a PersistentVolume's contents survive only as long as the storage behind it ([etcd basics](etcd.md)).
 
 ## Further reading
 

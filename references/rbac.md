@@ -3,7 +3,7 @@
 RBAC (role-based access control) is how Kubernetes decides what a user may do. It runs
 after authentication, which tells the [apiserver](control-plane.md#components) the request's subject: the identity
 that sent it. RBAC decides whether that subject may perform that verb, such as `list`, on that
-resource, such as pods. [How access control works](../learn/access-control.md) explains the model.
+resource, such as pods. [Access control](../learn/access-control.md) explains the model.
 
 ## The model
 
@@ -70,7 +70,7 @@ kubectl auth whoami
 kubectl get clusterrolebinding kubeadm:cluster-admins -o wide
 ```
 
-## Reading and testing permissions
+## Permission checks
 
 `kubectl auth can-i` answers `yes` or `no` without needing the subject's
 credentials:

@@ -37,7 +37,7 @@ export type Section =
 /**
  * One page of a topic in the sidebar. Introduction holds the topic's intro and the sections before the
  * first steps; each Learn page the topic links to follows; then one lesson per section, with a plain
- * section such as Check your work kept on the lesson before it.
+ * section such as Verification kept on the lesson before it.
  */
 export type Lesson = {
   slug: string;
@@ -75,7 +75,7 @@ function splitSections(md: string) {
       let kind: Section["kind"] = "plain";
       if (/^(recall|quiz)/i.test(text)) kind = "recall";
       else if (/^practice/i.test(text)) kind = "practice";
-      if (kind !== "plain" || /^check your work/i.test(text)) taught = false;
+      if (kind !== "plain" || /^verification/i.test(text)) taught = false;
       else if (taught) kind = "steps";
       sections.push({ slug, title: text, kind, nodes: [] });
     } else if (sections.length) {

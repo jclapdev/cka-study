@@ -23,7 +23,7 @@ A Secret's type says what it holds and which keys it must have ([Secret types](h
 | `kubernetes.io/service-account-token` | a long-lived [ServiceAccount](service-accounts.md) token |
 | `helm.sh/release.v1` | a [Helm](helm.md) release record. Helm sets this type itself. |
 
-## Using them in a pod
+## ConfigMaps and Secrets in pods
 
 The same pod spec reads a whole ConfigMap with `envFrom` and one Secret key with `valueFrom` ([ConfigMaps as environment variables](https://kubernetes.io/docs/concepts/configuration/configmap/#using-configmaps-as-environment-variables)):
 

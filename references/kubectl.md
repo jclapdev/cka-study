@@ -58,7 +58,7 @@ What `kubectl create` fills in by itself:
 - `k create deployment` [labels](labels.md) the pods `app: <name>` and names the container after the image, such as `nginx` for `nginx:1.27`. `k create service clusterip <name>` selects `app: <name>`, so the two match when the names match.
 - `k create secret generic` base64-encodes each value. Written by hand under `data`, a plain value is rejected with `illegal base64 data`.
 
-## Create and apply
+## `create` and `apply`
 
 Every manifest sets four fields: `apiVersion`, the version of the Kubernetes API the type belongs to; `kind`, the type; `metadata`, the name and other data that identify the object; and `spec`, the state you want ([required fields](https://kubernetes.io/docs/concepts/overview/working-with-objects/#required-fields)). The cluster adds a fifth, `status`, with what it last saw ([object spec and status](https://kubernetes.io/docs/concepts/overview/working-with-objects/#object-spec-and-status)).
 
@@ -77,7 +77,7 @@ k diff -f api.yaml                  # what apply would change; prints nothing wh
 k delete -f api.yaml                # delete what the file describes
 ```
 
-## Snippets from the docs
+## Docs snippets
 
 Some kinds have no `kubectl create` command, so their YAML comes from the docs. A NetworkPolicy is a set of rules for which pods may talk to which. A PersistentVolume is a piece of storage in the cluster, and a PersistentVolumeClaim is a pod's request for one. A StorageClass is a kind of storage that PersistentVolumes can be created from on demand. An Ingress is a set of rules that routes outside web traffic to [Services](services.md). The table lists where each one is, with other pages that have snippets. Many examples have a copy button, and some pages give a ready-to-paste `cat <<EOF` block:
 
@@ -118,7 +118,7 @@ k explain pod.spec.containers.resources
 k explain deploy.spec.strategy --recursive
 ```
 
-## Changing live objects
+## Live changes
 
 ```bash
 k set image deploy/web nginx=nginx:1.28     # container name, then image
@@ -132,7 +132,7 @@ k replace --force -f /tmp/kubectl-edit-….yaml
 
 Most of a running pod's spec cannot change ([pod update and replacement](https://kubernetes.io/docs/concepts/workloads/pods/#pod-update-and-replacement)). `k edit` on such a field fails with `pods "<name>" is invalid`, and it saves your edit to a file under `/tmp` and prints its name. `k replace --force -f <that file>` deletes the pod and creates it from your copy. A [Deployment](workloads.md)'s pods are replaced by a [rollout](workloads.md#rollouts) instead, so edit the Deployment, not its pods.
 
-## Reading values back
+## Reading objects
 
 `-o wide` adds columns, such as a Deployment's image. `describe` prints an object's settings and recent events: for a Deployment, read `Replicas`, then `Image` and `Limits` under `Containers`. `-o yaml` prints every field, and `grep -A3 resources` shows a container's `resources` line and the 3 after it. `auth can-i` asks whether a subject may do something and prints `yes` or `no`. `--as` asks as another subject, here a ServiceAccount:
 

@@ -1,12 +1,12 @@
-# How kubectl talks to the cluster
+# kubectl and the API
 
 `kubectl` is a client for the Kubernetes API, an HTTP interface served by the apiserver, the control plane component every request goes through. Commands such as `get`, `apply` and `edit` become HTTP requests to the apiserver, and every other component works through the same API ([the Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/)).
 
-## Finding the cluster
+## kubeconfig
 
 `kubectl` reads a kubeconfig file to learn three things: the apiserver's address, the credential to send, and a CA certificate to check the apiserver with. A CA, certificate authority, is the signer of the apiserver's certificate, and its certificate proves the apiserver is genuine. The file holds clusters, users and contexts, where a context pairs a cluster with a user and a default namespace ([organizing cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)). Without a kubeconfig, `kubectl` tries `localhost:8080` and fails.
 
-## What happens to a request
+## Request stages
 
 The apiserver passes each request through the same stages, and stores the result in etcd, the database that holds every object ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)):
 
@@ -30,7 +30,7 @@ Admission is where the cluster's admission controllers, plugins inside the apise
 
 Every type lives at a path under an API group and version, such as `/apis/apps/v1/deployments` ([API groups and versioning](https://kubernetes.io/docs/concepts/overview/kubernetes-api/#api-groups-and-versioning)). The group and version are an object's `apiVersion`, `apps/v1` for a Deployment and just `v1` for the oldest, core types such as pods. The apiserver publishes a schema for every type, and `kubectl explain` reads it, so it describes the exact version your cluster runs. That includes types added later by CustomResourceDefinitions (CRDs), objects that add new types to the cluster.
 
-## Ways to change objects
+## Management techniques
 
 `kubectl` offers three ways to manage objects ([management techniques](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/#management-techniques)):
 

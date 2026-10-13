@@ -13,7 +13,7 @@ A pod is bound to one node for life. It is never moved. A pod that seems to have
 | `Pending` | Accepted, not running yet: unscheduled, or image still pulling |
 | `Running` | Bound to a node, at least one container started |
 | `Succeeded` / `Failed` | All containers terminated, zero / non-zero exit |
-| `ContainerCreating` | Scheduled; the [container runtime](workers.md#what-a-worker-runs) and the [CNI](pod-network.md) plugin, which gives the pod its network address, are setting it up |
+| `ContainerCreating` | Scheduled; the [container runtime](workers.md#worker-components) and the [CNI](pod-network.md) plugin, which gives the pod its network address, are setting it up |
 | `CrashLoopBackOff` | The container keeps exiting, and the kubelet restarts it with a growing delay ([container restarts](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-restarts)) |
 | `ImagePullBackOff` | Image cannot be pulled: a wrong name, or no access to the registry |
 | `Error` | Container exited non-zero and is not being restarted |
@@ -29,7 +29,7 @@ kubectl get events -n <ns> --sort-by=.lastTimestamp
 
 `Pending` with `FailedScheduling` and `0/1 nodes are available` in the events is a scheduling problem: [taints](taints.md), resources or selectors. `CrashLoopBackOff` means the container's process keeps failing, and `kubectl logs` shows why.
 
-## CoreDNS after kubeadm init
+## Pending CoreDNS pods
 
 After `kubeadm init`, the two pods of [CoreDNS](pod-network.md#coredns), the cluster's DNS server, are `Pending`. The node is `NotReady` until a pod network is installed, so it carries the `node.kubernetes.io/not-ready:NoSchedule` taint, a mark that keeps off every pod without a matching toleration. CoreDNS has none for it. `kubectl describe pod` shows it in the events:
 

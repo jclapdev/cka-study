@@ -1,10 +1,10 @@
-# How Helm works
+# Helm basics
 
 An application in Kubernetes is rarely one object. A web app is a Deployment, a Service, a ConfigMap, a ServiceAccount and often more, and `kubectl apply` treats each of them as separate. Nothing records that these objects belong together, which version of the app they are, or what they looked like before the last change. A Deployment keeps its own rollout history, but a ConfigMap or a Service keeps none, so undoing a bad change means finding and reverting every file by hand.
 
 Helm adds three things on top of `kubectl`. It packages an application's manifests as a chart that anyone can install. It lets one chart serve many installs through values, the settings each install changes. It keeps a numbered history of every install, so the whole application can be upgraded, rolled back or removed as one unit ([what Helm can do](https://helm.sh/docs/intro/introduction/#what-can-helm-do)).
 
-## How it works
+## Charts, values and releases
 
 A chart is a folder of templates, which are Kubernetes manifests with gaps in them, plus a `values.yaml` file that fills each gap with a default ([the chart file structure](https://helm.sh/docs/topics/charts/#the-chart-file-structure)). A chart repository is a web server that hosts charts and an `index.yaml` listing them and their versions. A release is an installed copy of a chart, with its own name, in a namespace.
 
@@ -37,7 +37,7 @@ flowchart LR
   REL2 -->|helm rollback 1| REL3[revision 3<br/>= chart and values of 1]
 ```
 
-## How it fits in the cluster
+## A client-only tool
 
 Helm has no part running inside the cluster. It is a command-line tool that talks to the apiserver with the same kubeconfig as `kubectl`. That file holds the cluster's address and your credential, so Helm can do only what that user is allowed to do ([architecture](https://helm.sh/docs/intro/introduction/#architecture), [RBAC](../references/rbac.md)).
 

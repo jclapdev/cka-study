@@ -1,0 +1,15 @@
+# heading-name in the style list: a heading names what its section covers. It fails as an
+# instruction ("Run a pod"), a clause ("When the network is missing", "Names that change with
+# their contents"), a "How …" title, or a label any page could carry ("How it works").
+extends: existence
+message: "'%s' in a heading: name what the section covers, as a course names its lessons."
+level: error
+scope: heading
+ignorecase: false
+nonword: true
+tokens:
+  - '^(?:Add|Apply|Back|Bind|Build|Check|Configure|Copy|Create|Cross|Debug|Delete|Deploy|Drain|Edit|Expose|Find|Fix|Generate|Get|Give|Group|Initialise|Initialize|Inspect|Install|Issue|Join|Keep|Label|List|Look|Make|Mount|Move|Patch|Point|Practice it|Reach|Read|Remove|Render|Restore|Reuse|Roll|Run|Save|Scale|Schedule|See|Set|Show|Start|Stop|Test|Troubleshoot|Uninstall|Update|Upgrade|Use|Verify|Watch|Write)\b'
+  - "^(?:How|What(?!'s new)|Why|When|Where|Which|Who|Before|After|If|Until|Once|Putting|Wrapping)\\b"
+  - '\b(?:that|which|who|whose)\b'
+  - '\bit (?:works|fits)\b'
+  - '\b(?:have|has|is|are|does|do|can|gets|runs|needs) (?:no|not|its|their|a|an|the)\b'

@@ -1,4 +1,4 @@
-# How access control works
+# Access control
 
 Every request to the apiserver, the part of the control plane that `kubectl` and every component talk to, answers two questions in order. Authentication asks who sent it, and turns the request's credential into a username and a list of groups. Authorization asks whether that identity may do what it asks. On a cluster built with kubeadm, the tool that sets up a cluster, RBAC (role-based access control) answers it ([controlling access to the Kubernetes API](https://kubernetes.io/docs/concepts/security/controlling-access/)). The two are separate: a request can be authenticated perfectly and still be refused.
 
@@ -25,7 +25,7 @@ The pairs cross in one direction only. A RoleBinding may grant a ClusterRole, an
 
 Permissions only add up. There is no deny rule, so a subject may do anything that any of its bindings allows, and taking access away means removing bindings.
 
-## Putting it together
+## An admin request
 
 The admin `kubectl` on a kubeadm cluster shows the whole chain:
 

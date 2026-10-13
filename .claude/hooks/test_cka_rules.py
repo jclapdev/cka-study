@@ -90,14 +90,16 @@ try:
     second = open(path_for(packet(), "cold-reader")).read()
     assert "   11> Gamma." in second
     assert "Alpha." not in second and " NEW ===" not in second
+    assert "    5  ## First" in second  # an unchanged heading still reaches the reader
 finally:
     page.unlink()
 
 # Vale fails a page that uses a banned phrase.
 bad = Path(CWD) / "references" / "zz-vale-check.md"
-bad.write_text("# Check\n\nThe chart sets one value.\n")
+bad.write_text("# Check\n\nThe chart sets one value.\n\n## Install a release\n\nText.\n")
 try:
-    assert "EmptyCount" in subprocess.run(["vale", "--output=line", str(bad)], cwd=CWD, capture_output=True, text=True).stdout
+    out = subprocess.run(["vale", "--output=line", str(bad)], cwd=CWD, capture_output=True, text=True).stdout
+    assert "EmptyCount" in out and "HeadingName" in out
 finally:
     bad.unlink()
 print("all checks pass")

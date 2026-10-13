@@ -15,9 +15,9 @@ import sys
 LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
 LISTS = re.compile(r"^## (Docs|Further reading)\b")
 # A topic README is split into lessons at each `##` heading, and each lesson is a page of its own.
-# Objectives stays on the Introduction, and Check your work and Further reading stay on Practice.
+# Objectives stays on the Introduction, and Verification and Further reading stay on Practice.
 LESSONS = re.compile(r"(^|/)\d\d-[^/]+/\d\d-[^/]+/README\.md$")
-SAME_LESSON = re.compile(r"^## (Objectives|Check your work|Further reading)\b")
+SAME_LESSON = re.compile(r"^## (Objectives|Verification|Further reading)\b")
 
 failed = False
 for path in sys.argv[1:]:

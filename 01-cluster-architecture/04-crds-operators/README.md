@@ -5,7 +5,7 @@ Kubernetes comes with a fixed set of object types, such as [Pods](../../referenc
 like any other. The apiserver is the program every request to the cluster goes through. An [operator](../../references/crds.md#operators) is a program running in the cluster that watches objects of such a
 type and does the work they describe. Installing an operator usually means installing its CRDs
 and the program together. They often come as a [chart](../../references/helm.md#charts-repositories-and-releases), a package of manifests that [Helm](../../references/helm.md), a command-line tool, installs into a cluster.
-[How CRDs and operators extend Kubernetes](../../learn/crds-operators.md) explains the model.
+[Custom resources and operators](../../learn/crds-operators.md) explains the model.
 
 <!-- lab: crds -->
 
@@ -25,9 +25,9 @@ pods. The terminal opens on a fourth machine, `base`, which only reaches the oth
   operator act on it.
 * Save a list of CRDs and a field's description to files.
 
-## Look for custom resources
+## Existing CRDs
 
-A [CRD](../../references/crds.md#what-a-crd-adds) adds a new object type to the cluster, and a custom resource is an object of
+A [CRD](../../references/crds.md#custom-types) adds a new object type to the cluster, and a custom resource is an object of
 a type a CRD added. A CRD is itself an object, of the type `customresourcedefinitions`, which
 belongs to the whole cluster rather than a namespace.
 
@@ -51,7 +51,7 @@ belongs to the whole cluster rather than a namespace.
 
    Every type the cluster has so far is built into the apiserver.
 
-## Create a CRD
+## The CronTab CRD
 
 The docs' example CRD adds a made-up type, `CronTab`, which describes a job to run on a
 schedule. Nothing acts on it.
@@ -157,7 +157,7 @@ schedule. Nothing acts on it.
 
    `k explain` reads the CRD's schema.
 
-## Create custom objects
+## Custom objects
 
 An object of the new type puts the CRD's group and version in `apiVersion` and the CRD's kind in `kind`.
 
@@ -257,13 +257,13 @@ An object of the new type puts the CRD's group and version in `apiVersion` and t
    [Deleting a CRD](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#delete-a-customresourcedefinition)
    deletes every object of its type, in every namespace.
 
-## Install an operator
+## cert-manager
 
 An [operator](../../references/crds.md#operators) is a program in the cluster that acts on objects of its own types. The one here,
 cert-manager, issues [TLS certificates](../../references/certificates.md#client-and-serving-certificates), the files that let HTTPS servers prove who they are. You
 create a `Certificate` object that asks for one. cert-manager's [controller](../../references/control-plane.md#components), the part that watches
 those objects, then writes the key and certificate into a [Secret](../../references/config.md#secrets), an object for sensitive data.
-[How TLS secures the cluster](../../learn/tls.md) explains what a certificate proves.
+[TLS basics](../../learn/tls.md) explains what a certificate proves.
 
 1. Install cert-manager's chart with Helm, along with its CRDs.
    `oci://quay.io/jetstack/charts/cert-manager` is the chart's address in a container registry,
@@ -341,7 +341,7 @@ those objects, then writes the key and certificate into a [Secret](../../referen
    An Issuer, which signs certificates, works in one namespace, and a ClusterIssuer in the whole
    cluster ([namespaced and cluster-scoped resources](../../references/namespaces.md#namespaced-and-cluster-scoped-resources)).
 
-## Issue a certificate
+## Issuers and Certificates
 
 cert-manager acts on two kinds of object: an Issuer, which says how certificates are signed, and
 a [Certificate](../../references/crds.md#operators), which asks for one. `kubectl create` has no command for these objects and kubernetes.io has no
@@ -519,7 +519,7 @@ example of them, so `k explain` shows their fields from the CRDs and marks the [
 
    A field marked `-required-` in `k explain` has to be in the object, or nothing is created.
 
-## Save answers to files
+## Saving output to files
 
 A CKA task can ask for its answer in a file instead of as a change to the cluster.
 
@@ -820,7 +820,7 @@ spec:
 
 </details>
 
-## Check your work
+## Verification
 
 On `controlplane`:
 

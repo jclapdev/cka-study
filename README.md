@@ -6,14 +6,14 @@ Hands-on labs for the Certified Kubernetes Administrator (CKA) exam. Each topic 
 
 With Docker running, run `docker compose up -d` in this folder and open <http://localhost:5173>. [Getting started](lab/README.md) has the requirements, setup and troubleshooting.
 
-## How the CKA asks questions
+## Exam questions
 
 The Practice sections match the real CKA:
 
 - 15 to 20 hands-on tasks in 2 hours, on Kubernetes 1.35, with a 66% pass mark.
 - Each task names the host to `ssh` into and shows its weight as a percentage.
 - Only the final state of the cluster is graded, not the commands you used.
-- The documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), [helm.sh/docs](https://helm.sh/docs), the [Gateway API docs](https://gateway-api.sigs.k8s.io), and any page a task links in its [Quick Reference](references/kubectl.md#snippets-from-the-docs) box, a list of docs links some tasks include ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
+- The documentation allowed is [kubernetes.io/docs](https://kubernetes.io/docs), [kubernetes.io/blog](https://kubernetes.io/blog), [helm.sh/docs](https://helm.sh/docs), the [Gateway API docs](https://gateway-api.sigs.k8s.io), and any page a task links in its [Quick Reference](references/kubectl.md#docs-snippets) box, a list of docs links some tasks include ([resources allowed](https://docs.linuxfoundation.org/tc-docs/certification/certification-resources-allowed)).
 
 [About the CKA](EXAM.md) has the full format and every competency the topics below map to.
 

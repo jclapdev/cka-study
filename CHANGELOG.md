@@ -2,6 +2,10 @@
 
 Changes to the app, newest first.
 
+## 13 October 2026
+
+- Lessons, Learn pages and reference sections are now named for what they cover, such as **Pods**, **ReplicaSets**, **RoleBindings** and **TLS basics**, instead of "Run a pod" or "How TLS secures the cluster". Check your work is now **Verification**.
+
 ## 12 October 2026
 
 - Lessons now check your work with short commands such as `k api-resources`, `k describe` and `k get … -o wide`, then say which lines of the output to read.

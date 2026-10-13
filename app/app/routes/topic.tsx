@@ -182,7 +182,7 @@ export default function Topic({ loaderData }: Route.ComponentProps) {
   const running = !!state.run && lesson.kind === "practice";
   const [missedOnly, setMissedOnly] = useState(false);
   useEffect(() => setMissedOnly(false), [id]);
-  const check = exercise.sections.find((s) => s.slug === "check-your-work");
+  const check = exercise.sections.find((s) => s.slug === "verification");
   const lab = useLab(id, exercise.lab);
   const popout = usePopout(id);
   // The terminals leave the panel while they have a window of their own, and come back when it closes.

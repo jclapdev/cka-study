@@ -35,21 +35,21 @@ test.beforeEach(() => machines({ lab: null, up: false }));
 test("fresh open: Continue returns to the lesson opened last, and its terminal is the one left", async ({ page, context }) => {
   await startLab(page, OBJECTS);
   await run(page, "echo left-here", "left-here");
-  await page.goto(`${OBJECTS}/write-a-pod-in-yaml`);
+  await page.goto(`${OBJECTS}/pods-with-yaml`);
   await page.close();
   const again = await context.newPage();
   await again.goto("/");
   const cont = again.getByRole("link", { name: "Continue" });
-  await expect(cont).toHaveAttribute("href", `${OBJECTS}/write-a-pod-in-yaml`);
+  await expect(cont).toHaveAttribute("href", `${OBJECTS}/pods-with-yaml`);
   await cont.click();
-  await expect(again.locator("#lesson h1")).toHaveText("Write a pod in YAML");
+  await expect(again.locator("#lesson h1")).toHaveText("Pods with YAML");
   await expect(again.locator(".xterm-rows").first()).toContainText("left-here");
 });
 
 test("reload: the lesson keeps its place and the terminal its screen", async ({ page }) => {
   await startLab(page, OBJECTS);
   await run(page, "echo before-reload", "before-reload");
-  await page.goto(`${OBJECTS}/run-a-pod`);
+  await page.goto(`${OBJECTS}/pods`);
   await page.locator("#lesson").evaluate((p) => (p.scrollTop = 600));
   await page.waitForTimeout(300);
   await page.reload();
@@ -112,8 +112,8 @@ test("practice exam: the clock starts once the lab runs, and survives a reload a
   await expect(timer).toBeVisible({ timeout: 15_000 });
   await page.reload();
   await expect(timer).toBeVisible();
-  await page.goto(`${RBAC}/write-a-role`);
-  await expect(page.locator("#lesson h1")).toHaveText("Write a Role");
+  await page.goto(`${RBAC}/roles`);
+  await expect(page.locator("#lesson h1")).toHaveText("Roles");
   await expect(page.locator("#lesson section").first()).toBeVisible();
   await page.goto(`${RBAC}/practice`);
   await expect(timer).toBeVisible();
@@ -191,12 +191,12 @@ test("notes: text typed just before leaving is kept", async ({ page }) => {
 });
 
 test("notes: text typed just before the tab closes is kept", async ({ page, context }) => {
-  await page.goto(`${OBJECTS}/run-a-pod`);
+  await page.goto(`${OBJECTS}/pods`);
   await page.locator("summary", { hasText: "Notes" }).click();
   await page.getByLabel("Notes").fill("kept on closing");
   await page.close({ runBeforeUnload: true });
   const again = await context.newPage();
-  await again.goto(`${OBJECTS}/run-a-pod`);
+  await again.goto(`${OBJECTS}/pods`);
   await again.locator("summary", { hasText: "Notes" }).click();
   await expect(again.getByLabel("Notes")).toHaveValue("kept on closing");
 });

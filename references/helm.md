@@ -1,6 +1,6 @@
 # Helm
 
-Helm is a package manager for Kubernetes. It installs a [chart](#charts-repositories-and-releases), which is a package of templated [manifests](kubectl.md#generating-yaml), into a cluster as a release, and keeps a numbered revision for every change to it. [How Helm works](../learn/helm.md) explains the model.
+Helm is a package manager for Kubernetes. It installs a [chart](#charts-repositories-and-releases), which is a package of templated [manifests](kubectl.md#generating-yaml), into a cluster as a release, and keeps a numbered revision for every change to it. [Helm basics](../learn/helm.md) explains the model.
 
 ## Charts, repositories and releases
 
@@ -29,7 +29,7 @@ On an upgrade, values given with `-f` or `--set` start again from the chart's de
 
 `helm get values <release>` prints the overrides a release was given, and `--all` adds the defaults.
 
-## Revisions and where releases are stored
+## Revisions and release storage
 
 Every install, upgrade and rollback adds a revision, starting at 1 ([helm upgrade and helm rollback](https://helm.sh/docs/intro/using_helm/#helm-upgrade-and-helm-rollback-upgrading-a-release-and-recovering-on-failure)). A rollback does not delete later revisions. It writes a new revision with the chart and values of the one named. The newest revision is `deployed`, and the ones before it are `superseded`.
 
@@ -37,7 +37,7 @@ Helm runs only as a command-line tool that talks to the [apiserver](control-plan
 
 A release belongs to one namespace ([namespaces](namespaces.md)). Every `helm` command without `-n` uses the kubeconfig's current namespace, usually `default`.
 
-## Rendering without installing
+## Local rendering
 
 `helm template` renders a chart on the local machine and prints the manifests ([helm template](https://helm.sh/docs/helm/helm_template/)). Nothing is installed and no release is recorded, so objects created by piping its output to `kubectl apply` do not appear in `helm list` and cannot be upgraded or rolled back with Helm.
 

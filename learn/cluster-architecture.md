@@ -1,4 +1,4 @@
-# How a Kubernetes cluster works
+# Cluster architecture
 
 Kubernetes runs containers across a group of machines and keeps them running the way you asked. You don't usually tell it to start a container on a particular machine. You write down the state you want, such as "three copies of this web server", and the cluster works out the rest and keeps correcting it when something breaks.
 
@@ -53,7 +53,7 @@ Every node, the control plane node included, runs a kubelet ([node components](h
 
 So a new pod passes through four components: `kubectl` sends it to the apiserver, the apiserver stores it in etcd, the scheduler assigns it a node, and that node's kubelet starts it.
 
-## How the control plane starts itself
+## Static pods
 
 The apiserver runs as a pod, yet pods are created through the apiserver. The kubelet breaks that loop with static pods: it reads pod manifests from a folder on disk, `/etc/kubernetes/manifests/`, and starts them with no apiserver involved ([static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/)).
 
@@ -72,7 +72,7 @@ sequenceDiagram
 
 A mirror pod is the copy of a static pod that the kubelet shows through the apiserver, so `kubectl get pods` lists it. The file is the source of truth for a static pod. Editing it restarts the component, and deleting the pod through the apiserver only deletes the mirror, which the kubelet puts back.
 
-## Pods, and the objects that own them
+## Pods and their owners
 
 A pod is one or more containers that share an IP address and can share storage. It is the smallest thing the scheduler places, and it stays on its node for life. A pod that seems to have moved is a new pod made by a controller. You rarely create pods directly. A Deployment keeps a number of identical pods running, and a DaemonSet keeps one pod on every node, which is how node agents such as kube-proxy and the pod network's agent are installed.
 

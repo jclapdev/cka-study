@@ -12,7 +12,7 @@ A taint has a key, an optional value and an effect, written `key=value:Effect`, 
 | PreferNoSchedule | are scheduled there only when no other node fits | stay |
 | NoExecute | are not scheduled on the node | are evicted, after `tolerationSeconds` if the toleration sets one |
 
-## Taints Kubernetes adds itself
+## Built-in taints
 
 | Taint | Added when |
 | --- | --- |
@@ -22,7 +22,7 @@ A taint has a key, an optional value and an effect, written `key=value:Effect`, 
 
 The node controller, the part of the control plane that watches node health, adds and removes these from the node's conditions ([taint nodes by condition](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-nodes-by-condition)). Every pod gets tolerations for `not-ready` and `unreachable` with `tolerationSeconds: 300`, so the pods on a lost node are evicted after 5 minutes ([taint-based evictions](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#taint-based-evictions)).
 
-## On a kubeadm cluster
+## kubeadm's taints
 
 In a [kubeadm](kubeadm.md) cluster with one control plane node, `controlplane`, and two workers, `node01` and `node02`, only `controlplane` is tainted, so ordinary pods run on the workers:
 

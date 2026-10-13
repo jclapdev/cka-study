@@ -3,13 +3,13 @@
 The control plane is the set of components that store the cluster's desired state and act to
 make the nodes match it. Workloads run on nodes.
 
-[How a cluster works](../learn/cluster-architecture.md) explains how the parts fit together.
+[Cluster architecture](../learn/cluster-architecture.md) explains how the parts fit together.
 
 ## Components
 
 | Component | What it does | Where kubeadm puts it |
 | --- | --- | --- |
-| [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else, from `kubectl` to [kubelets](workers.md#what-a-worker-runs) and controllers, talks to it and never to etcd. Serves on port 6443. | [static pod](#static-pods) |
+| [`kube-apiserver`](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) | The only door to cluster state. Everything else, from `kubectl` to [kubelets](workers.md#worker-components) and controllers, talks to it and never to etcd. Serves on port 6443. | [static pod](#static-pods) |
 | [`etcd`](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | The key-value store that holds every object. | static pod |
 | `kube-controller-manager` | One process running many [controllers](https://kubernetes.io/docs/concepts/architecture/controller/), such as the ones for node health, replica counts and [ServiceAccounts](service-accounts.md). | static pod |
 | [`kube-scheduler`](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/) | Assigns unscheduled pods to nodes: it drops the nodes a pod cannot run on, then picks the best of the rest. It only writes `spec.nodeName`; the kubelet, the agent on each node, starts the pod. | static pod |
@@ -25,7 +25,7 @@ and kube-proxy. The kubelet is a systemd service, not a pod, so `systemctl statu
 
 A static pod is a pod defined by a file in `/etc/kubernetes/manifests/` rather than
 by an API object. The kubelet watches that directory directly, so static pods start with no
-apiserver and no scheduler involved ([how the control plane starts itself](../learn/cluster-architecture.md#how-the-control-plane-starts-itself)).
+apiserver and no scheduler involved ([static pods](../learn/cluster-architecture.md#static-pods)).
 [Create static pods](https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/) has the steps.
 
 Because the kubelet reads the files directly:

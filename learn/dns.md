@@ -1,10 +1,10 @@
-# How DNS works in the cluster
+# Cluster DNS
 
 A pod reaches a Service by name, such as `web`, rather than by its IP address. DNS, the system that turns names into addresses, makes that work inside the cluster as it does on the internet. Kubernetes gives every Service a DNS name and, by default, points every pod at the cluster's own DNS server, [CoreDNS](../references/pod-network.md#coredns) ([DNS for Services and Pods](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/)).
 
 Without it, a client would need each Service's IP address, which is only known once the Service exists and changes if the Service is created again. A name stays the same.
 
-## How it works
+## resolv.conf and search domains
 
 The kubelet, the agent on each node that runs its pods, writes each pod's `/etc/resolv.conf`, the file Linux programs read to find their DNS server. A pod in `default` gets:
 
@@ -31,7 +31,7 @@ sequenceDiagram
 
 Each Service gets a record `<service>.<namespace>.svc.cluster.local` that points to its ClusterIP, the Service's stable address inside the cluster ([A/AAAA records](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records)). The same `web` from a pod in `dev` becomes `web.dev.svc.cluster.local`, which does not exist. To reach a Service in another namespace, a pod uses `web.default`.
 
-## How it fits in the cluster
+## CoreDNS
 
 CoreDNS is a Deployment in `kube-system`, behind the Service `kube-dns`. The Service's name differs from the pods' on purpose: tools that look for a `kube-dns` Service find the cluster's DNS server whichever program runs it. Its configuration, the Corefile, is in the ConfigMap `coredns` ([CoreDNS ConfigMap options](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/#coredns-configmap-options)). Two of its lines do most of the work: `kubernetes cluster.local` answers names in the cluster domain from the Services and pods the apiserver holds, and `forward . /etc/resolv.conf` passes every other name, such as `kubernetes.io`, to the DNS server of the node CoreDNS runs on.
 
@@ -42,7 +42,7 @@ flowchart LR
   C -->|any other name| U[the node's DNS server]
 ```
 
-A pod uses CoreDNS because its `dnsPolicy` is `ClusterFirst`, the policy a pod gets when none is set ([pod's DNS policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy)). CoreDNS needs a pod address like any other pod, so it does not start until the pod network works. Until it runs, no Service name resolves ([how the pod network works](pod-network.md)).
+A pod uses CoreDNS because its `dnsPolicy` is `ClusterFirst`, the policy a pod gets when none is set ([pod's DNS policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy)). CoreDNS needs a pod address like any other pod, so it does not start until the pod network works. Until it runs, no Service name resolves ([Pod networking](pod-network.md)).
 
 A pod's `resolv.conf`, the Corefile and the commands to look a name up are in the CoreDNS section of the pod network reference page. Service names and their failures are on the [Services reference page](../references/services.md).
 

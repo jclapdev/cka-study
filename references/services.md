@@ -14,15 +14,15 @@ The type decides who can reach the Service ([service types](https://kubernetes.i
 
 `kubectl get svc` shows a NodePort as `80:32764/TCP`, which means the Service port 80 is reachable on port 32764 of every node.
 
-## How a Service IP answers
+## kube-proxy and EndpointSlices
 
-No machine holds a Service IP. [kube-proxy](workers.md#what-a-worker-runs), a [DaemonSet](daemonsets.md) pod on every node, watches Services and writes packet-rewriting rules into each node's kernel. A connection to the ClusterIP is rewritten to one of the pods' IPs on the way out ([virtual IPs and service proxies](https://kubernetes.io/docs/reference/networking/virtual-ips/)). This is why a ClusterIP answers but never appears in `ip addr`.
+No machine holds a Service IP. [kube-proxy](workers.md#worker-components), a [DaemonSet](daemonsets.md) pod on every node, watches Services and writes packet-rewriting rules into each node's kernel. A connection to the ClusterIP is rewritten to one of the pods' IPs on the way out ([virtual IPs and service proxies](https://kubernetes.io/docs/reference/networking/virtual-ips/)). This is why a ClusterIP answers but never appears in `ip addr`.
 
 kube-proxy writes iptables rules by default ([iptables mode](https://kubernetes.io/docs/reference/networking/virtual-ips/#proxy-mode-iptables)). IPVS is another Linux kernel feature for spreading connections across addresses, and kube-proxy uses it instead when its configuration sets `mode: ipvs` ([IPVS mode](https://kubernetes.io/docs/reference/networking/virtual-ips/#proxy-mode-ipvs)). [kubeadm](kubeadm.md) leaves `mode` empty, which means iptables.
 
 An EndpointSlice is an object listing the pod IPs behind a Service, which the [control plane](control-plane.md) keeps up to date ([EndpointSlices](https://kubernetes.io/docs/concepts/services-networking/service/#endpointslices)). A Service whose selector matches no pods has an empty EndpointSlice, and connections to it are refused.
 
-## On a new cluster
+## Built-in Services
 
 A new cluster has two Services. `kubernetes` is the [apiserver](control-plane.md#components), and `kube-dns` is [CoreDNS](pod-network.md#coredns):
 
