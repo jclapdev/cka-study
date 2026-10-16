@@ -2,6 +2,10 @@
 
 Changes to the app, newest first.
 
+## 15 October 2026
+
+- The lab now starts reliably, and its cluster comes up right away instead of after up to five minutes.
+
 ## 13 October 2026
 
 - Lessons, Learn pages and reference sections are now named for what they cover, such as **Pods**, **ReplicaSets**, **RoleBindings** and **TLS basics**, instead of "Run a pod" or "How TLS secures the cluster". Check your work is now **Verification**.

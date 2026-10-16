@@ -6,8 +6,25 @@ FLANNEL=https://github.com/flannel-io/flannel/releases/latest/download/kube-flan
 on() { docker exec -i -u ubuntu -w /home/ubuntu "$1" bash -c "$2"; }
 
 echo "== kubeadm init on controlplane"
-on controlplane "sudo kubeadm init --apiserver-advertise-address \$(ip route get 1.1.1.1 | awk '{print \$7; exit}') \
-    --pod-network-cidr 10.244.0.0/16 >/dev/null
+# maxPerCore 0 leaves the connection-tracking limit as Docker's machine has it, so this
+# cluster's kube-proxy starts even where the conntrack service could not set it.
+on controlplane "cat > /tmp/kubeadm.yaml <<EOF
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: \$(ip route get 1.1.1.1 | awk '{print \$7; exit}')
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+networking:
+  podSubnet: 10.244.0.0/16
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+conntrack:
+  maxPerCore: 0
+EOF
+  sudo kubeadm init --config /tmp/kubeadm.yaml >/dev/null && rm /tmp/kubeadm.yaml
   mkdir -p ~/.kube && sudo cp /etc/kubernetes/admin.conf ~/.kube/config && sudo chown ubuntu: ~/.kube/config
   kubectl apply -f $FLANNEL >/dev/null"
 join=$(on controlplane "sudo kubeadm token create --print-join-command")

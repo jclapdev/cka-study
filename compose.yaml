@@ -26,8 +26,9 @@ services:
       - .:/repo
       - /repo/app/node_modules
       - /var/run/docker.sock:/var/run/docker.sock
-  # kube-proxy raises the connection-tracking limit when it starts, and only Docker's
-  # own machine may change it, so raise it here first. It never lowers the limit.
+  # kube-proxy sets the connection-tracking limit to 32768 per CPU, at least 131072, and
+  # wants a hash table a quarter that size. Only Docker's own machine may change either,
+  # and kube-proxy stops if a value differs from what it wants, so set both here first.
   # It stays up and restarts with Docker, because a restart resets the limit and
   # brings the nodes back without `docker compose up`.
   conntrack:
@@ -38,7 +39,15 @@ services:
     image: cka-controlplane:clean
     privileged: true
     network_mode: host
-    entrypoint: ["sh", "-c", 'f=/proc/sys/net/netfilter/nf_conntrack_max; n=$$((32768 * $$(nproc))); [ "$$(cat $$f)" -ge $$n ] || echo $$n > $$f; exec sleep infinity']
+    entrypoint:
+      - sh
+      - -c
+      - |
+        n=$$((32768 * $$(nproc))); [ $$n -ge 131072 ] || n=131072
+        h=/sys/module/nf_conntrack/parameters/hashsize
+        [ "$$(cat $$h)" -ge $$((n / 4)) ] || echo $$((n / 4)) > $$h || echo "could not set $$h" >&2
+        echo $$n > /proc/sys/net/netfilter/nf_conntrack_max || echo "could not set nf_conntrack_max" >&2
+        exec sleep infinity
   controlplane:
     <<: *node
     image: cka-controlplane:${COPY:-clean}

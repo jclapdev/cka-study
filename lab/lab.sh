@@ -23,7 +23,7 @@ from() { cat "lab/labs/$1/base" 2>/dev/null || true; }
 sum() { if command -v sha256sum >/dev/null; then sha256sum; else shasum -a 256; fi | cut -c1-12; }
 hash() {
   local parent; parent=$(from "$1")
-  { if [ -n "$parent" ]; then hash "$parent"; else cat lab/Dockerfile; fi
+  { if [ -n "$parent" ]; then hash "$parent"; else cat lab/Dockerfile lab/entrypoint.sh; fi
     echo "$parent"; cat "lab/labs/$1/setup.sh" 2>/dev/null || true; } | sum
 }
 saved() {
@@ -35,7 +35,8 @@ saved() {
 # Recreates the machines from a copy. Whatever is on them is thrown away.
 up() {
   local since; since=$(date -u +%FT%TZ)
-  COPY=$1 docker compose up -d --no-build --pull never --force-recreate "${NODES[@]}" base
+  # conntrack too, so it sets the host's limits again before the nodes start.
+  COPY=$1 docker compose up -d --no-build --pull never --force-recreate conntrack "${NODES[@]}" base
   for n in "${NODES[@]}"; do docker exec "$n" systemctl is-system-running --wait >/dev/null || true; done
   # A restored cluster first shows the node and pod statuses it was saved with, so wait until
   # the controllers, every node and every pod have reported since the start.
